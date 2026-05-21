@@ -215,4 +215,86 @@ with col_result:
             """, unsafe_allow_html=True)
             
         with sub_col_chart:
-            st.markdown("<h4 style='color: #ffffff; font-size: 13px; font-weight: 600; margin
+            st.markdown("<h4 style='color: #ffffff; font-size: 13px; font-weight: 600; margin-bottom: 8px;'>📈 เครื่องจำลองราคาเป้าหมาย & สัดส่วนพอร์ต</h4>", unsafe_allow_html=True)
+            
+            # สร้างกราฟแท่งเปรียบเทียบราคาแบบ Interactive ดึงระดับเหรียญบวกหรือลบตามการปรับราคาด้านซ้าย
+            fig_sim = go.Figure()
+            
+            # แท่งที่ 1: ราคาต้นทุนเฉลี่ย
+            fig_sim.add_trace(go.Bar(
+                x=['ราคาต้นทุนเฉลี่ย (Break-Even)', 'ราคาจำลองตั้งขายจริง'],
+                y=[avg_cost_per_coin, target_sell_price],
+                marker_color=['#00E5FF', status_color],
+                text=[format_smart_clean(avg_cost_per_coin), format_smart_clean(target_sell_price)],
+                textposition='auto',
+                hovertemplate='%{x}: %{y} บาท<extra></extra>'
+            ))
+            
+            fig_sim.update_layout(
+                margin=dict(t=10, b=10, l=10, r=10),
+                height=190,
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                showlegend=False,
+                yaxis=dict(gridcolor='#1e2942', title="ราคาเหรียญ (บาท)", font=dict(color="#64748b", size=10)),
+                xaxis=dict(tickfont=dict(color="#ffffff", size=10))
+            )
+            st.plotly_chart(fig_sim, use_container_width=True, config={'displayModeBar': False})
+
+        # แสดงกราฟวงกลม Donut Chart ถัดลงมาเพื่อความสวยงามและครบถ้วนตามแบบแผน
+        st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+        c_left, c_right = st.columns([1.1, 0.9])
+        with c_left:
+            st.markdown("<h4 style='color: #ffffff; font-size: 13px; font-weight: 600; margin-bottom: 5px;'>📊 สัดส่วนเงินทุนรายไม้ (Donut Chart)</h4>", unsafe_allow_html=True)
+            fig_donut = go.Figure(data=[go.Pie(
+                labels=chart_labels, 
+                values=chart_values, 
+                hole=.45,
+                textinfo='percent',
+                marker=dict(colors=['#00FFCC', '#00E5FF', '#3366FF', '#9933FF', '#FF3366'],
+                            line=dict(color='#060913', width=2)),
+                hoverinfo='label+value+percent',
+                textfont=dict(color='#ffffff', size=11)
+            )])
+            fig_donut.update_layout(
+                showlegend=True,
+                legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="center", x=0.5, font=dict(color="#64748b", size=10)),
+                margin=dict(t=0, b=0, l=10, r=10),
+                height=160,
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)'
+            )
+            st.plotly_chart(fig_donut, use_container_width=True, config={'displayModeBar': False})
+
+        # บอร์ดสรุปต้นทุนเฉลี่ยรายไม้ ด้านล่างแผงควบคุม
+        st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
+        st.markdown("<h4 style='color: #ffffff; font-size: 13px; font-weight: 600; margin-bottom: 10px;'>🎯 3. บอร์ดสรุปต้นทุนเฉลี่ยสุทธิ</h4>", unsafe_allow_html=True)
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            st.markdown(f"""
+            <div class='neon-card'>
+                <div class='neon-lbl'>💰 เงินทุนรวมทั้งหมด</div>
+                <div class='neon-val' style='font-size:20px;'>{total_invest_cash:,.2f} <span style='font-size:11px; color:#64748b;'>THB</span></div>
+                <div style='color:#475569; font-size:11px; margin-top:3px;'>ฟีซื้อรวม {total_buy_fee:,.2f} บ.</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with m2:
+            st.markdown(f"""
+            <div class='neon-card'>
+                <div class='neon-lbl'>🪙 จำนวนเหรียญในมือ</div>
+                <div class='neon-val' style='color:#00E5FF; font-size:20px;'>{total_coins:,.4f}</div>
+                <div style='color:#475569; font-size:11px; margin-top:3px;'>เหรียญสุทธิหักฟีแล้ว</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with m3:
+            st.markdown(f"""
+            <div class='neon-card' style='border-color: #00FFCC; box-shadow: 0 0 12px rgba(0,255,204,0.12);'>
+                <div class='neon-lbl' style='color:#00FFCC; font-weight:bold;'>🏷️ ทุนเฉลี่ย / เหรียญ</div>
+                <div class='neon-val' style='color:#00FFCC; font-size:20px;'>{format_smart_clean(avg_cost_per_coin)} <span style='font-size:11px; color:#00FFCC;'>บ.</span></div>
+                <div style='color:#00FFCC; font-size:10px; margin-top:3px; font-weight:600;'>*BREAK-EVEN PRICE</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+    else:
+        st.info("💡 SYSTEMS READY: กรุณากรอกจำนวนเงินทุนใน 'ไม้ที่ 1' ฝั่งขวามือ เพื่อเปิดระบบประมวลผลพอร์ตครับ")
+        

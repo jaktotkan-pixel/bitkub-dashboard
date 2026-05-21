@@ -61,19 +61,16 @@ st.markdown("<h1 style='text-align: center; color: #00FFCC; font-weight: 900; le
 st.markdown("<p style='text-align: center; color: #64748b; font-size: 14px; font-weight: 500; letter-spacing: 0.5px;'>MULTI-TIER PORTFOLIO OVERVIEW • 5 ไม้ละเอียด (FEE 0.25%)</p>", unsafe_allow_html=True)
 st.markdown("<div style='border-bottom: 2px solid #1e2942; margin-bottom: 30px; box-shadow: 0 1px 5px rgba(0,255,204,0.1);'></div>", unsafe_allow_html=True)
 
-# 🌟 ฟังก์ชันจัดปลอกทศนิยมอัจฉริยะ ลบเลข 0 ลากหางออก 100% แต่ถ้าเป็นเลขยาวๆ โชว์ครบปกติ
+# ฟังก์ชันจัดปลอกทศนิยมส่วนแสดงผล ลบเลข 0 ลากหางออก 100% แต่ถ้าเป็นเลขยาวๆ โชว์ครบปกติ
 def format_smart_clean(value):
     if value == 0 or value is None:
         return "0.00"
     
-    # แปลงเป็นทศนิยมความละเอียดสูงสุด 8 ตำแหน่งก่อน
+    # แปลงเป็นทศนิยมความละเอียดสูงสุด 8 ตำแหน่งก่อนเพื่อรองรับ 8F สเปกเดิม
     formatted = f"{value:,.8f}"
     
-    # ถ้ามีจุดทศนิยม ให้ทำการลบเลข 0 ตัวท้ายสุดออกเรื่อยๆ จนกว่าจะเจอตัวเลขจริง
     if '.' in formatted:
         formatted = formatted.rstrip('0').rstrip('.')
-        
-        # ถ้ายกเลิกเลข 0 ท้ายแล้วเหลือแค่ทศนิยมหลักเดียว เช่น 44.5 ให้เติม 0 กลับไปตัวนึงเป็น 44.50 สวยๆ
         if '.' in formatted:
             parts = formatted.split('.')
             if len(parts[1]) == 1:
@@ -91,30 +88,31 @@ FEE_RATE = 0.0025
 col_result, col_input = st.columns([1.3, 1])
 
 # ----------------------------------------------------
-# 🔴 ฝั่งขวา [INPUT]: บันทึกรายการเข้าซื้อ (ช่องว่างโล่ง พิมพ์ได้อิสระ)
+# 🔴 ฝั่งขวา [INPUT]: บันทึกรายการเข้าซื้อ (เอา format= ออกเพื่อให้ช่องกรอกสะอาด)
 # ----------------------------------------------------
 with col_input:
     st.markdown("<h3 style='color: #00FFCC; font-size: 16px; font-weight: 700; margin-bottom: 15px;'>📥 [INPUT] บันทึกรายการเข้าซื้อ</h3>", unsafe_allow_html=True)
     
     with st.expander("🪵 รายละเอียด ไม้ที่ 1", expanded=True):
         cash_1 = st.number_input("เงินทุนที่ใช้ซื้อ ไม้ 1 (บาท):", min_value=0.0, value=None, step=100.0, key="c1_num", placeholder="กรอกเงินทุน...")
-        price_1 = st.number_input("ราคาเหรียญตอนซื้อ ไม้ 1 (บาท):", min_value=0.0, value=None, format="%.8f", step=0.0001, key="p1_num", placeholder="กรอกราคาเหรียญ...")
+        # 🌟 เอา format="%.8f" ออกเพื่อให้พิมพ์ 44.55 แล้วไม่มี 000000 ต่อท้าย แต่หลังบ้านยังรองรับเศษทศนิยมยาว 8 หลักปกติ
+        price_1 = st.number_input("ราคาเหรียญตอนซื้อ ไม้ 1 (บาท):", min_value=0.0, value=None, step=0.0001, key="p1_num", placeholder="กรอกราคาเหรียญ...")
     
     with st.expander("🪵 รายละเอียด ไม้ที่ 2", expanded=False):
         cash_2 = st.number_input("เงินทุนที่ใช้ซื้อ ไม้ 2 (บาท):", min_value=0.0, value=None, step=100.0, key="c2_num", placeholder="กรอกเงินทุน...")
-        price_2 = st.number_input("ราคาเหรียญตอนซื้อ ไม้ 2 (บาท):", min_value=0.0, value=None, format="%.8f", step=0.0001, key="p2_num", placeholder="กรอกราคาเหรียญ...")
+        price_2 = st.number_input("ราคาเหรียญตอนซื้อ ไม้ 2 (บาท):", min_value=0.0, value=None, step=0.0001, key="p2_num", placeholder="กรอกราคาเหรียญ...")
         
     with st.expander("🪵 รายละเอียด ไม้ที่ 3", expanded=False):
         cash_3 = st.number_input("เงินทุนที่ใช้ซื้อ ไม้ 3 (บาท):", min_value=0.0, value=None, step=100.0, key="c3_num", placeholder="กรอกเงินทุน...")
-        price_3 = st.number_input("ราคาเหรียญตอนซื้อ ไม้ 3 (บาท):", min_value=0.0, value=None, format="%.8f", step=0.0001, key="p3_num", placeholder="กรอกราคาเหรียญ...")
+        price_3 = st.number_input("ราคาเหรียญตอนซื้อ ไม้ 3 (บาท):", min_value=0.0, value=None, step=0.0001, key="p3_num", placeholder="กรอกราคาเหรียญ...")
         
     with st.expander("🪵 รายละเอียด ไม้ที่ 4", expanded=False):
         cash_4 = st.number_input("เงินทุนที่ใช้ซื้อ ไม้ 4 (บาท):", min_value=0.0, value=None, step=100.0, key="c4_num", placeholder="กรอกเงินทุน...")
-        price_4 = st.number_input("ราคาเหรียญตอนซื้อ ไม้ 4 (บาท):", min_value=0.0, value=None, format="%.8f", step=0.0001, key="p4_num", placeholder="กรอกราคาเหรียญ...")
+        price_4 = st.number_input("ราคาเหรียญตอนซื้อ ไม้ 4 (บาท):", min_value=0.0, value=None, step=0.0001, key="p4_num", placeholder="กรอกราคาเหรียญ...")
         
     with st.expander("🪵 รายละเอียด ไม้ที่ 5", expanded=False):
         cash_5 = st.number_input("เงินทุนที่ใช้ซื้อ ไม้ 5 (บาท):", min_value=0.0, value=None, step=100.0, key="c5_num", placeholder="กรอกเงินทุน...")
-        price_5 = st.number_input("ราคาเหรียญตอนซื้อ ไม้ 5 (บาท):", min_value=0.0, value=None, format="%.8f", step=0.0001, key="p5_num", placeholder="กรอกราคาเหรียญ...")
+        price_5 = st.number_input("ราคาเหรียญตอนซื้อ ไม้ 5 (บาท):", min_value=0.0, value=None, step=0.0001, key="p5_num", placeholder="กรอกราคาเหรียญ...")
 
 # --- แปลงค่า None เป็น 0.0 สำหรับคำนวณระบบหลังบ้าน ---
 c1 = cash_1 if cash_1 is not None else 0.0
@@ -156,9 +154,9 @@ for item in raw_data:
         rows.append({
             "ไม้ที่": f"ไม้ {item['ไม้ที่']}",
             "เงินทุนซื้อ (บาท)": f"{item['cash']:,.2f}",
-            "ราคาตอนซื้อ": format_smart_clean(item['price']), # ใช้ฟังก์ชันเคลียร์หางเลข 0 อัจฉริยะ
+            "ราคาตอนซื้อ": format_smart_clean(item['price']),
             "ค่าธรรมเนียมซื้อ (0.25%)": f"{fee:,.2f}",
-            "เหรียญที่ได้รับ": format_smart_clean(coins_received) # เคลียร์หางเลข 0 ให้จำนวนเหรียญด้วยครับ
+            "เหรียญที่ได้รับ": format_smart_clean(coins_received)
         })
         
         chart_labels.append(f"ไม้ {item['ไม้ที่']}")
@@ -175,11 +173,11 @@ with col_result:
     # 🌟 ส่วนที่ 1: จำลองเป้าหมายราคาตั้งขาย
     st.markdown("<h4 style='color: #ffffff; font-size: 13px; font-weight: 600; margin-bottom: 4px;'>🎯 1. จำลองเป้าหมายราคาตั้งขาย</h4>", unsafe_allow_html=True)
     
+    # 🌟 เอา format="%.8f" ออกจากจุดนี้เช่นกัน เพื่อให้กล่องพิมพ์ราคาขายสะอาด ไม่มี 000000 กวนใจครับ
     target_sell_price_raw = st.number_input(
         "พิมพ์กรอกราคาเหรียญที่ต้องการตั้งขายจริงในกระดาน (บาท):",
         min_value=0.0,
         value=None,
-        format="%.8f",
         step=0.0001 if avg_cost_per_coin == 0 else (0.0001 if avg_cost_per_coin > 1 else 0.000001),
         key="target_sell_num",
         placeholder="กรอกราคาตั้งขายเพื่อจำลองกำไร..."
@@ -229,7 +227,7 @@ with col_result:
     </div>
     """, unsafe_allow_html=True)
     
-    # 🌟 ส่วนที่ 2: สรุปแดชบอร์ดต้นทุนเฉลี่ยสุทธิ (อยู่ด้านล่างตามโครงสร้างเดิม)
+    # 🌟 ส่วนที่ 2: สรุปแดชบอร์ดต้นทุนเฉลี่ยสุทธิ (โครงสร้างเดิม)
     st.markdown("<h4 style='color: #ffffff; font-size: 13px; font-weight: 600; margin-bottom: 10px;'>🎯 2. สรุปแดชบอร์ดต้นทุนเฉลี่ยสุทธิ</h4>", unsafe_allow_html=True)
     
     if len(rows) > 0:
@@ -242,49 +240,3 @@ with col_result:
                 <div style='color:#475569; font-size:11px; margin-top:3px;'>ฟีซื้อรวม {total_buy_fee:,.2f} บ.</div>
             </div>
             """, unsafe_allow_html=True)
-        with m2:
-            st.markdown(f"""
-            <div class='neon-card'>
-                <div class='neon-lbl'>🪙 จำนวนเหรียญในมือ</div>
-                <div class='neon-val' style='color:#00E5FF; font-size:19px;'>{format_smart_clean(total_coins)}</div>
-                <div style='color:#475569; font-size:11px; margin-top:3px;'>เหรียญสุทธิหักฟีแล้ว</div>
-            </div>
-            """, unsafe_allow_html=True)
-        with m3:
-            st.markdown(f"""
-            <div class='neon-card' style='border-color: #00FFCC; box-shadow: 0 0 12px rgba(0,255,204,0.12);'>
-                <div class='neon-lbl' style='color:#00FFCC; font-weight:bold;'>🏷️ ต้นทุนเฉลี่ย / เหรียญ</div>
-                <div class='neon-val' style='color:#00FFCC; font-size:19px;'>{format_smart_clean(avg_cost_per_coin)} <span style='font-size:11px; color:#00FFCC;'>บ.</span></div>
-                <div style='color:#00FFCC; font-size:10px; margin-top:3px; font-weight:600;'>*BREAK-EVEN PRICE</div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-        # ตารางแสดงข้อมูลรายไม้แบบคลีน
-        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
-        df = pd.DataFrame(rows)
-        st.table(df)
-        
-        # กราฟ Donut Chart ท้ายตาราง
-        st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
-        fig_donut = go.Figure(data=[go.Pie(
-            labels=chart_labels, 
-            values=chart_values, 
-            hole=.45,
-            textinfo='percent',
-            marker=dict(colors=['#00FFCC', '#00E5FF', '#3366FF', '#9933FF', '#FF3366'],
-                        line=dict(color='#060913', width=2)),
-            hoverinfo='label+value+percent',
-            textfont=dict(color='#ffffff', size=11)
-        )])
-        fig_donut.update_layout(
-            showlegend=True,
-            legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="center", x=0.5, font=dict(color="#64748b", size=10)),
-            margin=dict(t=10, b=10, l=10, r=10),
-            height=160,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)'
-        )
-        st.plotly_chart(fig_donut, use_container_width=True, config={'displayModeBar': False})
-        
-    else:
-        st.info("💡 SYSTEMS READY: กรุณากรอกจำนวนเงินทุนและราคาเหรียญในฝั่งขวา เพื่อเปิดระบบประมวลผลพอร์ตครับ")

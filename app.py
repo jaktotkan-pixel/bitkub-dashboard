@@ -99,10 +99,9 @@ FEE_RATE = 0.0025
 # สัดส่วนหน้าจอ: ฝั่งซ้าย (โชว์ผลลัพธ์และจำลองเป้าหมาย) และ ฝั่งขวา (กล่องกรอกอินพุตรายไม้)
 col_result, col_input = st.columns([1.25, 1])
 
-# --- ประมวลผลข้อมูลล่วงหน้าเพื่อให้ฝั่งซ้ายเรียกใช้ค่าคำนวณได้ทันที ---
-# (ดึงข้อมูลโครงสร้างอินพุตมาจากสคริปต์เพื่อให้ระบบประมวลผลก่อนเรนเดอร์หน้าจอ)
+# --- ระบบจำค่าและประมวลผลอินพุต (Session State) ---
 if "c1_val" not in st.session_state: st.session_state.c1_val = "2600.00"
-if "p1_val" not in st.session_state: st.session_state.p1_val = "0.00019456"
+if "p1_val" not in st.session_state: st.session_state.p1_val = "47.55"
 if "c2_val" not in st.session_state: st.session_state.c2_val = "0.00"
 if "p2_val" not in st.session_state: st.session_state.p2_val = "0.00"
 if "c3_val" not in st.session_state: st.session_state.c3_val = "0.00"
@@ -111,14 +110,19 @@ if "c4_val" not in st.session_state: st.session_state.c4_val = "0.00"
 if "p4_val" not in st.session_state: st.session_state.p4_val = "0.00"
 if "c5_val" not in st.session_state: st.session_state.c5_val = "0.00"
 if "p5_val" not in st.session_state: st.session_state.p5_val = "0.00"
-if "ts_val" not in st.session_state: st.session_state.ts_val = "0.00021000"
+if "ts_val" not in st.session_state: st.session_state.ts_val = ""
 
-# โครงสร้างตัวแปรเพื่อเก็บค่าคำนวณหลังบ้าน
-cash_1, price_1 = safe_float(st.session_state.c1_val, 2600.0), safe_float(st.session_state.p1_val, 0.00019456)
-cash_2, price_2 = safe_float(st.session_state.c2_val, 0.0), safe_float(st.session_state.p2_val, 0.0)
-cash_3, price_3 = safe_float(st.session_state.c3_val, 0.0), safe_float(st.session_state.p3_val, 0.0)
-cash_4, price_4 = safe_float(st.session_state.c4_val, 0.0), safe_float(st.session_state.p4_val, 0.0)
-cash_5, price_5 = safe_float(st.session_state.c5_val, 0.0), safe_float(st.session_state.p5_val, 0.0)
+# ดึงค่าจาก state แปลงเป็นตัวเลขเพื่อใช้คำนวณล่วงหน้า
+cash_1 = safe_float(st.session_state.c1_val, 2600.0)
+price_1 = safe_float(st.session_state.p1_val, 47.55)
+cash_2 = safe_float(st.session_state.c2_val, 0.0)
+price_2 = safe_float(st.session_state.p2_val, 0.0)
+cash_3 = safe_float(st.session_state.c3_val, 0.0)
+price_3 = safe_float(st.session_state.p3_val, 0.0)
+cash_4 = safe_float(st.session_state.c4_val, 0.0)
+price_4 = safe_float(st.session_state.p4_val, 0.0)
+cash_5 = safe_float(st.session_state.c5_val, 0.0)
+price_5 = safe_float(st.session_state.p5_val, 0.0)
 
 raw_data = [
     {"ไม้ที่": 1, "input_cash": cash_1, "buy_price": price_1},
@@ -154,20 +158,18 @@ for item in raw_data:
 avg_cost_per_coin = total_invest_cash / total_coins if total_coins > 0 else 0.0
 
 # ----------------------------------------------------
-# 🟨 ฝั่งซ้าย [OUTPUT] ย้ายกลุ่มวิเคราะห์เป้าหมายขึ้นมาข้างบนสุดตามสั่ง
+# 🟨 ฝั่งซ้าย [OUTPUT] แสดงข้อมูลคำนวณและเป้าหมายขาย
 # ----------------------------------------------------
 with col_result:
     st.markdown("<h3 style='color: #00FFCC; font-size: 17px; font-weight: 700; margin-bottom: 15px; letter-spacing: 0.5px;'>📊 [OUTPUT] ประมวลผลพอร์ตและความคุ้มทุน</h3>", unsafe_allow_html=True)
     
     if len(rows) > 0:
-        # ส่วนจำลองเป้าหมายราคาตั้งขาย (ย้ายขึ้นมาอยู่บนสุดของฝั่งซ้าย)
+        # ส่วนจำลองเป้าหมายราคาตั้งขาย
         st.markdown("<h4 style='color: #ffffff; font-size: 14px; font-weight: 600; margin-bottom: 12px; letter-spacing: 0.5px;'>🎯 1. จำลองเป้าหมายราคาตั้งขาย</h4>", unsafe_allow_html=True)
         
-        # ปรับตัวแปรเป้าหมายเริ่มต้นให้ตรงตามราคาเฉลี่ยปัจจุบันหากยังไม่มีการแก้ไข
-        if st.session_state.ts_val == "0.00021000" and avg_cost_per_coin > 0 and st.session_state.ts_val == "0.00021000":
-            default_sell_str = "0.00021000" # ล็อกค่าตามภาพตัวอย่างเดิมของพี่ หรือใช้ format_smart(avg_cost_per_coin) ได้
-        else:
-            default_sell_str = st.session_state.ts_val
+        # ตั้งค่าตั้งต้นของราคาขายให้ตรงกับราคาเฉลี่ยปัจจุบันหากยังว่างอยู่
+        if st.session_state.ts_val == "":
+            st.session_state.ts_val = format_smart(avg_cost_per_coin).replace(',', '')
             
         target_sell_raw = st.text_input(
             "พิมพ์กรอกราคาเหรียญที่ต้องการตั้งขายจริงในกระดาน (บาท):",
@@ -214,7 +216,7 @@ with col_result:
         </div>
         """, unsafe_allow_html=True)
         
-        # ตารางแสดงผลฝั่งซื้อและบอร์ดสรุปต้นทุนเฉลี่ย
+        # แดชบอร์ดสรุปต้นทุนเฉลี่ย
         st.markdown("<h4 style='color: #ffffff; font-size: 14px; font-weight: 600; margin-bottom: 12px; letter-spacing: 0.5px;'>🎯 2. สรุปแดชบอร์ดต้นทุนเฉลี่ยสุทธิ</h4>", unsafe_allow_html=True)
         m1, m2, m3 = st.columns(3)
         with m1:
@@ -250,7 +252,7 @@ with col_result:
         st.info("💡 SYSTEMS READY: กรุณากรอกจำนวนเงินทุนใน 'ไม้ที่ 1' ฝั่งขวามือ เพื่อเริ่มต้นระบบคำนวณครับ")
 
 # ----------------------------------------------------
-# 🔴 ฝั่งขวา [INPUT] ย้ายกล่องกรอกข้อมูลรายไม้มาไว้ฝั่งนี้
+# 🔴 ฝั่งขวา [INPUT] กล่องบันทึกรายการเข้าซื้อรายไม้
 # ----------------------------------------------------
 with col_input:
     st.markdown("<h3 style='color: #00FFCC; font-size: 17px; font-weight: 700; margin-bottom: 15px; letter-spacing: 0.5px;'>📥 [INPUT] บันทึกรายการเข้าซื้อ</h3>", unsafe_allow_html=True)
@@ -279,9 +281,3 @@ with col_input:
         c5_in = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 5 (บาท):", value=st.session_state.c5_val, key="c5_input")
         p5_in = st.text_input("ราคาเหรียญตอนซื้อ ไม้ 5 (บาท):", value=st.session_state.p5_val, key="p5_input")
         st.session_state.c5_val, st.session_state.p5_val = c5_in, p5_in
-
-# สั่งให้แอปรีรันข้ามสเต็ปอย่างเสถียรเมื่อมีการแก้ข้อความใน text_input ล่าสุด
-if (c1_in != cash_1_raw or p1_in != price_1_raw or c2_in != cash_2_raw or p2_in != price_2_raw or 
-    c3_in != cash_3_raw or p3_in != price_3_raw or c4_in != cash_4_raw or p4_in != price_4_raw or 
-    c5_in != cash_5_raw or p5_in != price_5_raw or target_sell_raw != st.session_state.ts_val):
-    st.rerun()

@@ -231,3 +231,42 @@ with col_result:
                 <div class='neon-val' style='color:#00E5FF; font-size:19px;'>{total_coins:,.4f}</div>
                 <div style='color:#475569; font-size:11px; margin-top:3px;'>เหรียญสุทธิหักฟีแล้ว</div>
             </div>
+            """, unsafe_allow_html=True)
+        with m3:
+            st.markdown(f"""
+            <div class='neon-card' style='border-color: #00FFCC; box-shadow: 0 0 12px rgba(0,255,204,0.12);'>
+                <div class='neon-lbl' style='color:#00FFCC; font-weight:bold;'>🏷️ ต้นทุนเฉลี่ย / เหรียญ</div>
+                <div class='neon-val' style='color:#00FFCC; font-size:19px;'>{format_smart_clean(avg_cost_per_coin)} <span style='font-size:11px; color:#00FFCC;'>บ.</span></div>
+                <div style='color:#00FFCC; font-size:10px; margin-top:3px; font-weight:600;'>*BREAK-EVEN PRICE</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        # ตารางแสดงข้อมูลรายไม้แบบสรุปความคุ้มทุนด้านล่างสุดของฝั่งผลลัพธ์
+        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+        df = pd.DataFrame(rows)
+        st.table(df)
+        
+        # แสดงกราฟสัดส่วนเงินทุน Donut Chart แนบไว้ท้ายตารางสวยๆ ครับ
+        st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+        fig_donut = go.Figure(data=[go.Pie(
+            labels=chart_labels, 
+            values=chart_values, 
+            hole=.45,
+            textinfo='percent',
+            marker=dict(colors=['#00FFCC', '#00E5FF', '#3366FF', '#9933FF', '#FF3366'],
+                        line=dict(color='#060913', width=2)),
+            hoverinfo='label+value+percent',
+            textfont=dict(color='#ffffff', size=11)
+        )])
+        fig_donut.update_layout(
+            showlegend=True,
+            legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="center", x=0.5, font=dict(color="#64748b", size=10)),
+            margin=dict(t=10, b=10, l=10, r=10),
+            height=160,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)'
+        )
+        st.plotly_chart(fig_donut, use_container_width=True, config={'displayModeBar': False})
+        
+    else:
+        st.info("💡 SYSTEMS READY: กรุณากรอกจำนวนเงินทุนและราคาเหรียญในฝั่งขวา เพื่อเปิดระบบประมวลผลพอร์ตครับ")

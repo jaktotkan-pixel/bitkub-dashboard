@@ -3,15 +3,31 @@ import streamlit as st
 # --- 1. SETTING & CYBERPUNK CSS STYLE ---
 st.set_page_config(page_title="Bitkub Multi-Coin Dashboard", layout="wide")
 
-# ปรับแต่งธีมภาพรวมด้วยสไตล์มืด Cyberpunk Neon
-st.logo("https://www.bitkub.com/static/images/logo-bitkub.e25b16f3.svg", icon_image="https://www.bitkub.com/static/images/logo-bitkub.e25b16f3.svg") if hasattr(st, "logo") else None
-
 st.markdown("""
 <style>
     /* พื้นหลังมืดสนิทสไตล์ Cyberpunk */
     .stApp {
         background-color: #060913;
         color: #e2e8f0;
+    }
+    
+    /* กล่องสรุปผลรวมยักษ์บนสุด */
+    .total-portfolio-box {
+        background: linear-gradient(135deg, #151324 0%, #0d1b2a 100%);
+        padding: 25px;
+        border-radius: 16px;
+        border: 2px solid #00FFCC;
+        box-shadow: 0 0 25px rgba(0, 255, 204, 0.25);
+        margin-bottom: 35px;
+        text-align: center;
+    }
+    
+    /* กล่องสี่เหลี่ยมรายชุด */
+    .master-coin-box {
+        background: linear-gradient(135deg, #0d1224 0%, #151c33 100%);
+        border: 1px solid #1e2942;
+        border-radius: 14px;
+        padding: 20px;
     }
     
     /* ปรับแต่งช่อง Input ให้คลีน มินิมอล */
@@ -28,16 +44,15 @@ st.markdown("""
 
 # ส่วนหัวข้อหลักสไตล์ Trader Space Station
 st.markdown("<h1 style='text-align: center; color: #00FFCC; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 12px rgba(0,255,204,0.4); margin-bottom: 5px;'>⚡ BITKUB MULTI-COIN MONITOR</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #64748b; font-size: 14px; font-weight: 500; letter-spacing: 0.5px;'>ระบบคำนวณแยกอิสระ 5 บล็อกสี่เหลี่ยมเดี่ยว • แก้ไขบั๊กการแสดงผล HTML เรียบร้อย</p>", unsafe_allow_html=True)
-st.markdown("<div style='border-bottom: 2px solid #1e2942; margin-bottom: 35px;'></div>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #64748b; font-size: 14px; font-weight: 500; letter-spacing: 0.5px;'>ระบบคำนวณแยกอิสระ 5 บล็อกสี่เหลี่ยมเดี่ยว • พร้อมระบบสรุปยอดเงินรวมทุกไม้</p>", unsafe_allow_html=True)
+st.markdown("<div style='border-bottom: 2px solid #1e2942; margin-bottom: 30px;'></div>", unsafe_allow_html=True)
 
-# รายชื่อเหรียญใน Bitkub สำหรับให้เลือกใน Dropdown
+# รายชื่อเหรียญใน Bitkub
 BITKUB_COINS = [
-    "เลือกเหรียญ...", "ZEREBRO", "BTC", "STO","ETH", "KUB", "XRP", "ADA", "SOL", "DOGE", "BNB", 
+    "เลือกเหรียญ...", "ZEREBRO", "STO", "BTC", "ETH", "KUB", "XRP", "ADA", "SOL", "DOGE", "BNB", 
     "DOT", "GALA", "NEAR", "OP", "ARB", "AVAX", "LINK", "LTC", "IOST", "USDT"
 ]
 
-# ฟังก์ชันจัดปลอกทศนิยมส่วนแสดงผล ลบเลข 0 ลากหางออก 100% แต่ถ้าเป็นเลขยาวๆ โชว์ครบปกติ
 def format_smart_clean(value):
     if value == 0 or value is None:
         return "0.00"
@@ -54,7 +69,6 @@ def format_smart_clean(value):
             formatted = f"{formatted}.00"
     return formatted
 
-# ฟังก์ชันแปลงข้อความจากช่องกรอกให้เป็น Float ปลอดภัย ไร้ Error
 def parse_float_input(val_str):
     if not val_str or val_str.strip() == "":
         return None
@@ -65,18 +79,83 @@ def parse_float_input(val_str):
 
 FEE_RATE = 0.0025
 
-# --- ลูปสร้างกล่องสี่เหลี่ยมเดียวรวมศูนย์ 5 ชุดแยกอิสระ ---
+# --- [PRE-CALCULATION] วิ่งเก็บค่าล่วงหน้าเพื่อเอาไปทำสรุปยอดรวมด้านบนสุด ---
+grand_total_cash = 0.0
+grand_total_net_sell = 0.0
+grand_total_pnl_baht = 0.0
+active_blocks_count = 0
+
+for idx in range(1, 6):
+    c_name = st.session_state.get(f"coin_{idx}", "เลือกเหรียญ...")
+    c_raw = st.session_state.get(f"cash_{idx}", "")
+    bp_raw = st.session_state.get(f"bp_{idx}", "")
+    sp_raw = st.session_state.get(f"sp_{idx}", "")
+    
+    cash_val = parse_float_input(c_raw) if parse_float_input(c_raw) is not None else 0.0
+    bp_val = parse_float_input(bp_raw) if parse_float_input(bp_raw) is not None else 0.0
+    sp_val = parse_float_input(sp_raw) if parse_float_input(sp_raw) is not None else 0.0
+    
+    if c_name != "เลือกเหรียญ..." and cash_val > 0 and bp_val > 0:
+        active_blocks_count += 1
+        b_fee = cash_val * FEE_RATE
+        n_buy = cash_val - b_fee
+        coins = n_buy / bp_val
+        
+        g_sell = coins * sp_val
+        s_fee = g_sell * FEE_RATE
+        n_sell = g_sell - s_fee
+        
+        pnl_b = n_sell - cash_val
+        
+        grand_total_cash += cash_val
+        grand_total_net_sell += n_sell
+        grand_total_pnl_baht += pnl_b
+
+# -----------------------------------------------------------------
+# 🌟 [TOP RENDER] กล่องแดชบอร์ดสรุปเงินรวมทุกไม้ (TOTAL PORTFOLIO SUMMARY)
+# -----------------------------------------------------------------
+if active_blocks_count > 0:
+    grand_pnl_percent = (grand_total_pnl_baht / grand_total_cash) * 100 if grand_total_cash > 0 else 0.0
+    g_status_color = "#00FF66" if grand_total_pnl_baht >= 0 else "#FF3366"
+    g_status_sign = "+" if grand_total_pnl_baht >= 0 else ""
+    
+    st.html(f"""
+    <div class="total-portfolio-box">
+        <div style="font-size: 13px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">
+            📊 TOTAL PORTFOLIO SUMMARY (สรุปผลรวมพอร์ตทั้งหมด {active_blocks_count} ไม้)
+        </div>
+        <div style="font-size: 38px; font-weight: 900; color: {g_status_color}; text-shadow: 0 0 15px {g_status_color}40; margin-bottom: 15px;">
+            {g_status_sign}{grand_total_pnl_baht:,.2f} <span style="font-size: 18px; font-weight: 700;">THB ({g_status_sign}{grand_pnl_percent:,.2f}%)</span>
+        </div>
+        
+        <div style="display: flex; gap: 15px; justify-content: center; max-width: 800px; margin: 0 auto;">
+            <div style="background: rgba(6, 9, 19, 0.6); padding: 12px 25px; border-radius: 8px; border: 1px solid #1e2942; flex: 1;">
+                <div style="font-size: 11px; color: #64748b; font-weight: 600;">💵 เงินทุนรวมทุกไม้</div>
+                <div style="font-size: 20px; font-weight: bold; color: #ffffff; margin-top: 2px;">{grand_total_cash:,.2f} บ.</div>
+            </div>
+            <div style="background: rgba(6, 9, 19, 0.6); padding: 12px 25px; border-radius: 8px; border: 1px solid #1e2942; flex: 1;">
+                <div style="font-size: 11px; color: #00E5FF; font-weight: 600;">💰 เงินเข้าบัญชีสุทธิรวมทั้งหมด</div>
+                <div style="font-size: 20px; font-weight: bold; color: #00E5FF; margin-top: 2px;">{grand_total_net_sell:,.2f} บ.</div>
+            </div>
+        </div>
+    </div>
+    """)
+else:
+    st.info("💡 SYSTEMS READY: กรุณากรอกข้อมูลเหรียญในบล็อกด้านล่าง ระบบรวมยอดเงินรวมพอร์ตจะเปิดทำงานทันทีครับพี่จักรกฤช")
+
+
+# -----------------------------------------------------------------
+# 📦 [BODY RENDER] ลูปสร้างบล็อกสี่เหลี่ยมเดี่ยวรายเหรียญ 5 ชุด
+# -----------------------------------------------------------------
 for i in range(1, 6):
     
-    # ใช้ st.container ครอบเพื่อสร้างขอบเขตกล่องสี่เหลี่ยมเดียวกันอย่างสมบูรณ์แบบ
     with st.container(border=True):
         st.markdown(f"""
         <div style="font-size: 15px; font-weight: 800; color: #00E5FF; margin-bottom: 12px; letter-spacing: 0.5px;">
-            📦 ชุดที่ {i} : บล็อกประมวลผลเหรียญรายไม้ (รวมศูนย์ในกรอบเดียว)
+            📦 ชุดที่ {i} : บล็อกประมวลผลเหรียญรายไม้
         </div>
         """, unsafe_allow_html=True)
         
-        # เจาะ Grid ด้านในกล่องสี่เหลี่ยม: แยกซ้าย (กรอกข้อมูล) ขวา (แดชบอร์ดสรุปผล)
         inner_col_in, inner_col_out = st.columns([1, 1.2])
         
         with inner_col_in:
@@ -86,23 +165,19 @@ for i in range(1, 6):
             sell_price_raw = st.text_input(f"🎯 ราคาที่ต้องการตั้งขาย (บาท):", key=f"sp_{i}", placeholder="เช่น 1.20")
             
         with inner_col_out:
-            # ดึงค่ามาคำนวณหลังบ้าน
             cash = parse_float_input(cash_raw) if parse_float_input(cash_raw) is not None else 0.0
             buy_price = parse_float_input(buy_price_raw) if parse_float_input(buy_price_raw) is not None else 0.0
             sell_price = parse_float_input(sell_price_raw) if parse_float_input(sell_price_raw) is not None else 0.0
             
             if coin_name != "เลือกเหรียญ..." and cash > 0 and buy_price > 0:
-                # 1. คำนวณฝั่งซื้อ
                 buy_fee = cash * FEE_RATE
                 net_buy = cash - buy_fee
                 coins_received = net_buy / buy_price
                 
-                # 2. คำนวณฝั่งขาย
                 gross_sell = coins_received * sell_price
                 sell_fee = gross_sell * FEE_RATE
                 net_sell = gross_sell - sell_fee
                 
-                # 3. กำไร/ขาดทุนสุทธิ
                 pnl_baht = net_sell - cash
                 pnl_percent = (pnl_baht / cash) * 100 if cash > 0 else 0.0
                 
@@ -110,7 +185,6 @@ for i in range(1, 6):
                 status_bg = "rgba(0, 255, 102, 0.02)" if pnl_baht >= 0 else "rgba(255, 51, 102, 0.02)"
                 status_sign = "+" if pnl_baht >= 0 else ""
                 
-                # ใช้ st.html สำหรับพ่นกราฟิกการ์ด เพื่อไม่ให้โค้ดหลุดรั่วออกมาหน้าจออีก
                 st.html(f"""
                 <div style='background: {status_bg}; padding: 15px; border-radius: 10px; border: 1px solid #1e2942; border-left: 5px solid {status_color}; margin-top: 5px;'>
                     <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;'>
@@ -148,12 +222,10 @@ for i in range(1, 6):
                 </div>
                 """)
             else:
-                # หน้าตาสแตนด์บายรอข้อมูลในกรอบขวาอย่างสุภาพ ไม่มีโค้ดหลุดร่วง
                 st.html(f"""
                 <div style='text-align: center; padding: 52px 15px; color: #475569; border: 1px dashed #1e2942; border-radius: 10px; font-size: 13px; background: rgba(6, 9, 19, 0.3); margin-top: 5px;'>
                     ⏳ [STANDBY] กรุณาเลือกเหรียญ และระบุเงินทุน + ราคาซื้อ เพื่อเปิดระบบแสดงแดชบอร์ดสรุปผลครับ
                 </div>
                 """)
                 
-    # เว้นช่องไฟระหว่างบล็อกสี่เหลี่ยมให้ดูง่ายสบายตา
     st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)

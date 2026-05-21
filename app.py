@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go
 
 # --- 1. SETTING & CYBERPUNK CSS STYLE ---
 st.set_page_config(page_title="Coin Average Cost Calculator", layout="wide")
@@ -13,23 +12,23 @@ st.markdown("""
         color: #e2e8f0;
     }
     
-    /* กล่อง Metrics Card เรืองแสง Neon Cyan */
+    /* กล่อง Metrics Card ปรับขนาดให้ยืดหยุ่นเต็มพื้นที่ ไม่หดตกขอบ */
     .neon-card {
         background: linear-gradient(135deg, #0d1224 0%, #151c33 100%);
-        padding: 16px;
+        padding: 20px;
         border-radius: 12px;
         border: 1px solid #1e2942;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         text-align: center;
-        margin-bottom: 12px;
         transition: all 0.3s ease;
+        width: 100%;
     }
     .neon-card:hover {
         border-color: #00FFCC;
         box-shadow: 0 0 15px rgba(0, 255, 204, 0.35);
     }
-    .neon-lbl { font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-    .neon-val { font-size: 20px; font-weight: bold; color: #ffffff; }
+    .neon-lbl { font-size: 12px; color: #64748b; margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .neon-val { font-size: 22px; font-weight: bold; color: #ffffff; }
     
     /* กล่อง Expander ฝั่งขวา (Input) */
     .stExpander {
@@ -57,232 +56,4 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ส่วนหัวข้อหลักสไตล์ Trader Space Station
-st.markdown("<h1 style='text-align: center; color: #00FFCC; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 12px rgba(0,255,204,0.4); margin-bottom: 5px;'>⚡ CYBERPUNK NEON TRADER</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #64748b; font-size: 14px; font-weight: 500; letter-spacing: 0.5px;'>MULTI-TIER PORTFOLIO OVERVIEW • 5 ไม้ละเอียด (FEE 0.25%)</p>", unsafe_allow_html=True)
-st.markdown("<div style='border-bottom: 2px solid #1e2942; margin-bottom: 30px; box-shadow: 0 1px 5px rgba(0,255,204,0.1);'></div>", unsafe_allow_html=True)
-
-# ฟังก์ชันจัดปลอกทศนิยมส่วนแสดงผล ลบเลข 0 ลากหางออก 100% แต่ถ้าเป็นเลขยาวๆ โชว์ครบปกติ
-def format_smart_clean(value):
-    if value == 0 or value is None:
-        return "0.00"
-    
-    # แปลงเป็นทศนิยมความละเอียดสูงสุด 8 ตำแหน่งก่อนเพื่อรองรับ 8F สเปกเดิม
-    formatted = f"{value:,.8f}"
-    
-    if '.' in formatted:
-        formatted = formatted.rstrip('0').rstrip('.')
-        if '.' in formatted:
-            parts = formatted.split('.')
-            if len(parts[1]) == 1:
-                formatted = f"{parts[0]}.{parts[1]}0"
-            elif len(parts[1]) == 0:
-                formatted = f"{parts[0]}.00"
-        else:
-            formatted = f"{formatted}.00"
-            
-    return formatted
-
-# ฟังก์ชันช่วยแปลงข้อความจากช่องกรอกให้เป็น Float ปลอดภัย ไร้ Error
-def parse_float_input(val_str):
-    if not val_str or val_str.strip() == "":
-        return None
-    try:
-        # แทนที่ลูกน้ำ (ถ้ามี) แล้วแปลงเป็นทศนิยม
-        return float(val_str.replace(",", "").strip())
-    except ValueError:
-        return 0.0
-
-FEE_RATE = 0.0025
-
-# --- LAYOUT DIVISION (โครงสร้างหลักแยกฝั่งซ้าย-ขวา) ---
-col_result, col_input = st.columns([1.2, 1])
-
-# ----------------------------------------------------
-# 🔴 ฝั่งขวา [INPUT]: บันทึกรายการเข้าซื้อ (ใช้ Text Input แก้ปัญหาทศนิยม 000000 กวนใจ)
-# ----------------------------------------------------
-with col_input:
-    st.markdown("<h3 style='color: #00FFCC; font-size: 16px; font-weight: 700; margin-bottom: 15px;'>📥 [INPUT] บันทึกรายการเข้าซื้อ</h3>", unsafe_allow_html=True)
-    
-    with st.expander("🪵 รายละเอียด ไม้ที่ 1", expanded=True):
-        cash_1_raw = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 1 (บาท):", key="c1_str", placeholder="เช่น 1629")
-        price_1_raw = st.text_input("ราคาเหรียญตอนซื้อ ไม้ 1 (บาท):", key="p1_str", placeholder="เช่น 47.55 หรือ 0.0001924")
-    
-    with st.expander("🪵 รายละเอียด ไม้ที่ 2", expanded=False):
-        cash_2_raw = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 2 (บาท):", key="c2_str", placeholder="กรอกเงินทุน...")
-        price_2_raw = st.text_input("ราคาเหรียญตอนซื้อ ไม้ 2 (บาท):", key="p2_str", placeholder="กรอกราคาเหรียญ...")
-        
-    with st.expander("🪵 รายละเอียด ไม้ที่ 3", expanded=False):
-        cash_3_raw = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 3 (บาท):", key="c3_str", placeholder="กรอกเงินทุน...")
-        price_3_raw = st.text_input("ราคาเหรียญตอนซื้อ ไม้ 3 (บาท):", key="p3_str", placeholder="กรอกราคาเหรียญ...")
-        
-    with st.expander("🪵 รายละเอียด ไม้ที่ 4", expanded=False):
-        cash_4_raw = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 4 (บาท):", key="c4_str", placeholder="กรอกเงินทุน...")
-        price_4_raw = st.text_input("ราคาเหรียญตอนซื้อ ไม้ 4 (บาท):", key="p4_str", placeholder="กรอกราคาเหรียญ...")
-        
-    with st.expander("🪵 รายละเอียด ไม้ที่ 5", expanded=False):
-        cash_5_raw = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 5 (บาท):", key="c5_str", placeholder="กรอกเงินทุน...")
-        price_5_raw = st.text_input("ราคาเหรียญตอนซื้อ ไม้ 5 (บาท):", key="p5_str", placeholder="กรอกราคาเหรียญ...")
-
-# --- แปลงค่าอินพุตจาก String เป็น Float สำหรับประมวลผลหลังบ้านระดับ 8F ---
-c1 = parse_float_input(cash_1_raw) if parse_float_input(cash_1_raw) is not None else 0.0
-p1 = parse_float_input(price_1_raw) if parse_float_input(price_1_raw) is not None else 0.0
-c2 = parse_float_input(cash_2_raw) if parse_float_input(cash_2_raw) is not None else 0.0
-p2 = parse_float_input(price_2_raw) if parse_float_input(price_2_raw) is not None else 0.0
-c3 = parse_float_input(cash_3_raw) if parse_float_input(cash_3_raw) is not None else 0.0
-p3 = parse_float_input(price_3_raw) if parse_float_input(price_3_raw) is not None else 0.0
-c4 = parse_float_input(cash_4_raw) if parse_float_input(cash_4_raw) is not None else 0.0
-p4 = parse_float_input(price_4_raw) if parse_float_input(price_4_raw) is not None else 0.0
-c5 = parse_float_input(cash_5_raw) if parse_float_input(cash_5_raw) is not None else 0.0
-p5 = parse_float_input(price_5_raw) if parse_float_input(price_5_raw) is not None else 0.0
-
-raw_data = [
-    {"ไม้ที่": 1, "cash": c1, "price": p1},
-    {"ไม้ที่": 2, "cash": c2, "price": p2},
-    {"ไม้ที่": 3, "cash": c3, "price": p3},
-    {"ไม้ที่": 4, "cash": c4, "price": p4},
-    {"ไม้ที่": 5, "cash": c5, "price": p5}
-]
-
-rows = []
-chart_labels = []
-chart_values = []
-total_invest_cash = 0.0
-total_coins = 0.0
-total_buy_fee = 0.0
-
-for item in raw_data:
-    if item["cash"] > 0 and item["price"] > 0:
-        fee = item["cash"] * FEE_RATE
-        net_buy = item["cash"] - fee
-        coins_received = net_buy / item["price"]
-        
-        total_invest_cash += item["cash"]
-        total_buy_fee += fee
-        total_coins += coins_received
-        
-        rows.append({
-            "ไม้ที่": f"ไม้ {item['ไม้ที่']}",
-            "เงินทุนซื้อ (บาท)": f"{item['cash']:,.2f}",
-            "ราคาตอนซื้อ": format_smart_clean(item['price']),
-            "ค่าธรรมเนียมซื้อ (0.25%)": f"{fee:,.2f}",
-            "เหรียญที่ได้รับ": format_smart_clean(coins_received)
-        })
-        
-        chart_labels.append(f"ไม้ {item['ไม้ที่']}")
-        chart_values.append(item["cash"])
-
-avg_cost_per_coin = total_invest_cash / total_coins if total_coins > 0 else 0.0
-
-# ----------------------------------------------------
-# 🟨 ฝั่งซ้าย [OUTPUT]: ประมวลผลพอร์ตและความคุ้มทุน
-# ----------------------------------------------------
-with col_result:
-    st.markdown("<h3 style='color: #00FFCC; font-size: 16px; font-weight: 700; margin-bottom: 15px;'>📊 [OUTPUT] ประมวลผลพอร์ตและความคุ้มทุน</h3>", unsafe_allow_html=True)
-    
-    # 🌟 ส่วนที่ 1: จำลองเป้าหมายราคาตั้งขาย (ใช้ช่องกรอกสะอาด ไม่มีศูนย์ต่อท้าย)
-    st.markdown("<h4 style='color: #ffffff; font-size: 13px; font-weight: 600; margin-bottom: 4px;'>🎯 1. จำลองเป้าหมายราคาตั้งขาย</h4>", unsafe_allow_html=True)
-    
-    target_sell_price_raw = st.text_input(
-        "พิมพ์กรอกราคาเหรียญที่ต้องการตั้งขายจริงในกระดาน (บาท):",
-        key="target_sell_str",
-        placeholder="เช่น 47.10 หรือ 2.28"
-    )
-    
-    t_sell = parse_float_input(target_sell_price_raw)
-    target_sell_price = t_sell if t_sell is not None else 0.0
-    
-    # คำนวณผลลัพธ์ฝั่งตั้งขาย
-    gross_sell_revenue = total_coins * target_sell_price
-    sell_fee = gross_sell_revenue * FEE_RATE
-    net_sell_revenue = gross_sell_revenue - sell_fee 
-    
-    if total_invest_cash > 0:
-        pnl_baht = net_sell_revenue - total_invest_cash
-        pnl_percent = (pnl_baht / total_invest_cash) * 100
-    else:
-        pnl_baht = 0.0
-        pnl_percent = 0.0
-        
-    status_color = "#00FF66" if pnl_baht >= 0 else "#FF3366"
-    status_bg = "rgba(0, 255, 102, 0.02)" if pnl_baht >= 0 else "rgba(255, 51, 102, 0.02)"
-    status_sign = "+" if pnl_baht >= 0 else ""
-    
-    st.markdown(f"""
-    <div style='background-color:{status_bg}; padding:18px; border-radius:12px; border: 1px solid #1e2942; border-left:5px solid {status_color}; box-shadow: 0 8px 16px rgba(0,0,0,0.4); margin-bottom: 25px;'>
-        <h4 style='color:white; margin-top:0px; font-size:13px; font-weight:700; margin-bottom:10px;'>📍 TARGET ANALYSIS: ราคา {format_smart_clean(target_sell_price)} บาท</h4>
-        <table style='width:100%; color:white; font-size:13px; border-collapse: collapse;'>
-            <tr style='border-bottom: 1px solid #1e2942;'>
-                <td style='padding:6px 0; color:#64748b;'>💵 ยอดขายรวม (ก่อนหักค่าฟี):</td>
-                <td style='text-align:right; font-weight:600;'>{gross_sell_revenue:,.2f} บาท</td>
-            </tr>
-            <tr style='border-bottom: 1px solid #1e2942;'>
-                <td style='padding:6px 0; color:#64748b;'>📉 หักค่าธรรมเนียมฝั่งขาย (0.25%):</td>
-                <td style='text-align:right; color:#FF3366;'>- {sell_fee:,.2f} บาท</td>
-            </tr>
-            <tr style='border-bottom: 2px solid #1e2942;'>
-                <td style='padding:8px 0; color:#00E5FF; font-weight:bold;'>💰 ยอดเงินเข้าบัญชีสุทธิ (หักฟีแล้ว):</td>
-                <td style='text-align:right; color:#00E5FF; font-size:15px; font-weight:bold;'>{net_sell_revenue:,.2f} บาท</td>
-            </tr>
-            <tr>
-                <td style='padding:10px 0 0 0; color:{status_color}; font-weight:bold;'>📈 NET PROFIT / LOSS:</td>
-                <td style='text-align:right; color:{status_color}; font-size:18px; font-weight:900; padding-top:6px;'>
-                    {status_sign}{pnl_percent:,.2f}% ({status_sign}{pnl_baht:,.2f} บาท)
-                </td>
-            </tr>
-        </table>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # 🌟 ส่วนที่ 2: สรุปแดชบอร์ดต้นทุนเฉลี่ยสุทธิ
-    st.markdown("<h4 style='color: #ffffff; font-size: 13px; font-weight: 600; margin-bottom: 10px;'>🎯 2. สรุปแดชบอร์ดต้นทุนเฉลี่ยสุทธิ</h4>", unsafe_allow_html=True)
-    
-    if len(rows) > 0:
-        # 🌟 [แก้ไขแก้เบียดตกขอบ]: เปลี่ยนมาใช้การสตรีม Layout แบบ 1 คอลัมน์กว้างๆ แล้วแบ่ง Grid ด้านในด้วย HTML 
-        # ทำให้ไม่ว่าจะแสดงผลบนหน้าจอขนาดไหน การ์ดข้อมูลทั้ง 3 ใบจะยืดหยุ่นตามพื้นที่จริง ไม่หดหายไปไหนแน่นอนครับพี่!
-        st.markdown(f"""
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 15px;">
-            <div class='neon-card'>
-                <div class='neon-lbl'>💰 เงินทุนรวมทั้งหมด</div>
-                <div class='neon-val'>{total_invest_cash:,.2f} <span style='font-size:10px; color:#64748b;'>บ.</span></div>
-                <div style='color:#475569; font-size:10px; margin-top:3px;'>ฟีซื้อรวม {total_buy_fee:,.2f}</div>
-            </div>
-            <div class='neon-card'>
-                <div class='neon-lbl'>🪙 จำนวนเหรียญในมือ</div>
-                <div class='neon-val' style='color:#00E5FF;'>{format_smart_clean(total_coins)}</div>
-                <div style='color:#475569; font-size:10px; margin-top:3px;'>สุทธิหักฟีแล้ว</div>
-            </div>
-            <div class='neon-card' style='border-color: #00FFCC;'>
-                <div class='neon-lbl' style='color:#00FFCC;'>🏷️ ต้นทุนเฉลี่ย / เหรียญ</div>
-                <div class='neon-val' style='color:#00FFCC;'>{format_smart_clean(avg_cost_per_coin)}</div>
-                <div style='color:#00FFCC; font-size:9px; margin-top:3px; font-weight:600;'>*BREAK-EVEN</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-            
-        # ตารางรายไม้สุทธิ
-        df = pd.DataFrame(rows)
-        st.table(df)
-        
-        # กราฟวงกลมแสดงสัดส่วนใต้ตาราง
-        fig_donut = go.Figure(data=[go.Pie(
-            labels=chart_labels, 
-            values=chart_values, 
-            hole=.45,
-            textinfo='percent',
-            marker=dict(colors=['#00FFCC', '#00E5FF', '#3366FF', '#9933FF', '#FF3366'],
-                        line=dict(color='#060913', width=2)),
-            hoverinfo='label+value+percent',
-            textfont=dict(color='#ffffff', size=11)
-        )])
-        fig_donut.update_layout(
-            showlegend=True,
-            legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="center", x=0.5, font=dict(color="#64748b", size=10)),
-            margin=dict(t=5, b=5, l=5, r=5),
-            height=150,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)'
-        )
-        st.plotly_chart(fig_donut, use_container_width=True, config={'displayModeBar': False})
-        
-    else:
-        st.info("💡 SYSTEMS READY: กรุณากรอกจำนวนเงินทุนและราคาเหรียญในฝั่งขวา เพื่อเปิดระบบประมวลผลพอร์ตครับ")
+st.markdown("<h1 style='text-align: center; color: #00FFCC; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 12

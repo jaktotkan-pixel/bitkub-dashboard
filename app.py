@@ -266,4 +266,22 @@ with col_input:
         st.session_state.c2_val, st.session_state.p2_val = c2_in, p2_in
         
     with st.expander("🪵 รายละเอียด ไม้ที่ 3", expanded=False):
-        c3_in = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 3
+        c3_in = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 3 (บาท):", value=st.session_state.c3_val, key="c3_input")
+        p3_in = st.text_input("ราคาเหรียญตอนซื้อ ไม้ 3 (บาท):", value=st.session_state.p3_val, key="p3_input")
+        st.session_state.c3_val, st.session_state.p3_val = c3_in, p3_in
+        
+    with st.expander("🪵 รายละเอียด ไม้ที่ 4", expanded=False):
+        c4_in = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 4 (บาท):", value=st.session_state.c4_val, key="c4_input")
+        p4_in = st.text_input("ราคาเหรียญตอนซื้อ ไม้ 4 (บาท):", value=st.session_state.p4_val, key="p4_input")
+        st.session_state.c4_val, st.session_state.p4_val = c4_in, p4_in
+        
+    with st.expander("🪵 รายละเอียด ไม้ที่ 5", expanded=False):
+        c5_in = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 5 (บาท):", value=st.session_state.c5_val, key="c5_input")
+        p5_in = st.text_input("ราคาเหรียญตอนซื้อ ไม้ 5 (บาท):", value=st.session_state.p5_val, key="p5_input")
+        st.session_state.c5_val, st.session_state.p5_val = c5_in, p5_in
+
+# สั่งให้แอปรีรันข้ามสเต็ปอย่างเสถียรเมื่อมีการแก้ข้อความใน text_input ล่าสุด
+if (c1_in != cash_1_raw or p1_in != price_1_raw or c2_in != cash_2_raw or p2_in != price_2_raw or 
+    c3_in != cash_3_raw or p3_in != price_3_raw or c4_in != cash_4_raw or p4_in != price_4_raw or 
+    c5_in != cash_5_raw or p5_in != price_5_raw or target_sell_raw != st.session_state.ts_val):
+    st.rerun()

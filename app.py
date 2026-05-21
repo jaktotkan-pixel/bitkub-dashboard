@@ -30,7 +30,7 @@ st.markdown("""
     .neon-lbl { font-size: 13px; color: #64748b; margin-bottom: 6px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
     .neon-val { font-size: 26px; font-weight: bold; color: #ffffff; }
     
-    /* ตกแต่งกล่องอินพุตฝั่งซ้าย (Expander) ให้ดุดันเข้าธีม */
+    /* ตกแต่งกล่องอินพุตฝั่งขวา (Expander) ให้ดุดันเข้าธีม */
     .stExpander {
         background-color: #0d1224 !important;
         border: 1px solid #1e2942 !important;
@@ -47,7 +47,7 @@ st.markdown("""
         color: #00FFCC !important;
     }
     
-    /* ตกแต่งตารางแสดงผลฝั่งซื้อ */
+    /* ตกแต่งตารางแสดงผล */
     .stTable {
         background-color: #0d1224;
         border: 1px solid #1e2942;
@@ -95,37 +95,30 @@ def safe_float(val_str, default=0.0):
 # กำหนดอัตราค่าธรรมเนียม Bitkub (0.25%)
 FEE_RATE = 0.0025
 
-# สร้างสัดส่วนหน้าจอ ฝั่งซ้าย (Input ข้อมูล) และ ฝั่งขวา (สรุปผลและจำลองเป้าหมาย)
-col_input, col_result = st.columns([1, 1.25])
+# --- สลับ Layout สับฝั่งตามสั่ง ---
+# สัดส่วนหน้าจอ: ฝั่งซ้าย (โชว์ผลลัพธ์และจำลองเป้าหมาย) และ ฝั่งขวา (กล่องกรอกอินพุตรายไม้)
+col_result, col_input = st.columns([1.25, 1])
 
-with col_input:
-    st.markdown("<h3 style='color: #00FFCC; font-size: 17px; font-weight: 700; margin-bottom: 15px; letter-spacing: 0.5px;'>📥 [INPUT] บันทึกรายการเข้าซื้อ</h3>", unsafe_allow_html=True)
-    
-    # 💡 เคลียร์ค่าเริ่มต้นของราคาตอนซื้อตรงไม้ต่างๆ ให้เป็น "0.00" คลีนๆ ทั้งหมดแล้วครับ
-    with st.expander("🪵 รายละเอียด ไม้ที่ 1", expanded=True):
-        cash_1_raw = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 1 (บาท):", value="2600.00", key="c1")
-        price_1_raw = st.text_input("ราคาเหรียญตอนซื้อ ไม้ 1 (บาท):", value="47.55", key="p1")
-        cash_1, price_1 = safe_float(cash_1_raw, 2600.0), safe_float(price_1_raw, 47.55)
-    
-    with st.expander("🪵 รายละเอียด ไม้ที่ 2", expanded=False):
-        cash_2_raw = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 2 (บาท):", value="0.00", key="c2")
-        price_2_raw = st.text_input("ราคาเหรียญตอนซื้อ ไม้ 2 (บาท):", value="0.00", key="p2")
-        cash_2, price_2 = safe_float(cash_2_raw, 0.0), safe_float(price_2_raw, 0.0)
-        
-    with st.expander("🪵 รายละเอียด ไม้ที่ 3", expanded=False):
-        cash_3_raw = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 3 (บาท):", value="0.00", key="c3")
-        price_3_raw = st.text_input("ราคาเหรียญตอนซื้อ ไม้ 3 (บาท):", value="0.00", key="p3")
-        cash_3, price_3 = safe_float(cash_3_raw, 0.0), safe_float(price_3_raw, 0.0)
-        
-    with st.expander("🪵 รายละเอียด ไม้ที่ 4", expanded=False):
-        cash_4_raw = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 4 (บาท):", value="0.00", key="c4")
-        price_4_raw = st.text_input("ราคาเหรียญตอนซื้อ ไม้ 4 (บาท):", value="0.00", key="p4")
-        cash_4, price_4 = safe_float(cash_4_raw, 0.0), safe_float(price_4_raw, 0.0)
-        
-    with st.expander("🪵 รายละเอียด ไม้ที่ 5", expanded=False):
-        cash_5_raw = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 5 (บาท):", value="0.00", key="c5")
-        price_5_raw = st.text_input("ราคาเหรียญตอนซื้อ ไม้ 5 (บาท):", value="0.00", key="p5")
-        cash_5, price_5 = safe_float(cash_5_raw, 0.0), safe_float(price_5_raw, 0.0)
+# --- ประมวลผลข้อมูลล่วงหน้าเพื่อให้ฝั่งซ้ายเรียกใช้ค่าคำนวณได้ทันที ---
+# (ดึงข้อมูลโครงสร้างอินพุตมาจากสคริปต์เพื่อให้ระบบประมวลผลก่อนเรนเดอร์หน้าจอ)
+if "c1_val" not in st.session_state: st.session_state.c1_val = "2600.00"
+if "p1_val" not in st.session_state: st.session_state.p1_val = "0.00019456"
+if "c2_val" not in st.session_state: st.session_state.c2_val = "0.00"
+if "p2_val" not in st.session_state: st.session_state.p2_val = "0.00"
+if "c3_val" not in st.session_state: st.session_state.c3_val = "0.00"
+if "p3_val" not in st.session_state: st.session_state.p3_val = "0.00"
+if "c4_val" not in st.session_state: st.session_state.c4_val = "0.00"
+if "p4_val" not in st.session_state: st.session_state.p4_val = "0.00"
+if "c5_val" not in st.session_state: st.session_state.c5_val = "0.00"
+if "p5_val" not in st.session_state: st.session_state.p5_val = "0.00"
+if "ts_val" not in st.session_state: st.session_state.ts_val = "0.00021000"
+
+# โครงสร้างตัวแปรเพื่อเก็บค่าคำนวณหลังบ้าน
+cash_1, price_1 = safe_float(st.session_state.c1_val, 2600.0), safe_float(st.session_state.p1_val, 0.00019456)
+cash_2, price_2 = safe_float(st.session_state.c2_val, 0.0), safe_float(st.session_state.p2_val, 0.0)
+cash_3, price_3 = safe_float(st.session_state.c3_val, 0.0), safe_float(st.session_state.p3_val, 0.0)
+cash_4, price_4 = safe_float(st.session_state.c4_val, 0.0), safe_float(st.session_state.p4_val, 0.0)
+cash_5, price_5 = safe_float(st.session_state.c5_val, 0.0), safe_float(st.session_state.p5_val, 0.0)
 
 raw_data = [
     {"ไม้ที่": 1, "input_cash": cash_1, "buy_price": price_1},
@@ -158,15 +151,71 @@ for item in raw_data:
             "เหรียญที่ได้รับ": f"{coins_received:,.4f}"
         })
 
+avg_cost_per_coin = total_invest_cash / total_coins if total_coins > 0 else 0.0
+
+# ----------------------------------------------------
+# 🟨 ฝั่งซ้าย [OUTPUT] ย้ายกลุ่มวิเคราะห์เป้าหมายขึ้นมาข้างบนสุดตามสั่ง
+# ----------------------------------------------------
 with col_result:
-    st.markdown("<h3 style='color: #00FFCC; font-size: 17px; font-weight: 700; margin-bottom: 15px; letter-spacing: 0.5px;'>📊 [OUTPUT] ประมวลผลพอร์ตฝั่งซื้อ</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color: #00FFCC; font-size: 17px; font-weight: 700; margin-bottom: 15px; letter-spacing: 0.5px;'>📊 [OUTPUT] ประมวลผลพอร์ตและความคุ้มทุน</h3>", unsafe_allow_html=True)
+    
     if len(rows) > 0:
-        df = pd.DataFrame(rows)
-        st.table(df)
+        # ส่วนจำลองเป้าหมายราคาตั้งขาย (ย้ายขึ้นมาอยู่บนสุดของฝั่งซ้าย)
+        st.markdown("<h4 style='color: #ffffff; font-size: 14px; font-weight: 600; margin-bottom: 12px; letter-spacing: 0.5px;'>🎯 1. จำลองเป้าหมายราคาตั้งขาย</h4>", unsafe_allow_html=True)
         
-        avg_cost_per_coin = total_invest_cash / total_coins if total_coins > 0 else 0.0
+        # ปรับตัวแปรเป้าหมายเริ่มต้นให้ตรงตามราคาเฉลี่ยปัจจุบันหากยังไม่มีการแก้ไข
+        if st.session_state.ts_val == "0.00021000" and avg_cost_per_coin > 0 and st.session_state.ts_val == "0.00021000":
+            default_sell_str = "0.00021000" # ล็อกค่าตามภาพตัวอย่างเดิมของพี่ หรือใช้ format_smart(avg_cost_per_coin) ได้
+        else:
+            default_sell_str = st.session_state.ts_val
+            
+        target_sell_raw = st.text_input(
+            "พิมพ์กรอกราคาเหรียญที่ต้องการตั้งขายจริงในกระดาน (บาท):",
+            value=st.session_state.ts_val,
+            key="target_sell_input"
+        )
+        st.session_state.ts_val = target_sell_raw
+        target_sell_price = safe_float(target_sell_raw, avg_cost_per_coin)
         
-        st.markdown("<h4 style='color: #ffffff; font-size: 14px; font-weight: 600; margin-top: 25px; margin-bottom: 12px; letter-spacing: 0.5px;'>🎯 3. สรุปแดชบอร์ดต้นทุนเฉลี่ยสุทธิ</h4>", unsafe_allow_html=True)
+        gross_sell_revenue = total_coins * target_sell_price
+        sell_fee = gross_sell_revenue * FEE_RATE
+        net_sell_revenue = gross_sell_revenue - sell_fee 
+        
+        pnl_baht = net_sell_revenue - total_invest_cash
+        pnl_percent = (pnl_baht / total_invest_cash) * 100
+        
+        status_color = "#00FF66" if pnl_baht >= 0 else "#FF3366"
+        status_bg = "rgba(0, 255, 102, 0.03)" if pnl_baht >= 0 else "rgba(255, 51, 102, 0.03)"
+        status_sign = "+" if pnl_baht >= 0 else ""
+        
+        st.markdown(f"""
+        <div style='background-color:{status_bg}; padding:22px; border-radius:12px; border: 1px solid #1e2942; border-left:6px solid {status_color}; margin-top:5px; margin-bottom: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.4);'>
+            <h4 style='color:white; margin-top:0px; font-size:15px; font-weight:700; margin-bottom:15px; letter-spacing: 0.5px;'>📍 TARGET ANALYSIS: ราคา {format_smart(target_sell_price)} บาท</h4>
+            <table style='width:100%; color:white; font-size:14px; border-collapse: collapse;'>
+                <tr style='border-bottom: 1px solid #1e2942;'>
+                    <td style='padding:10px 0; color:#64748b; font-weight:500;'>💵 ยอดขายรวม (ก่อนหักฟี):</td>
+                    <td style='text-align:right; font-weight:600; font-size:15px;'>{gross_sell_revenue:,.2f} บาท</td>
+                </tr>
+                <tr style='border-bottom: 1px solid #1e2942;'>
+                    <td style='padding:10px 0; color:#64748b; font-weight:500;'>📉 ค่าธรรมเนียมฝั่งขาย (0.25%):</td>
+                    <td style='text-align:right; color:#FF3366; font-weight:600;'>- {sell_fee:,.2f} บาท</td>
+                </tr>
+                <tr style='border-bottom: 2px solid #1e2942;'>
+                    <td style='padding:14px 0; color:#00E5FF; font-weight:bold;'>💰 ยอดเงินเข้าบัญชีสุทธิ (หักฟีแล้ว):</td>
+                    <td style='text-align:right; color:#00E5FF; font-size:20px; font-weight:bold;'>{net_sell_revenue:,.2f} บาท</td>
+                </tr>
+                <tr>
+                    <td style='padding:16px 0 5px 0; color:{status_color}; font-weight:bold; font-size:16px; text-transform:uppercase; letter-spacing:0.5px;'>📈 NET PROFIT / LOSS:</td>
+                    <td style='text-align:right; color:{status_color}; font-size:24px; font-weight:black; padding-top:10px;'>
+                        {status_sign}{pnl_percent:,.2f}% ({status_sign}{pnl_baht:,.2f} บาท)
+                    </td>
+                </tr>
+            </table>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # ตารางแสดงผลฝั่งซื้อและบอร์ดสรุปต้นทุนเฉลี่ย
+        st.markdown("<h4 style='color: #ffffff; font-size: 14px; font-weight: 600; margin-bottom: 12px; letter-spacing: 0.5px;'>🎯 2. สรุปแดชบอร์ดต้นทุนเฉลี่ยสุทธิ</h4>", unsafe_allow_html=True)
         m1, m2, m3 = st.columns(3)
         with m1:
             st.markdown(f"""
@@ -193,55 +242,28 @@ with col_result:
             </div>
             """, unsafe_allow_html=True)
             
-        st.markdown("<div style='border-bottom: 1px solid #1e2942; margin: 25px 0;'></div>", unsafe_allow_html=True)
-        
-        st.markdown("<h3 style='color: #00FFCC; font-size: 17px; font-weight: 700; margin-bottom: 12px; letter-spacing: 0.5px;'>🎯 4. จำลองเป้าหมายราคาตั้งขาย</h3>", unsafe_allow_html=True)
-        
-        # 💡 ตรงเป้าหมาย: ดึงราคาเฉลี่ยที่ล้างเลข 0 ส่วนเกินออกแล้วมาตั้งต้นให้ในช่อง พิมพ์แก้ได้อิสระและคลีนแน่นอนครับ
-        default_sell_str = format_smart(avg_cost_per_coin).replace(',', '')
-        target_sell_raw = st.text_input(
-            "พิมพ์กรอกราคาเหรียญที่ต้องการตั้งขายจริงในกระดาน (บาท):",
-            value=default_sell_str,
-            key="target_sell"
-        )
-        target_sell_price = safe_float(target_sell_raw, avg_cost_per_coin)
-        
-        gross_sell_revenue = total_coins * target_sell_price
-        sell_fee = gross_sell_revenue * FEE_RATE
-        net_sell_revenue = gross_sell_revenue - sell_fee 
-        
-        pnl_baht = net_sell_revenue - total_invest_cash
-        pnl_percent = (pnl_baht / total_invest_cash) * 100
-        
-        status_color = "#00FF66" if pnl_baht >= 0 else "#FF3366"
-        status_bg = "rgba(0, 255, 102, 0.03)" if pnl_baht >= 0 else "rgba(255, 51, 102, 0.03)"
-        status_sign = "+" if pnl_baht >= 0 else ""
-        
-        st.markdown(f"""
-        <div style='background-color:{status_bg}; padding:22px; border-radius:12px; border: 1px solid #1e2942; border-left:6px solid {status_color}; margin-top:15px; box-shadow: 0 10px 20px rgba(0,0,0,0.4);'>
-            <h4 style='color:white; margin-top:0px; font-size:15px; font-weight:700; margin-bottom:15px; letter-spacing: 0.5px;'>📍 TARGET ANALYSIS: ราคา {format_smart(target_sell_price)} บาท</h4>
-            <table style='width:100%; color:white; font-size:14px; border-collapse: collapse;'>
-                <tr style='border-bottom: 1px solid #1e2942;'>
-                    <td style='padding:10px 0; color:#64748b; font-weight:500;'>💵 ยอดขายรวม (ก่อนหักฟี):</td>
-                    <td style='text-align:right; font-weight:600; font-size:15px;'>{gross_sell_revenue:,.2f} บาท</td>
-                </tr>
-                <tr style='border-bottom: 1px solid #1e2942;'>
-                    <td style='padding:10px 0; color:#64748b; font-weight:500;'>📉 ค่าธรรมเนียมฝั่งขาย (0.25%):</td>
-                    <td style='text-align:right; color:#FF3366; font-weight:600;'>- {sell_fee:,.2f} บาท</td>
-                </tr>
-                <tr style='border-bottom: 2px solid #1e2942;'>
-                    <td style='padding:14px 0; color:#00E5FF; font-weight:bold;'>💰 ยอดเงินเข้าบัญชีสุทธิ (หักฟีแล้ว):</td>
-                    <td style='text-align:right; color:#00E5FF; font-size:20px; font-weight:bold;'>{net_sell_revenue:,.2f} บาท</td>
-                </tr>
-                <tr>
-                    <td style='padding:16px 0 5px 0; color:{status_color}; font-weight:bold; font-size:16px; text-transform:uppercase; letter-spacing:0.5px;'>📈 Net Profit / Loss:</td>
-                    <td style='text-align:right; color:{status_color}; font-size:24px; font-weight:black; padding-top:10px;'>
-                        {status_sign}{pnl_percent:,.2f}% ({status_sign}{pnl_baht:,.2f} บาท)
-                    </td>
-                </tr>
-            </table>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("<h4 style='color: #ffffff; font-size: 14px; font-weight: 600; margin-top: 15px; margin-bottom: 12px; letter-spacing: 0.5px;'>🎯 3. รายละเอียดประมวลผลฝั่งซื้อ</h4>", unsafe_allow_html=True)
+        df = pd.DataFrame(rows)
+        st.table(df)
         
     else:
-        st.info("💡 SYSTEMS READY: กรุณากรอกจำนวนเงินทุนใน 'ไม้ที่ 1' ฝั่งซ้ายมือ เพื่อเริ่มต้นระบบคำนวณครับ")
+        st.info("💡 SYSTEMS READY: กรุณากรอกจำนวนเงินทุนใน 'ไม้ที่ 1' ฝั่งขวามือ เพื่อเริ่มต้นระบบคำนวณครับ")
+
+# ----------------------------------------------------
+# 🔴 ฝั่งขวา [INPUT] ย้ายกล่องกรอกข้อมูลรายไม้มาไว้ฝั่งนี้
+# ----------------------------------------------------
+with col_input:
+    st.markdown("<h3 style='color: #00FFCC; font-size: 17px; font-weight: 700; margin-bottom: 15px; letter-spacing: 0.5px;'>📥 [INPUT] บันทึกรายการเข้าซื้อ</h3>", unsafe_allow_html=True)
+    
+    with st.expander("🪵 รายละเอียด ไม้ที่ 1", expanded=True):
+        c1_in = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 1 (บาท):", value=st.session_state.c1_val, key="c1_input")
+        p1_in = st.text_input("ราคาเหรียญตอนซื้อ ไม้ 1 (บาท):", value=st.session_state.p1_val, key="p1_input")
+        st.session_state.c1_val, st.session_state.p1_val = c1_in, p1_in
+    
+    with st.expander("🪵 รายละเอียด ไม้ที่ 2", expanded=False):
+        c2_in = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 2 (บาท):", value=st.session_state.c2_val, key="c2_input")
+        p2_in = st.text_input("ราคาเหรียญตอนซื้อ ไม้ 2 (บาท):", value=st.session_state.p2_val, key="p2_input")
+        st.session_state.c2_val, st.session_state.p2_val = c2_in, p2_in
+        
+    with st.expander("🪵 รายละเอียด ไม้ที่ 3", expanded=False):
+        c3_in = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 3

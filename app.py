@@ -165,4 +165,122 @@ avg_cost_per_coin = total_invest_cash / total_coins if total_coins > 0 else 0.0
 # 🟨 ฝั่งซ้าย [OUTPUT]: ประมวลผลพอร์ตและความคุ้มทุน (โครงสร้างเดิม)
 # ----------------------------------------------------
 with col_result:
-    st.markdown("<h3 style='color: #00FFCC; font-size: 16px; font-weight: 700; margin-bottom: 15px;'>📊 [OUTPUT] ประมวลผลพอร์ตและความ
+    st.markdown("<h3 style='color: #00FFCC; font-size: 16px; font-weight: 700; margin-bottom: 15px;'>📊 [OUTPUT] ประมวลผลพอร์ตและความคุ้มทุน</h3>", unsafe_allow_html=True)
+    
+    # 🌟 ส่วนที่ 1: จำลองเป้าหมายราคาตั้งขาย
+    st.markdown("<h4 style='color: #ffffff; font-size: 13px; font-weight: 600; margin-bottom: 4px;'>🎯 1. จำลองเป้าหมายราคาตั้งขาย</h4>", unsafe_allow_html=True)
+    
+    # ช่องพิมพ์กรอกราคาขายเริ่มต้นที่ช่องว่างเปล่า (None) พิมพ์ง่ายไม่ต้องคอยกดลบเลขเดิม
+    target_sell_price_raw = st.number_input(
+        "พิมพ์กรอกราคาเหรียญที่ต้องการตั้งขายจริงในกระดาน (บาท):",
+        min_value=0.0,
+        value=None,
+        format="%.8f",
+        step=0.0001 if avg_cost_per_coin == 0 else (0.0001 if avg_cost_per_coin > 1 else 0.000001),
+        key="target_sell_num",
+        placeholder="กรอกราคาตั้งขายเพื่อจำลองกำไร..."
+    )
+    
+    target_sell_price = target_sell_price_raw if target_sell_price_raw is not None else 0.0
+    
+    # คำนวณผลลัพธ์ฝั่งตั้งขาย
+    gross_sell_revenue = total_coins * target_sell_price
+    sell_fee = gross_sell_revenue * FEE_RATE
+    net_sell_revenue = gross_sell_revenue - sell_fee 
+    
+    if total_invest_cash > 0:
+        pnl_baht = net_sell_revenue - total_invest_cash
+        pnl_percent = (pnl_baht / total_invest_cash) * 100
+    else:
+        pnl_baht = 0.0
+        pnl_percent = 0.0
+        
+    status_color = "#00FF66" if pnl_baht >= 0 else "#FF3366"
+    status_bg = "rgba(0, 255, 102, 0.02)" if pnl_baht >= 0 else "rgba(255, 51, 102, 0.02)"
+    status_sign = "+" if pnl_baht >= 0 else ""
+    
+    st.markdown(f"""
+    <div style='background-color:{status_bg}; padding:18px; border-radius:12px; border: 1px solid #1e2942; border-left:5px solid {status_color}; box-shadow: 0 8px 16px rgba(0,0,0,0.4); margin-bottom: 25px;'>
+        <h4 style='color:white; margin-top:0px; font-size:13px; font-weight:700; margin-bottom:10px;'>📍 TARGET ANALYSIS: ราคา {format_smart_clean(target_sell_price)} บาท</h4>
+        <table style='width:100%; color:white; font-size:13px; border-collapse: collapse;'>
+            <tr style='border-bottom: 1px solid #1e2942;'>
+                <td style='padding:6px 0; color:#64748b;'>💵 ยอดขายรวม (ก่อนหักค่าฟี):</td>
+                <td style='text-align:right; font-weight:600;'>{gross_sell_revenue:,.2f} บาท</td>
+            </tr>
+            <tr style='border-bottom: 1px solid #1e2942;'>
+                <td style='padding:6px 0; color:#64748b;'>📉 หักค่าธรรมเนียมฝั่งขาย (0.25%):</td>
+                <td style='text-align:right; color:#FF3366;'>- {sell_fee:,.2f} บาท</td>
+            </tr>
+            <tr style='border-bottom: 2px solid #1e2942;'>
+                <td style='padding:8px 0; color:#00E5FF; font-weight:bold;'>💰 ยอดเงินเข้าบัญชีสุทธิ (หักฟีแล้ว):</td>
+                <td style='text-align:right; color:#00E5FF; font-size:15px; font-weight:bold;'>{net_sell_revenue:,.2f} บาท</td>
+            </tr>
+            <tr>
+                <td style='padding:10px 0 0 0; color:{status_color}; font-weight:bold;'>📈 NET PROFIT / LOSS:</td>
+                <td style='text-align:right; color:{status_color}; font-size:18px; font-weight:900; padding-top:6px;'>
+                    {status_sign}{pnl_percent:,.2f}% ({status_sign}{pnl_baht:,.2f} บาท)
+                </td>
+            </tr>
+        </table>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # 🌟 ส่วนที่ 2: สรุปแดชบอร์ดต้นทุนเฉลี่ยสุทธิ (อยู่ถัดลงมาด้านล่างตามโครงสร้างเดิม)
+    st.markdown("<h4 style='color: #ffffff; font-size: 13px; font-weight: 600; margin-bottom: 10px;'>🎯 2. สรุปแดชบอร์ดต้นทุนเฉลี่ยสุทธิ</h4>", unsafe_allow_html=True)
+    
+    if len(rows) > 0:
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            st.markdown(f"""
+            <div class='neon-card'>
+                <div class='neon-lbl'>💰 เงินทุนรวมทั้งหมด</div>
+                <div class='neon-val' style='font-size:19px;'>{total_invest_cash:,.2f} <span style='font-size:11px; color:#64748b;'>THB</span></div>
+                <div style='color:#475569; font-size:11px; margin-top:3px;'>ฟีซื้อรวม {total_buy_fee:,.2f} บ.</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with m2:
+            st.markdown(f"""
+            <div class='neon-card'>
+                <div class='neon-lbl'>🪙 จำนวนเหรียญในมือ</div>
+                <div class='neon-val' style='color:#00E5FF; font-size:19px;'>{total_coins:,.4f}</div>
+                <div style='color:#475569; font-size:11px; margin-top:3px;'>เหรียญสุทธิหักฟีแล้ว</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with m3:
+            st.markdown(f"""
+            <div class='neon-card' style='border-color: #00FFCC; box-shadow: 0 0 12px rgba(0,255,204,0.12);'>
+                <div class='neon-lbl' style='color:#00FFCC; font-weight:bold;'>🏷️ ต้นทุนเฉลี่ย / เหรียญ</div>
+                <div class='neon-val' style='color:#00FFCC; font-size:19px;'>{format_smart_clean(avg_cost_per_coin)} <span style='font-size:11px; color:#00FFCC;'>บ.</span></div>
+                <div style='color:#00FFCC; font-size:10px; margin-top:3px; font-weight:600;'>*BREAK-EVEN PRICE</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        # ตารางแสดงข้อมูลรายไม้แบบสรุปความคุ้มทุน
+        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+        df = pd.DataFrame(rows)
+        st.table(df)
+        
+        # แสดงกราฟสัดส่วนเงินทุน Donut Chart แนบไว้ท้ายตาราง
+        st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+        fig_donut = go.Figure(data=[go.Pie(
+            labels=chart_labels, 
+            values=chart_values, 
+            hole=.45,
+            textinfo='percent',
+            marker=dict(colors=['#00FFCC', '#00E5FF', '#3366FF', '#9933FF', '#FF3366'],
+                        line=dict(color='#060913', width=2)),
+            hoverinfo='label+value+percent',
+            textfont=dict(color='#ffffff', size=11)
+        )])
+        fig_donut.update_layout(
+            showlegend=True,
+            legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="center", x=0.5, font=dict(color="#64748b", size=10)),
+            margin=dict(t=10, b=10, l=10, r=10),
+            height=160,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)'
+        )
+        st.plotly_chart(fig_donut, use_container_width=True, config={'displayModeBar': False})
+        
+    else:
+        st.info("💡 SYSTEMS READY: กรุณากรอกจำนวนเงินทุนและราคาเหรียญในฝั่งขวา เพื่อเปิดระบบประมวลผลพอร์ตครับ")

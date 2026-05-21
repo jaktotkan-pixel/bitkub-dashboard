@@ -33,7 +33,7 @@ st.markdown("<div style='border-bottom: 2px solid #1e2942; margin-bottom: 35px;'
 
 # รายชื่อเหรียญใน Bitkub สำหรับให้เลือกใน Dropdown
 BITKUB_COINS = [
-    "เลือกเหรียญ...", "ZEREBRO", "BTC", "ETH", "KUB", "XRP", "ADA", "SOL", "DOGE", "BNB", 
+    "เลือกเหรียญ...", "ZEREBRO", "BTC", "STO","ETH", "KUB", "XRP", "ADA", "SOL", "DOGE", "BNB", 
     "DOT", "GALA", "NEAR", "OP", "ARB", "AVAX", "LINK", "LTC", "IOST", "USDT"
 ]
 

@@ -23,7 +23,6 @@ st.markdown("""
         margin-bottom: 15px;
         transition: all 0.3s ease;
     }
-    /* เอฟเฟกต์เรืองแสงเวลาเอาเมาส์ไปชี้ */
     .neon-card:hover {
         border-color: #00FFCC;
         box-shadow: 0 0 15px rgba(0, 255, 204, 0.35);
@@ -40,7 +39,6 @@ st.markdown("""
         box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
     }
     
-    /* สไตล์ปุ่มและหัวข้อ Expander */
     .stExpander summary {
         font-weight: 600 !important;
         color: #e2e8f0 !important;
@@ -69,7 +67,7 @@ st.markdown("<h1 style='text-align: center; color: #00FFCC; font-weight: 900; le
 st.markdown("<p style='text-align: center; color: #64748b; font-size: 14px; font-weight: 500; letter-spacing: 0.5px;'>MULTI-TIER COST CALCULATOR • 5 ไม้ละเอียด (FEE 0.25%)</p>", unsafe_allow_html=True)
 st.markdown("<div style='border-bottom: 2px solid #1e2942; margin-bottom: 30px; box-shadow: 0 1px 5px rgba(0,255,204,0.1);'></div>", unsafe_allow_html=True)
 
-# ฟังก์ชันจัดปลอกทศนิยมอัจฉริยะ ป้องกันเลข 0 ลากหางยาวกวนใจ
+# ฟังก์ชันจัดปลอกทศนิยมอัจฉริยะ ป้องกันเลข 0 ลากหางยาว
 def format_smart(value):
     if value == 0:
         return "0.00"
@@ -87,6 +85,13 @@ def format_smart(value):
                 formatted = f"{formatted}.00"
         return formatted
 
+# ฟังก์ชันเซฟสำหรับแปลงข้อความกลับเป็นตัวเลข float
+def safe_float(val_str, default=0.0):
+    try:
+        return float(val_str.replace(',', '').strip())
+    except ValueError:
+        return default
+
 # กำหนดอัตราค่าธรรมเนียม Bitkub (0.25%)
 FEE_RATE = 0.0025
 
@@ -96,25 +101,31 @@ col_input, col_result = st.columns([1, 1.25])
 with col_input:
     st.markdown("<h3 style='color: #00FFCC; font-size: 17px; font-weight: 700; margin-bottom: 15px; letter-spacing: 0.5px;'>📥 [INPUT] บันทึกรายการเข้าซื้อ</h3>", unsafe_allow_html=True)
     
+    # 💡 เคลียร์ค่าเริ่มต้นของราคาตอนซื้อตรงไม้ต่างๆ ให้เป็น "0.00" คลีนๆ ทั้งหมดแล้วครับ
     with st.expander("🪵 รายละเอียด ไม้ที่ 1", expanded=True):
-        cash_1 = st.number_input("เงินทุนที่ใช้ซื้อ ไม้ 1 (บาท):", min_value=0.0, value=2600.0, step=100.0, key="c1")
-        price_1 = st.number_input("ราคาเหรียญตอนซื้อ ไม้ 1 (บาท):", min_value=0.00000001, value=47.55, format="%.8f", step=0.00000001, key="p1")
+        cash_1_raw = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 1 (บาท):", value="2600.00", key="c1")
+        price_1_raw = st.text_input("ราคาเหรียญตอนซื้อ ไม้ 1 (บาท):", value="47.55", key="p1")
+        cash_1, price_1 = safe_float(cash_1_raw, 2600.0), safe_float(price_1_raw, 47.55)
     
     with st.expander("🪵 รายละเอียด ไม้ที่ 2", expanded=False):
-        cash_2 = st.number_input("เงินทุนที่ใช้ซื้อ ไม้ 2 (บาท):", min_value=0.0, value=0.0, step=100.0, key="c2")
-        price_2 = st.number_input("ราคาเหรียญตอนซื้อ ไม้ 2 (บาท):", min_value=0.00000001, value=0.0001926, format="%.8f", step=0.00000001, key="p2")
+        cash_2_raw = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 2 (บาท):", value="0.00", key="c2")
+        price_2_raw = st.text_input("ราคาเหรียญตอนซื้อ ไม้ 2 (บาท):", value="0.00", key="p2")
+        cash_2, price_2 = safe_float(cash_2_raw, 0.0), safe_float(price_2_raw, 0.0)
         
     with st.expander("🪵 รายละเอียด ไม้ที่ 3", expanded=False):
-        cash_3 = st.number_input("เงินทุนที่ใช้ซื้อ ไม้ 3 (บาท):", min_value=0.0, value=0.0, step=100.0, key="c3")
-        price_3 = st.number_input("ราคาเหรียญตอนซื้อ ไม้ 3 (บาท):", min_value=0.00000001, value=43.0, format="%.8f", step=0.00000001, key="p3")
+        cash_3_raw = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 3 (บาท):", value="0.00", key="c3")
+        price_3_raw = st.text_input("ราคาเหรียญตอนซื้อ ไม้ 3 (บาท):", value="0.00", key="p3")
+        cash_3, price_3 = safe_float(cash_3_raw, 0.0), safe_float(price_3_raw, 0.0)
         
     with st.expander("🪵 รายละเอียด ไม้ที่ 4", expanded=False):
-        cash_4 = st.number_input("เงินทุนที่ใช้ซื้อ ไม้ 4 (บาท):", min_value=0.0, value=0.0, step=100.0, key="c4")
-        price_4 = st.number_input("ราคาเหรียญตอนซื้อ ไม้ 4 (บาท):", min_value=0.00000001, value=41.0, format="%.8f", step=0.00000001, key="p4")
+        cash_4_raw = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 4 (บาท):", value="0.00", key="c4")
+        price_4_raw = st.text_input("ราคาเหรียญตอนซื้อ ไม้ 4 (บาท):", value="0.00", key="p4")
+        cash_4, price_4 = safe_float(cash_4_raw, 0.0), safe_float(price_4_raw, 0.0)
         
     with st.expander("🪵 รายละเอียด ไม้ที่ 5", expanded=False):
-        cash_5 = st.number_input("เงินทุนที่ใช้ซื้อ ไม้ 5 (บาท):", min_value=0.0, value=0.0, step=100.0, key="c5")
-        price_5 = st.number_input("ราคาเหรียญตอนซื้อ ไม้ 5 (บาท):", min_value=0.00000001, value=39.0, format="%.8f", step=0.00000001, key="p5")
+        cash_5_raw = st.text_input("เงินทุนที่ใช้ซื้อ ไม้ 5 (บาท):", value="0.00", key="c5")
+        price_5_raw = st.text_input("ราคาเหรียญตอนซื้อ ไม้ 5 (บาท):", value="0.00", key="p5")
+        cash_5, price_5 = safe_float(cash_5_raw, 0.0), safe_float(price_5_raw, 0.0)
 
 raw_data = [
     {"ไม้ที่": 1, "input_cash": cash_1, "buy_price": price_1},
@@ -130,7 +141,7 @@ total_coins = 0.0
 total_buy_fee = 0.0
 
 for item in raw_data:
-    if item["input_cash"] > 0:
+    if item["input_cash"] > 0 and item["buy_price"] > 0:
         fee = item["input_cash"] * FEE_RATE
         net_buy = item["input_cash"] - fee
         coins_received = net_buy / item["buy_price"]
@@ -186,14 +197,14 @@ with col_result:
         
         st.markdown("<h3 style='color: #00FFCC; font-size: 17px; font-weight: 700; margin-bottom: 12px; letter-spacing: 0.5px;'>🎯 4. จำลองเป้าหมายราคาตั้งขาย</h3>", unsafe_allow_html=True)
         
-        target_sell_price = st.number_input(
+        # 💡 ตรงเป้าหมาย: ดึงราคาเฉลี่ยที่ล้างเลข 0 ส่วนเกินออกแล้วมาตั้งต้นให้ในช่อง พิมพ์แก้ได้อิสระและคลีนแน่นอนครับ
+        default_sell_str = format_smart(avg_cost_per_coin).replace(',', '')
+        target_sell_raw = st.text_input(
             "พิมพ์กรอกราคาเหรียญที่ต้องการตั้งขายจริงในกระดาน (บาท):",
-            min_value=0.00000001,
-            value=float(avg_cost_per_coin),
-            format="%.8f",
-            step=0.00000001,
+            value=default_sell_str,
             key="target_sell"
         )
+        target_sell_price = safe_float(target_sell_raw, avg_cost_per_coin)
         
         gross_sell_revenue = total_coins * target_sell_price
         sell_fee = gross_sell_revenue * FEE_RATE
@@ -202,7 +213,6 @@ with col_result:
         pnl_baht = net_sell_revenue - total_invest_cash
         pnl_percent = (pnl_baht / total_invest_cash) * 100
         
-        # ปรับธีมสีตามสถานะ กำไรเขียวนีออน / ขาดทุนแดงนีออน
         status_color = "#00FF66" if pnl_baht >= 0 else "#FF3366"
         status_bg = "rgba(0, 255, 102, 0.03)" if pnl_baht >= 0 else "rgba(255, 51, 102, 0.03)"
         status_sign = "+" if pnl_baht >= 0 else ""

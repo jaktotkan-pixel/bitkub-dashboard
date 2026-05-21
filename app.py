@@ -21,31 +21,26 @@ with col_input:
     # ไม้ที่ 1
     with st.expander("🪵 รายละเอียด ไม้ที่ 1", expanded=True):
         cash_1 = st.number_input("เงินทุนที่ใช้ซื้อ ไม้ 1 (บาท):", min_value=0.0, value=2600.0, step=100.0, key="c1")
-        # 🎯 ปรับราคาตอนซื้อให้กรอกและแสดงผลเป็น 8 ตำแหน่ง
         price_1 = st.number_input("ราคาเหรียญตอนซื้อ ไม้ 1 (บาท):", min_value=0.00000001, value=47.55000000, format="%.8f", step=0.00000001, key="p1")
     
     # ไม้ที่ 2
     with st.expander("🪵 รายละเอียด ไม้ที่ 2", expanded=False):
         cash_2 = st.number_input("เงินทุนที่ใช้ซื้อ ไม้ 2 (บาท):", min_value=0.0, value=0.0, step=100.0, key="c2")
-        # 🎯 ปรับราคาตอนซื้อให้กรอกและแสดงผลเป็น 8 ตำแหน่ง
         price_2 = st.number_input("ราคาเหรียญตอนซื้อ ไม้ 2 (บาท):", min_value=0.00000001, value=45.00000000, format="%.8f", step=0.00000001, key="p2")
         
     # ไม้ที่ 3
     with st.expander("🪵 รายละเอียด ไม้ที่ 3", expanded=False):
         cash_3 = st.number_input("เงินทุนที่ใช้ซื้อ ไม้ 3 (บาท):", min_value=0.0, value=0.0, step=100.0, key="c3")
-        # 🎯 ปรับราคาตอนซื้อให้กรอกและแสดงผลเป็น 8 ตำแหน่ง
         price_3 = st.number_input("ราคาเหรียญตอนซื้อ ไม้ 3 (บาท):", min_value=0.00000001, value=43.00000000, format="%.8f", step=0.00000001, key="p3")
         
     # ไม้ที่ 4
     with st.expander("🪵 รายละเอียด ไม้ที่ 4", expanded=False):
         cash_4 = st.number_input("เงินทุนที่ใช้ซื้อ ไม้ 4 (บาท):", min_value=0.0, value=0.0, step=100.0, key="c4")
-        # 🎯 ปรับราคาตอนซื้อให้กรอกและแสดงผลเป็น 8 ตำแหน่ง
         price_4 = st.number_input("ราคาเหรียญตอนซื้อ ไม้ 4 (บาท):", min_value=0.00000001, value=41.00000000, format="%.8f", step=0.00000001, key="p4")
         
     # ไม้ที่ 5
     with st.expander("🪵 รายละเอียด ไม้ที่ 5", expanded=False):
         cash_5 = st.number_input("เงินทุนที่ใช้ซื้อ ไม้ 5 (บาท):", min_value=0.0, value=0.0, step=100.0, key="c5")
-        # 🎯 ปรับราคาตอนซื้อให้กรอกและแสดงผลเป็น 8 ตำแหน่ง
         price_5 = st.number_input("ราคาเหรียญตอนซื้อ ไม้ 5 (บาท):", min_value=0.00000001, value=39.00000000, format="%.8f", step=0.00000001, key="p5")
 
 # รวบรวมข้อมูลและคำนวณรายละเอียดแต่ละไม้
@@ -73,7 +68,6 @@ for item in raw_data:
         total_buy_fee += fee
         total_coins += coins_received
         
-        # 🎯 ปรับการแสดงผลราคาในตารางสรุปเป็น 8 ตำแหน่ง และคงจำนวนเหรียญที่ได้ไว้ 4 ตำแหน่ง
         rows.append({
             "ไม้ที่": f"ไม้ {item['ไม้ที่']}",
             "เงินทุนซื้อ (บาท)": f"{item['input_cash']:,.2f}",
@@ -110,7 +104,6 @@ with col_result:
             </div>
             """, unsafe_allow_html=True)
         with m3:
-            # 🎯 ปรับกล่องสรุปต้นทุนเฉลี่ยสุดท้ายตรงกลางให้โชว์ 8 ตำแหน่ง
             st.markdown(f"""
             <div style='background-color:#0f172a; padding:15px; border-radius:8px; border:1px solid #00FFCC; text-align:center;'>
                 <div style='color:#00FFCC; font-size:13px; font-weight:bold;'>🏷️ ต้นทุนเฉลี่ย/เหรียญ</div>
@@ -123,15 +116,14 @@ with col_result:
         # โซนตั้งเป้าหมายราคาขายเพื่อดูผลกำไร
         st.subheader("🎯 4. จำลองเป้าหมายราคาตั้งขายเพื่อดูไรสุทธิ")
         
-        # ให้ Slider เริ่มต้นที่ราคาเฉลี่ยปัจจุบัน เพื่อให้เลื่อนดูง่าย
-        # 🎯 ปรับตัวเลื่อน (Slider) ให้ขยับทีละสเต็ปเล็กๆ และแสดงผลเป็น 8 ตำแหน่ง
-        target_sell_price = st.slider(
-            "เลื่อนปรับราคาเหรียญที่คุณตั้งใจจะกดขายจริง (บาท):",
-            min_value=float(avg_cost_per_coin * 0.7),
-            max_value=float(avg_cost_per_coin * 1.5),
+        # 🎯 เปลี่ยนจาก Slider มาเป็นช่องให้พิมพ์ใส่ตัวเลขเองโดยตรงเหมือนฝั่งซ้าย รองรับ 8 ตำแหน่ง
+        target_sell_price = st.number_input(
+            "พิมพ์กรอกราคาเหรียญที่ต้องการตั้งขายจริงในกระดาน (บาท):",
+            min_value=0.00000001,
             value=float(avg_cost_per_coin),
             format="%.8f",
-            step=0.00000001
+            step=0.00000001,
+            key="target_sell"
         )
         
         # คำนวณฝั่งขาย
@@ -147,7 +139,6 @@ with col_result:
         status_color = "#00FF66" if pnl_baht >= 0 else "#FF3366"
         status_sign = "+" if pnl_baht >= 0 else ""
         
-        # 🎯 ปรับหัวข้อสรุปการจำลองราคาตั้งขายให้แสดงเป็น 8 ตำแหน่ง
         st.markdown(f"""
         <div style='background-color:#161b22; padding:20px; border-radius:10px; border-left:6px solid {status_color}; margin-top:15px;'>
             <h4 style='color:white; margin-top:0px;'>📍 ผลลัพธ์จากการตั้งขายที่ราคา {target_sell_price:,.8f} บาท</h4>

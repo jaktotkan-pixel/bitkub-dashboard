@@ -1,265 +1,168 @@
 import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.graph_objects as [g]o
+from datetime import datetime, timedelta
 
-# --- 1. SETTING & CYBERPUNK CSS STYLE ---
-st.set_page_config(page_title="Candlestick B/S Signals Dashboard", layout="wide")
+# --- 1. SETUP PAGE & STYLE ---
+st.set_page_config(page_title="Crypto Candlestick Simulator", layout="wide")
 
 st.markdown("""
 <style>
-    /* พื้นหลังมืดสนิทสไตล์ Cyberpunk */
     .stApp {
         background-color: #0b0e14;
         color: #cbd5e1;
         font-family: 'Anuphan', sans-serif;
     }
-    
-    /* กล่องสัญญาณซื้อ (Buy) */
-    .signal-box-buy {
-        background: rgba(0, 255, 102, 0.03);
-        padding: 25px;
-        border-radius: 14px;
-        border: 1px solid #1e293b;
-        border-left: 6px solid #00ff66;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 20px rgba(0, 255, 102, 0.05);
-    }
-    
-    /* กล่องสัญญาณขาย (Sell) */
-    .signal-box-sell {
-        background: rgba(255, 59, 48, 0.03);
-        padding: 25px;
-        border-radius: 14px;
-        border: 1px solid #1e293b;
-        border-left: 6px solid #ff3b30;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 20px rgba(255, 59, 48, 0.05);
-    }
-    
-    /* หัวข้อ Badge */
-    .badge-buy {
-        background: rgba(0, 255, 102, 0.15);
-        color: #00ff66;
-        padding: 6px 14px;
-        border-radius: 6px;
-        font-weight: bold;
-        font-size: 14px;
+    .decision-card-buy {
+        background: rgba(0, 255, 102, 0.04);
         border: 1px solid #00ff66;
-    }
-    .badge-sell {
-        background: rgba(255, 59, 48, 0.15);
-        color: #ff3b30;
-        padding: 6px 14px;
-        border-radius: 6px;
-        font-weight: bold;
-        font-size: 14px;
-        border: 1px solid #ff3b30;
-    }
-    
-    /* --- แผงกล่องดำขนาดใหญ่สำหรับแสดงกราฟต่อเนื่อง --- */
-    .chart-sequence-card {
-        background-color: #05070a;
-        border: 2px solid #1e293b;
         border-radius: 12px;
-        padding: 30px 20px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 280px;
-        height: 100%;
+        padding: 20px;
+        margin-bottom: 20px;
     }
-
-    /* ตารางโครงสร้างกราฟแท่งเทียน */
-    .candle-table {
-        border: none !important;
-        margin: 0 auto;
-        width: auto;
-        border-collapse: collapse;
+    .decision-card-sell {
+        background: rgba(255, 59, 48, 0.04);
+        border: 1px solid #ff3b30;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
     }
-    .candle-table td {
-        border: none !important;
-        padding: 0 !important;
-        text-align: center !important;
-    }
-    
-    /* ตัวครอบจัดตารางเรียงแนวตั้งแยกส่วนไส้-เนื้อ */
-    .wick { width: 3px; background-color: #ffffff; margin: 0 auto; }
-    .wick-highlight { width: 3px; background-color: #00ff66; margin: 0 auto; box-shadow: 0 0 8px #00ff66; }
-    .wick-danger { width: 3px; background-color: #ff3b30; margin: 0 auto; box-shadow: 0 0 8px #ff3b30; }
-
-    /* ซ่อนปุ่มที่ไม่ได้ใช้งาน */
     .stDeployButton { display:none; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- HEADER ---
-st.markdown("<h1 style='text-align: center; color: #ffffff; font-weight: 800; margin-top: 10px;'>📊 CANDLESTICK SIGNALS DASHBOARD</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #64748b; font-size: 16px;'>จำลองชุดแนวโน้มราคาต่อเนื่อง 6 แท่งเทียนเพื่อวิเคราะห์พฤติกรรมราคา</p>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #ffffff; font-weight: 800;'>📈 CANDLESTICK PATTERN SIMULATOR</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #64748b; font-size: 16px;'>ระบบจำลองกราฟเทรดเสมือนจริงเพื่อฝึกการตัดสินใจเข้า Order ซื้อ (B) / ขาย (S)</p>", unsafe_allow_html=True)
 st.markdown("<div style='border-bottom: 1px solid #1e293b; margin-bottom: 30px;'></div>", unsafe_allow_html=True)
 
-tab1, tab2 = st.tabs(["🟢 วิเคราะห์ชุดสัญญาณซื้อ (Buy)", "🔴 วิเคราะห์ชุดสัญญาณขาย (Sell)"])
-
 # -----------------------------------------------------------------
-# 🟢 TAB 1: สัญญาณซื้อ (BUY SIGNALS - 6 CANDLES SEQUENCE)
+# 🗂️ฟังก์ชันสร้างข้อมูลกราฟจำลองเสมือนจริง (6-10 แท่งต่อเนื่อง)
 # -----------------------------------------------------------------
-with tab1:
-    st.markdown("<h3 style='color: #00ff66; margin-bottom: 20px;'>1. ชุดแท่งเทียนการเกิด Hammer (กลับตัวจากขาลงเป็นขาขึ้น)</h3>", unsafe_allow_html=True)
+def generate_mock_data(pattern_type="hammer"):
+    base_time = datetime.now() - timedelta(hours=10)
+    times = [base_time + timedelta(hours=i) for i in range(8)]
     
-    col1_text, col1_img = st.columns([1.3, 1.7])
-    with col1_text:
-        st.markdown(f"""
-        <div class="signal-box-buy" style="height: 100%;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <h4 style="color: #ffffff; margin: 0; font-size: 20px;">🔨 พฤติกรรมกราฟแบบ 6 แท่ง</h4>
-                <span class="badge-buy">SIGNAL B</span>
-            </div>
-            <p style="font-size:15px;"><strong>• แท่ง 1-3 (เทขาย):</strong> ราคาร่วงดิ่งลงต่อเนื่อง เกิดแท่งแดงเรียงตัวกันลงมา</p>
-            <p style="font-size:15px;"><strong>• แท่งที่ 4 (Hammer):</strong> ราคาเปิดปุ๊บโดนทุบลงไปลึกมาก แต่ท้ายชั่วโมงมีแรงซื้อวาฬดันสวนกลับขึ้นมาปิดด้านบน ทิ้งไส้ล่างยาวเฟี้ยว</p>
-            <p style="font-size:15px;"><strong>• แท่งที่ 5-6 (กลับตัวขึ้น):</strong> แรงซื้อไหลเข้าต่อเนื่อง ดันราคาปิดเป็นแท่งเขียวยาวสวนแนวโน้มเดิมขึ้นไป</p>
-            <p style="color: #00ff66; font-size:15px; margin-top:10px;"><strong>🎯 จุด Action (B):</strong> เข้าซื้อไม้ที่ 1 เมื่อจบแท่งที่ 5 คอนเฟิร์มเขียวครับ!</p>
-        </div>
-        """, unsafe_allow_html=True)
+    if pattern_type == "hammer":
+        # จำลองสถานการณ์ขาลง -> เกิดค้อน -> เด้งขึ้น
+        opens  = [45.0, 43.5, 42.0, 41.2, 38.5, 39.0, 41.5, 43.0]
+        highs  = [45.5, 44.0, 42.2, 41.5, 39.2, 41.0, 42.5, 44.2]
+        lows   = [43.0, 41.5, 40.0, 38.0, 34.0, 38.8, 40.5, 42.0]
+        closes = [43.5, 42.0, 41.2, 38.5, 39.0, 41.5, 43.0, 44.0]
+    else:
+        # จำลองสถานการณ์ขาขึ้น -> เกิดดาวตก -> ดิ่งลงเหว
+        opens  = [38.0, 40.2, 42.0, 43.8, 45.0, 44.8, 42.0, 39.5]
+        highs  = [40.5, 42.5, 44.0, 45.5, 50.0, 45.2, 42.5, 40.0]
+        lows   = [37.8, 40.0, 41.8, 43.5, 44.2, 41.5, 39.0, 37.0]
+        closes = [40.2, 42.0, 43.8, 45.0, 44.8, 42.0, 39.5, 37.5]
         
-    with col1_img:
-        # สังเกตตรงนี้ครับ เพิ่ม unsafe_allow_html=True เข้าไปแล้วเพื่อให้ฝั่งขวาเรนเดอร์แท่งเทียนสำเร็จ
-        st.markdown("""
-        <div class="chart-sequence-card">
-            <div style="display: flex; gap: 18px; align-items: flex-start; justify-content: center; width: 100%;">
-                
-                <div style="text-align:center; margin-top: 20px;">
-                    <table class="candle-table">
-                        <tr><td><div class="wick" style="height:15px;"></div></td></tr>
-                        <tr><td><div style="background-color:#ff3b30; width:30px; height:50px; border-radius:2px;"></div></td></tr>
-                        <tr><td><div class="wick" style="height:15px;"></div></td></tr>
-                    </table>
-                    <div style="font-size:12px; color:#64748b; margin-top:8px;">1.ลง</div>
-                </div>
+    df = pd.DataFrame({
+        'Time': times, 'Open': opens, 'High': highs, 'Low': lows, 'Close': closes
+    })
+    # คำนวณเส้นอินดิเคเตอร์จำลองให้เห็นทิศทางแนวโน้ม
+    df['EMA12'] = df['Close'].ewm(span=3, adjust=False).mean() # ปรับ span ให้สั้นลงเพื่อให้สอดคล้องกับแท่งเทียนจำลอง
+    df['EMA26'] = df['Close'].ewm(span=5, adjust=False).mean()
+    return df
 
-                <div style="text-align:center; margin-top: 50px;">
-                    <table class="candle-table">
-                        <tr><td><div class="wick" style="height:10px;"></div></td></tr>
-                        <tr><td><div style="background-color:#ff3b30; width:30px; height:55px; border-radius:2px;"></div></td></tr>
-                        <tr><td><div class="wick" style="height:10px;"></div></td></tr>
-                    </table>
-                    <div style="font-size:12px; color:#64748b; margin-top:8px;">2.ลงต่อ</div>
-                </div>
-
-                <div style="text-align:center; margin-top: 90px;">
-                    <table class="candle-table">
-                        <tr><td><div class="wick" style="height:10px;"></div></td></tr>
-                        <tr><td><div style="background-color:#ff3b30; width:30px; height:45px; border-radius:2px;"></div></td></tr>
-                        <tr><td><div class="wick" style="height:10px;"></div></td></tr>
-                    </table>
-                    <div style="font-size:12px; color:#64748b; margin-top:8px;">3.ทุบสุด</div>
-                </div>
-
-                <div style="text-align:center; margin-top: 105px;">
-                    <table class="candle-table">
-                        <tr><td><div style="background-color:#00ff66; width:32px; height:25px; border-radius:3px; box-shadow:0 0 15px rgba(0,255,102,0.8);"></div></td></tr>
-                        <tr><td><div class="wick-highlight" style="height:90px;"></div></td></tr>
-                    </table>
-                    <div style="font-size:13px; color:#00ff66; font-weight:bold; margin-top:8px;">4.ค้อน!</div>
-                </div>
-
-                <div style="text-align:center; margin-top: 55px;">
-                    <table class="candle-table">
-                        <tr><td><div class="wick" style="height:15px;"></div></td></tr>
-                        <tr><td><div style="background-color:#00ff66; width:30px; height:65px; border-radius:2px; box-shadow: 0 0 10px rgba(0,255,102,0.2);"></div></td></tr>
-                        <tr><td><div class="wick" style="height:15px;"></div></td></tr>
-                    </table>
-                    <div style="font-size:13px; color:#00ff66; font-weight:bold; margin-top:8px;">5.ซื้อ (B)</div>
-                </div>
-
-                <div style="text-align:center; margin-top: 15px;">
-                    <table class="candle-table">
-                        <tr><td><div class="wick" style="height:15px;"></div></td></tr>
-                        <tr><td><div style="background-color:#00ff66; width:30px; height:75px; border-radius:2px;"></div></td></tr>
-                        <tr><td><div class="wick" style="height:10px;"></div></td></tr>
-                    </table>
-                    <div style="font-size:12px; color:#64748b; margin-top:8px;">6.พุ่งยาว</div>
-                </div>
-
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+# เลือกโหมดที่ต้องการศึกษาหรือจำลองสถานการณ์
+mode = st.radio("⚡ เลือกสถานการณ์กราฟจำลองเพื่อฝึกตัดสินใจ:", ["🟢 จำลองจุดซื้อ (B) ด้วยรูปแบบ Hammer", "🔴 จำลองจุดขาย (S) ด้วยรูปแบบ Shooting Star"], horizontal=True)
 
 # -----------------------------------------------------------------
-# 🔴 TAB 2: สัญญาณขาย (SELL SIGNALS - 6 CANDLES SEQUENCE)
+# 🟢 MODE 1: HAMMER SIMULATION (จุดซื้อ B)
 # -----------------------------------------------------------------
-with tab2:
-    st.markdown("<h3 style='color: #ff3b30; margin-bottom: 20px;'>2. ชุดแท่งเทียนการเกิด Shooting Star (กลับตัวจากขาขึ้นเป็นดิ่งลง)</h3>", unsafe_allow_html=True)
+if mode == "🟢 จำลองจุดซื้อ (B) ด้วยรูปแบบ Hammer":
+    df = generate_mock_data("hammer")
     
-    col2_text, col2_img = st.columns([1.3, 1.7])
-    with col2_text:
-        st.markdown(f"""
-        <div class="signal-box-sell" style="height: 100%;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <h4 style="color: #ffffff; margin: 0; font-size: 20px;">☄️ พฤติกรรมกราฟแบบ 6 แท่ง</h4>
-                <span class="badge-sell">SIGNAL S</span>
-            </div>
-            <p style="font-size:15px;"><strong>• แท่ง 1-3 (ขาขึ้นล่อซื้อ):</strong> ราคาพุ่งทะยานขึ้นต่อเนื่องเป็นแท่งเขียว ดึงดูดรายย่อยให้ไล่ราคาเข้าซื้อ</p>
-            <p style="font-size:15px;"><strong>• แท่งที่ 4 (Shooting Star):</strong> ราคาทำท่าพุ่งแรงต่อแต่โดนแรงขายเจ้ามือทุบสวนคว่ำ ดึงราคาลงมาปิดข้างล่าง ทิ้งไส้บนยาวเตือนภัย</p>
-            <p style="font-size:15px;"><strong>• แท่งที่ 5-6 (เทกระจาด):</strong> แรงขายชนะขาดเกิดแท่งแดงใหญ่ลากดิ่งเหวทำลายรอบขาขึ้น</p>
-            <p style="color: #ff3b30; font-size:15px; margin-top:10px;"><strong>🎯 จุด Action (S):</strong> เจอแท่ง 5 ปิดแดงกินทุนลงมา ต้องตัดสินใจขายออกทันทีครับ!</p>
+    col1, col2 = st.columns([1.8, 1.2])
+    
+    with col1:
+        st.subheader("📊 กราฟจำลองสถานการณ์ตลาดเสมือนจริง")
+        
+        # วาดกราฟแท่งเทียนเสมือนจริงด้วย Plotly
+        fig = go.Figure(data=[go.Candlestick(
+            x=df['Time'].dt.strftime('%H:%M'),
+            open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'],
+            increasing_line_color='#00ff66', decreasing_line_color='#ff3b30',
+            name="ราคาเหรียญ"
+        )])
+        
+        # ใส่เส้น EMA 12 และ EMA 26 เข้าไปในกราฟ
+        fig.add_trace(go.Scatter(x=df['Time'].dt.strftime('%H:%M'), y=df['EMA12'], mode='lines', name='EMA 12 (เขียว)', line=dict(color='#00ff66', width=1.5)))
+        fig.add_trace(go.Scatter(x=df['Time'].dt.strftime('%H:%M'), y=df['EMA26'], mode='lines', name='EMA 26 (ส้ม)', line=dict(color='#ff9f0a', width=1.5)))
+        
+        # ปักหมุดลูกศรชี้จุดซื้อ (B) บนแท่งที่คอนเฟิร์มสัญญาณ
+        fig.add_annotation(
+            x=df['Time'].dt.strftime('%H:%M').iloc[5], y=df['Low'].iloc[5] - 1.5,
+            text="🎯 BUY POINT (B)<br>เข้าซื้อไม้ที่ 1", showarrow=True,
+            arrowhead=2, arrowcolor="#00ff66", bgcolor="#00ff66", font=dict(color="black", size=12),
+            bordercolor="#00ff66", borderwidth=1, borderpad=4, ay=-40
+        )
+        
+        fig.update_layout(
+            plot_bgcolor='#05070a', paper_bgcolor='#05070a',
+            xaxis_rangeslider_visible=False, font=dict(color='#cbd5e1'),
+            margin=dict(l=20, r=20, t=20, b=20), height=450
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        st.subheader("💡 คู่มือวิเคราะห์เพื่อตัดสินใจออก Order")
+        st.markdown("""
+        <div class="decision-card_buy" style="border-left: 6px solid #00ff66; padding-left:15px; background:rgba(0,255,102,0.02);">
+            <h4 style="color:#00ff66;">🔍 วิธีการมองหน้างานจริง:</h4>
+            <p><b>1. สังเกตแนวโน้มหลักก่อนหน้า:</b> กราฟ 4 แท่งแรกไหลลงต่อเนื่อง เส้น EMA ม้วนหัวลง แสดงว่าฝั่งขายคุมตลาดอยู่</p>
+            <p><b>2. จุดเกิดแท่งค้อน (แท่งที่ 5):</b> ราคาเปิดมาปุ๊บโดนลากลงไปลึกมาก (ทิ้งไส้ล่างยาวเรียว) ก่อนจะมี <b>'แรงซื้อปริศนา'</b> ดันราคากลับขึ้นมาปิดจุดบนสุด เกิดพฤติกรรมปฏิเสธราคาต่ำ</p>
+            <p><b>3. แท่งคอนเฟิร์ม (แท่งที่ 6):</b> ดีดตัวขึ้นมาปิดเป็นแท่งเขียวเหนือหัวค้อนได้อย่างสวยงาม พร้อมเส้น EMA 12 เริ่มหักหัวกลับขึ้นมา</p>
+            <h4 style="color:#ffffff; margin-top:15px;">🛠️ สรุปแผนเข้าออเดอร์ (Decision Making):</h4>
+            <p style="color:#00ff66; font-size:16px; font-weight:bold;">👉 จังหวะนี้ สัญญาณคอนเฟิร์มครบถ้วน! สามารถกดเข้าเปิดออเดอร์ซื้อ (Buy Order) ไม้ที่ 1 ได้ทันทีที่ราคาปิดแท่งเขียวนี้ครับ</p>
         </div>
         """, unsafe_allow_html=True)
+
+# -----------------------------------------------------------------
+# 🔴 MODE 2: SHOOTING STAR SIMULATION (จุดขาย S)
+# -----------------------------------------------------------------
+else:
+    df = generate_mock_data("shooting")
+    
+    col1, col2 = st.columns([1.8, 1.2])
+    
+    with col1:
+        st.subheader("📊 กราฟจำลองสถานการณ์ตลาดเสมือนจริง")
         
-    with col2_img:
+        fig = go.Figure(data=[go.Candlestick(
+            x=df['Time'].dt.strftime('%H:%M'),
+            open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'],
+            increasing_line_color='#00ff66', decreasing_line_color='#ff3b30',
+            name="ราคาเหรียญ"
+        )])
+        
+        fig.add_trace(go.Scatter(x=df['Time'].dt.strftime('%H:%M'), y=df['EMA12'], mode='lines', name='EMA 12 (เขียว)', line=dict(color='#00ff66', width=1.5)))
+        fig.add_trace(go.Scatter(x=df['Time'].dt.strftime('%H:%M'), y=df['EMA26'], mode='lines', name='EMA 26 (ส้ม)', line=dict(color='#ff9f0a', width=1.5)))
+        
+        # ปักหมุดลูกศรชี้จุดขาย (S) บนแท่งที่หลุดแนวโน้ม
+        fig.add_annotation(
+            x=df['Time'].dt.strftime('%H:%M').iloc[5], y=df['High'].iloc[5] + 1.5,
+            text="⚠️ SELL POINT (S)<br>กดขายหนีตาย / ล็อกกำไร", showarrow=True,
+            arrowhead=2, arrowcolor="#ff3b30", bgcolor="#ff3b30", font=dict(color="white", size=12),
+            bordercolor="#ff3b30", borderwidth=1, borderpad=4, ay=40
+        )
+        
+        fig.update_layout(
+            plot_bgcolor='#05070a', paper_bgcolor='#05070a',
+            xaxis_rangeslider_visible=False, font=dict(color='#cbd5e1'),
+            margin=dict(l=20, r=20, t=20, b=20), height=450
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        st.subheader("💡 คู่มือวิเคราะห์เพื่อตัดสินใจออก Order")
         st.markdown("""
-        <div class="chart-sequence-card">
-            <div style="display: flex; gap: 18px; align-items: flex-start; justify-content: center; width: 100%;">
-                
-                <div style="text-align:center; margin-top: 110px;">
-                    <table class="candle-table">
-                        <tr><td><div class="wick" style="height:10px;"></div></td></tr>
-                        <tr><td><div style="background-color:#00ff66; width:30px; height:45px; border-radius:2px;"></div></td></tr>
-                        <tr><td><div class="wick" style="height:10px;"></div></td></tr>
-                    </table>
-                    <div style="font-size:12px; color:#64748b; margin-top:8px;">1.ขึ้น</div>
-                </div>
-
-                <div style="text-align:center; margin-top: 65px;">
-                    <table class="candle-table">
-                        <tr><td><div class="wick" style="height:15px;"></div></td></tr>
-                        <tr><td><div style="background-color:#00ff66; width:30px; height:55px; border-radius:2px;"></div></td></tr>
-                        <tr><td><div class="wick" style="height:10px;"></div></td></tr>
-                    </table>
-                    <div style="font-size:12px; color:#64748b; margin-top:8px;">2.ขึ้นต่อ</div>
-                </div>
-
-                <div style="text-align:center; margin-top: 35px;">
-                    <table class="candle-table">
-                        <tr><td><div class="wick" style="height:10px;"></div></td></tr>
-                        <tr><td><div style="background-color:#00ff66; width:30px; height:50px; border-radius:2px;"></div></td></tr>
-                        <tr><td><div class="wick" style="height:15px;"></div></td></tr>
-                    </table>
-                    <div style="font-size:12px; color:#64748b; margin-top:8px;">3.ล่อซื้อ</div>
-                </div>
-
-                <div style="text-align:center; margin-top: 10px;">
-                    <table class="candle-table">
-                        <tr><td><div class="wick-danger" style="height:90px;"></div></td></tr>
-                        <tr><td><div style="background-color:#ff3b30; width:32px; height:25px; border-radius:3px; box-shadow:0 0 15px rgba(255,59,48,0.8);"></div></td></tr>
-                    </table>
-                    <div style="font-size:13px; color:#ff3b30; font-weight:bold; margin-top:8px;">4.ดาวตก!</div>
-                </div>
-
-                <div style="text-align:center; margin-top: 45px;">
-                    <table class="candle-table">
-                        <tr><td><div class="wick" style="height:10px;"></div></td></tr>
-                        <tr><td><div style="background-color:#ff3b30; width:30px; height:65px; border-radius:2px; box-shadow: 0 0 10px rgba(255,59,48,0.2);"></div></td></tr>
-                        <tr><td><div class="wick" style="height:15px;"></div></td></tr>
-                    </table>
-                    <div style="font-size:13px; color:#ff3b30; font-weight:bold; margin-top:8px;">5.ขาย (S)</div>
-                </div>
-
-                <div style="text-align:center; margin-top: 95px;">
-                    <table class="candle-table">
-                        <tr><td><div class="wick" style="height:10px;"></div></td></tr>
-                        <tr><td><div style="background-color:#ff3b30; width:30px; height:75px; border-radius:2px;"></div></td></tr>
-                        <tr><td><div class="wick" style="height:15px;"></div></td></tr>
-                    </table>
-                    <div style="font-size:12px; color:#64748b; margin-top:8px;">6.ลงยาว</div>
-                </div>
-
-            </div>
+        <div class="decision-card_sell" style="border-left: 6px solid #ff3b30; padding-left:15px; background:rgba(255,59,48,0.02);">
+            <h4 style="color:#ff3b30;">🔍 วิธีการมองหน้างานจริง:</h4>
+            <p><b>1. สังเกตแนวโน้มก่อนหน้า:</b> ราคาพุ่งขึ้นร้อนแรงมาก 4 แท่งแรกเป็นสีเขียวสดใส ยั่วยวนใจให้รายย่อยอยากกระโดดเกาะรถ (FOMO)</p>
+            <p><b>2. จุดเกิดดาวตก (แท่งที่ 5):</b> ราคาดันซิ่งทะลักไปสูงมาก แต่สุดท้ายโดนแรงทุบมหาศาลไล่สับลงมาจนมาปิดตูดด้านล่าง ทิ้งไส้เทียนยาวเป็นเสาอากาศอยู่ข้างบน แปลว่าเจ้ามือรินขายของออกหมดแล้ว</p>
+            <p><b>3. แท่งทุบย้ำตอกฝาโลง (แท่งที่ 6):</b> เกิดแท่งแดงใหญ่ลากดิ่งลงสวนทาง ทะลุเส้นแนวรับ EMA ขาลงก่อตัวสมบูรณ์</p>
+            <h4 style="color:#ffffff; margin-top:15px;">🛠️ สรุปแผนเข้าออเดอร์ (Decision Making):</h4>
+            <p style="color:#ff3b30; font-size:16px; font-weight:bold;">👉 จังหวะนี้ อันตรายสุดๆ! ห้ามกดเปิดออเดอร์ซื้อเด็ดขาด และถ้ามีของอยู่ในมือ ให้ทำตามแผนคือ "กดเปิดออเดอร์ขาย (Sell Order)" ออกมาถือเงินสดทันทีครับพี่!</p>
         </div>
         """, unsafe_allow_html=True)

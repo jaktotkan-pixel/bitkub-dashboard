@@ -253,4 +253,13 @@ with tab2:
 
                 <div style="text-align:center; margin-top: 95px;">
                     <table class="candle-table">
-                        <tr><td><div class="wick" style="height:1
+                        <tr><td><div class="wick" style="height:10px;"></div></td></tr>
+                        <tr><td><div style="background-color:#ff3b30; width:30px; height:75px; border-radius:2px;"></div></td></tr>
+                        <tr><td><div class="wick" style="height:15px;"></div></td></tr>
+                    </table>
+                    <div style="font-size:12px; color:#64748b; margin-top:8px;">6.ลงยาว</div>
+                </div>
+
+            </div>
+        </div>
+        """, unsafe_allow_html=True)

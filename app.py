@@ -141,23 +141,65 @@ write"""]
 
 # 4. หมวดหมู่คำสั่งรันบนคอมพิวเตอร์หน้างาน (Windows CMD)
 pc_cmd_commands = {
+    "🚀 ทางลัดเปิดโปรแกรมระบบ & หน้าต่างด่วน (Shortcut)": [
+        ["javis (คำสั่งด่วนเรียกเปิดระบบช่วยเหลือ หรือเปิดลิงก์ Javis ผ่านบราวเซอร์หลัก)", "start https://javis.nt.co.th"],
+        ["ncpa.cpl (คีย์ลัดเปิดหน้าต่าง Network Connections เพื่อไปจัดการการ์ดแลน / Fix IP)", "ncpa.cpl"],
+        ["notepad (เปิดโปรแกรมจดบันทึก Notepad ขึ้นมาทดสคริปต์ด่วน)", "notepad"],
+        ["compmgmt.msc (เปิดหน้า Computer Management จัดการระบบฮาร์ดแวร์/เช็คไดรเวอร์คอม)", "compmgmt.msc"]
+    ],
     "💻 คำสั่งวิเคราะห์เน็ตหน้างานผ่านคอมพิวเตอร์": [
-        ["ipconfig", "ipconfig"],
-        ["ipconfig /all (เช็คไอพี, แมคแอดเดรส และการ์ดแลนทั้งหมดในคอม)", "ipconfig /all"],
+        ["ipconfig (เช็คหมายเลข IP Address เบื้องต้นในการ์ดแลนคอมพิวเตอร์)", "ipconfig"],
+        ["ipconfig /all (เช็คไอพี, แมคแอดเดรส และข้อมูล DNS การ์ดแลนทั้งหมดในคอม)", "ipconfig /all"],
         ["arp -a (ตรวจสอบหมายเลขไอพีและแมคของอุปกรณ์อื่นๆ ในวง LAN เดียวกัน)", "arp -a"],
         ["nslookup (ใช้ตรวจสอบการทำงานและแปลชื่อโดเมน/DNS)", "nslookup google.com"],
         ["tracert (ทดสอบวิ่งหาเส้นทาง Network ยิงเช็คว่าเน็ตไปติดคอขวดที่ฮอปไหน)", "tracert 8.8.8.8"]
     ]
 }
 
+# 5. หมวดหมู่คำสั่งสำหรับ Line Bot Javis (ชุดคำสั่งที่เพิ่มเข้ามาใหม่)
+javis_bot_commands = {
+    "🔍 คำสั่งค้นหารายชื่อ Node และเช็คสถานะทางกายภาพ": [
+        ["nodelist,hw. (ดูชื่อ node ต่างๆ ทั้งหมดในระบบ)", "nodelist,hw."],
+        ["showoptical,hw[ชื่อ node] (สั่งดูค่าแสงของโหนดนั้นๆ เช่น ตลุงเหนือ)", "showoptical,hwตลุงเหนือ"]
+    ],
+    "⚡ คำสั่งตรวจสอบสถานะทั่วไป (Check Status)": [
+        ["1. ดูซีรี ลอย (เช็ค Serial Number ที่ยังไม่ได้ลงทะเบียน)", "sn,กาญ"],
+        ["2. ดูจำนวน ONU ใน PON (เช็คปริมาณอุปกรณ์ในพอร์ตของการ์ดนั้นๆ)", "state,กาญ"],
+        ["3. ดู run config (ส่องโปรไฟล์การตั้งค่าปัจจุบันของ ONU)", "run,3451j0000"],
+        ["4. ดู Port Lan (เช็คสถานะการเชื่อมต่อพอร์ตแลนหลัง ONU)", "lanstate,3451j0000"],
+        ["13. ดู แสน / เช็คแสง (ตรวจสอบระดับสัญญาณ Optical ด่วน)", "!!,3451j0000"],
+        ["14. ดู mac (ตรวจสอบตาราง MAC Address ที่ผ่านตัวอุปกรณ์)", "mac,3451j0000"]
+    ],
+    "🛠️ คำสั่งควบคุมระบบและแก้ไขพอร์ต (Control & Block)": [
+        ["5. Block แสง (สั่งปิดสัญญาณแสงไปที่ ONU ชั่วคราว)", "block,3451j0000"],
+        ["6. DeBlock แสง (สั่งเปิดสัญญาณแสงกลับคืนให้ ONU)", "deblock,3451j0000"],
+        ["19. reboot onu (สั่งรีสตาร์ทตัว ONU ลูกค้าจากระยะไกล)", "reboot,3451j5000"]
+    ],
+    "➕❌ คำสั่งเพิ่ม / ลบ / เปลี่ยนแปลงอุปกรณ์ (Provisioning)": [
+        ["7. ลบ ONU (ลบข้อมูล ONU ออกจากระบบโหนด [โหนด,พิกัด,วงจร])", "delonu,กาญ,1/2/2,100"],
+        ["8. เปลี่ยน ONU (สลับเปลี่ยนเครื่องใหม่โดยใช้ค่า Config เดิม)", "replace,3451j0000,ZTEGC9999999"]
+    ],
+    "⚙️ คำสั่งตั้งค่าโปรไฟล์สลับโหมด (Configuration & Mode)": [
+        ["9. config route (สั่งตั้งค่าเป็นโหมด Route โหมดเริ่มต้น)", "autoroute,กาญ,ZTEGC9999999,3003,3451j8888"],
+        ["10. config bridge (สั่งตั้งค่าเป็นโหมด Bridge ต่อพ่วงเลเยอร์ 2)", "bridge,กาญ,ZTEGC9999999,3003,3451j8888"],
+        ["11. เปลี่ยน route to bridge (สลับโหมดจาก Route ไปเป็น Bridge)", "rtob,3451j0000"],
+        ["12. เปลี่ยน bridge to route (สลับโหมดจาก Bridge กลับมาเป็น Route)", "btor,3451j0000"],
+        ["15. config ด้าน interface (จัดการระบบเชื่อมต่อพอร์ตโครงสร้าง)", "interface,3451j0000"],
+        ["16. config ด้าน pon (ตั้งค่าโปรไฟล์ฝั่งเครือข่าย PON)", "ponconfig,3451j0000"],
+        ["17. config autoroute (คำสั่งสร้างเส้นทางแบบระบุรายละเอียดโหนดคริ)", "autoroute,kri,ZTEGC1E1E1EE,3001,3451j0000"],
+        ["18. setdhcpfromnet (สั่งกำหนดดึง IP รับแจกผ่านระบบเครือข่าย)", "dhcpfromnet,3459j5063"]
+    ]
+}
+
 
 # --- 3. DISPLAY ENGINE (สลับแท็บแบบใช้งานสะดวกรวดเร็ว) ---
 
-tab_c300, tab_c600, tab_sys, tab_pc = st.tabs([
+tab_c300, tab_c600, tab_sys, tab_pc, tab_javis_bot = st.tabs([
     "🍏 1. ตู้ซีรีส์เดิม ZTE C300", 
     "⚡ 2. ตู้ซีรีส์ใหม่ ZTE C600", 
     "📡 3. คำสั่ง Uplink / ชุดตั้งตู้ OLT ใหม่",
-    "💻 4. คำสั่ง CMD บนคอมพิวเตอร์ (Windows)"
+    "💻 4. คำสั่ง CMD บนคอมพิวเตอร์ (Windows)",
+    "🤖 5. Javis Line Bot (ZTE Config)"
 ])
 
 # แสดงผลพาร์ท C300
@@ -198,7 +240,6 @@ with tab_sys:
         if filtered_items:
             st.markdown(f"### {sub_category}")
             for description, cli_command in filtered_items:
-                # กรณีสคริปต์ยาวมาก (Initial Config) ให้กินพื้นที่เต็มยาวลงมาสวยๆ
                 if len(cli_command) > 500:
                     st.markdown(f"📌 **{description}**")
                     st.code(cli_command, language="routeros")
@@ -220,6 +261,21 @@ with tab_pc:
                 col_desc, col_code = st.columns([1.1, 1.9])
                 with col_desc: st.markdown(f"📌 **{description}**")
                 with col_code: st.code(cli_command, language="batch")
+
+# แสดงผลพาร์ท Javis Line Bot (เพิ่มเข้ามาใหม่แยกหัวข้อต่างหาก)
+with tab_javis_bot:
+    st.markdown("<h2>🤖 Javis Line Bot Help Center (สำหรับส่งคำสั่งควบคุม OLT/ONU ผ่านไลน์)</h2>", unsafe_allow_html=True)
+    st.warning("⚠️ คำแจ้งเตือน: Javis เป็น LINE Bot ช่วยจัดการ Configuration ของ ZTE กรุณาใช้งานอย่างระมัดระวัง! รูปแบบการพิมพ์ต้องใช้เครื่องหมายคอมม่า ( , ) เป็นตัวแยกชุดคำสั่งเสมอ")
+    search_javis = st.text_input("🔍 ค้นหาคำสั่ง Line Bot Javis:", "", key="search_javis_key").lower()
+    
+    for sub_category, items in javis_bot_commands.items():
+        filtered_items = [i for i in items if search_javis in i[0].lower() or search_javis in i[1].lower()]
+        if filtered_items:
+            st.markdown(f"### {sub_category}")
+            for description, cli_command in filtered_items:
+                col_desc, col_code = st.columns([1.2, 1.8])
+                with col_desc: st.markdown(f"📌 **{description}**")
+                with col_code: st.code(cli_command, language="text")
 
 # --- 5. FOOTER TEMPLATE PROFILE EXTRA ---
 st.markdown("---")

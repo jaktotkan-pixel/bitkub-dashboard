@@ -3,19 +3,30 @@ import streamlit as st
 # --- 1. SETUP PAGE ---
 st.set_page_config(page_title="ZTE OLT & PC Command Center", layout="wide")
 
-# ปรับดีไซน์ให้จัดกลุ่มสีแยกโมเดลชัดเจน สแกนสายตาง่าย
+# ปรับดีไซน์เป็นธีมขาว คลีน สว่าง สบายตา สแกนหัวข้อง่ายมาก
 st.markdown("""
 <style>
-    .stApp { background-color: #0b0f14; color: #c9d1d9; font-family: sans-serif; }
-    .stCodeBlock { background-color: #161b22 !important; border: 1px solid #30363d; }
-    h2 { color: #58a6ff !important; font-weight: 600; margin-top: 10px; }
-    h3 { color: #58a6ff !important; font-weight: 500; font-size: 16px; border-bottom: 1px solid #21262d; padding-bottom: 5px; }
+    /* พื้นหลังสีขาวสะอาดตา */
+    .stApp { background-color: #ffffff; color: #1f2328; font-family: sans-serif; }
+    
+    /* กล่องข้อความ Code Block สีเทาอ่อน ขอบมน ชัดเจน */
+    .stCodeBlock { background-color: #f6f8fa !important; border: 1px solid #d0d7de !important; }
+    .stCodeBlock code { color: #000000 !important; }
+    
+    /* หัวข้อหลักสีน้ำเงินเข้ม มองเห็นเด่นชัด */
+    h2 { color: #0969da !important; font-weight: 700; margin-top: 15px; margin-bottom: 5px; }
+    h3 { color: #24292f !important; font-weight: 600; font-size: 17px; border-bottom: 2px solid #d0d7de; padding-bottom: 6px; margin-top: 15px; }
+    
+    /* สไตล์ข้อความธรรมดาให้หนาและชัดขึ้น */
+    p, span, li { color: #24292f; font-weight: 500; }
+    
+    /* ซ่อนปุ่มที่ไม่จำเป็น */
     .stDeployButton { display:none; }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1 style='color: #2ea043; margin-top: -10px;'>💻 ZTE OLT & PC COMMAND CENTER</h1>", unsafe_allow_html=True)
-st.markdown("<p style='color: #8b949e;'>ศูนย์รวมคำสั่งด่วน ZTE OLT C300/C600 และคำสั่ง CMD สำหรับวิเคราะห์ระบบหน้างาน</p>", unsafe_allow_html=True)
+st.markdown("<h1 style='color: #1a7f37; margin-top: -10px; font-weight: 800;'>💻 ZTE OLT & PC COMMAND CENTER</h1>", unsafe_allow_html=True)
+st.markdown("<p style='color: #57606a; font-size: 15px;'>ศูนย์รวมคำสั่งด่วน ZTE OLT C300/C600 และคำสั่ง CMD สำหรับวิเคราะห์ระบบหน้างาน (ธีมขาว คลีน สบายตา)</p>", unsafe_allow_html=True)
 st.markdown("---")
 
 # --- 2. SIDEBAR : LIVE INJECTION ---
@@ -28,7 +39,7 @@ clean_slot = input_slot.split(':')[0] if ':' in input_slot else input_slot
 
 
 # =================================================================
-# ⚙️ Dictionary คลังคำสั่งที่แยกเก็บอย่างเป็นระเบียบ (แก้ไข/เพิ่มตรงนี้ได้ตลอด)
+# ⚙️ Dictionary คลังคำสั่ง
 # =================================================================
 
 # 1. หมวดหมู่สำหรับตู้รุ่นเดิม (C300 ซีรีส์)
@@ -156,7 +167,7 @@ pc_cmd_commands = {
     ]
 }
 
-# 5. หมวดหมู่คำสั่งสำหรับ Line Bot Javis (ชุดคำสั่งที่เพิ่มเข้ามาใหม่)
+# 5. หมวดหมู่คำสั่งสำหรับ Line Bot Javis
 javis_bot_commands = {
     "🔍 คำสั่งค้นหารายชื่อ Node และเช็คสถานะทางกายภาพ": [
         ["nodelist,hw. (ดูชื่อ node ต่างๆ ทั้งหมดในระบบ)", "nodelist,hw."],
@@ -167,7 +178,7 @@ javis_bot_commands = {
         ["2. ดูจำนวน ONU ใน PON (เช็คปริมาณอุปกรณ์ในพอร์ตของการ์ดนั้นๆ)", "state,กาญ"],
         ["3. ดู run config (ส่องโปรไฟล์การตั้งค่าปัจจุบันของ ONU)", "run,3451j0000"],
         ["4. ดู Port Lan (เช็คสถานะการเชื่อมต่อพอร์ตแลนหลัง ONU)", "lanstate,3451j0000"],
-        ["13. ดู แสน / เช็คแสง (ตรวจสอบระดับสัญญาณ Optical ด่วน)", "!!,3451j0000"],
+        ["13. ดู แสง / เช็คแสง (ตรวจสอบระดับสัญญาณ Optical ด่วน)", "!!,3451j0000"],
         ["14. ดู mac (ตรวจสอบตาราง MAC Address ที่ผ่านตัวอุปกรณ์)", "mac,3451j0000"]
     ],
     "🛠️ คำสั่งควบคุมระบบและแก้ไขพอร์ต (Control & Block)": [
@@ -192,7 +203,7 @@ javis_bot_commands = {
 }
 
 
-# --- 3. DISPLAY ENGINE (สลับแท็บแบบใช้งานสะดวกรวดเร็ว) ---
+# --- 3. DISPLAY ENGINE (สลับแท็บแยกชัดเจน) ---
 
 tab_c300, tab_c600, tab_sys, tab_pc, tab_javis_bot = st.tabs([
     "🍏 1. ตู้ซีรีส์เดิม ZTE C300", 
@@ -230,7 +241,7 @@ with tab_c600:
                 with col_desc: st.markdown(f"📌 **{description}**")
                 with col_code: st.code(cli_command, language="routeros")
 
-# แสดงผลพาร์ท System / Uplink / Initial Config ตัวใหม่
+# แสดงผลพาร์ท System / Uplink / Initial Config
 with tab_sys:
     st.markdown("<h2>📡 หมวดคำสั่งระบบ Uplink และการตั้งค่าตู้ OLT เริ่มต้น</h2>", unsafe_allow_html=True)
     search_sys = st.text_input("🔍 ค้นหาคำสั่งระบบ:", "", key="search_sys_key").lower()
@@ -248,7 +259,7 @@ with tab_sys:
                     with col_desc: st.markdown(f"📌 **{description}**")
                     with col_code: st.code(cli_command, language="routeros")
 
-# แสดงผลพาร์ท PC CMD ยิงเช็คเน็ตฝั่งคอมลูกค้า
+# แสดงผลพาร์ท PC CMD
 with tab_pc:
     st.markdown("<h2>💻 หมวดคำสั่ง CMD บนคอมพิวเตอร์ (Windows) สำหรับวิเคราะห์หน้างาน</h2>", unsafe_allow_html=True)
     search_pc = st.text_input("🔍 ค้นหาคำสั่งคอมพิวเตอร์:", "", key="search_pc_key").lower()
@@ -262,10 +273,10 @@ with tab_pc:
                 with col_desc: st.markdown(f"📌 **{description}**")
                 with col_code: st.code(cli_command, language="batch")
 
-# แสดงผลพาร์ท Javis Line Bot (เพิ่มเข้ามาใหม่แยกหัวข้อต่างหาก)
+# แสดงผลพาร์ท Javis Line Bot (พื้นหลังขาว-คลีน)
 with tab_javis_bot:
     st.markdown("<h2>🤖 Javis Line Bot Help Center (สำหรับส่งคำสั่งควบคุม OLT/ONU ผ่านไลน์)</h2>", unsafe_allow_html=True)
-    st.warning("⚠️ คำแจ้งเตือน: Javis เป็น LINE Bot ช่วยจัดการ Configuration ของ ZTE กรุณาใช้งานอย่างระมัดระวัง! รูปแบบการพิมพ์ต้องใช้เครื่องหมายคอมม่า ( , ) เป็นตัวแยกชุดคำสั่งเสมอ")
+    st.info("ℹ️ คำแจ้งเตือน: Javis เป็น LINE Bot ช่วยจัดการ Configuration ของ ZTE กรุณาใช้งานอย่างระมัดระวัง! รูปแบบการพิมพ์ต้องใช้เครื่องหมายคอมม่า ( , ) เป็นตัวแยกชุดคำสั่งเสมอ")
     search_javis = st.text_input("🔍 ค้นหาคำสั่ง Line Bot Javis:", "", key="search_javis_key").lower()
     
     for sub_category, items in javis_bot_commands.items():

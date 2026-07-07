@@ -1,261 +1,232 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.graph_objects as go
-from datetime import datetime, timedelta
 
-# --- 1. SETUP PAGE & CYBERPUNK TRADING STYLE ---
-st.set_page_config(page_title="Pro Candlestick Simulator", layout="wide")
+# --- 1. SETUP PAGE ---
+st.set_page_config(page_title="ZTE OLT & PC Command Center", layout="wide")
 
+# ปรับดีไซน์ให้จัดกลุ่มสีแยกโมเดลชัดเจน สแกนสายตาง่าย
 st.markdown("""
 <style>
-    /* พื้นหลังมืดสไตล์ Cyberpunk Bitkub Room */
-    .stApp {
-        background-color: #0b0e14;
-        color: #cbd5e1;
-        font-family: 'Anuphan', sans-serif;
-    }
-    
-    /* กล่องข้อมูลจุดตัดสินใจฝั่งซื้อ */
-    .decision-card-buy {
-        background: rgba(0, 255, 102, 0.02);
-        border: 1px solid rgba(0, 255, 102, 0.2);
-        border-left: 6px solid #00ff66;
-        border-radius: 12px;
-        padding: 22px;
-        margin-bottom: 20px;
-    }
-    
-    /* กล่องข้อมูลจุดตัดสินใจฝั่งขาย */
-    .decision-card-sell {
-        background: rgba(255, 59, 48, 0.02);
-        border: 1px solid rgba(255, 59, 48, 0.2);
-        border-left: 6px solid #ff3b30;
-        border-radius: 12px;
-        padding: 22px;
-        margin-bottom: 20px;
-    }
-    
-    /* ซ่อนปุ่ม Deploy ที่ไม่ได้ใช้ */
+    .stApp { background-color: #0b0f14; color: #c9d1d9; font-family: sans-serif; }
+    .stCodeBlock { background-color: #161b22 !important; border: 1px solid #30363d; }
+    h2 { color: #58a6ff !important; font-weight: 600; margin-top: 10px; }
+    h3 { color: #58a6ff !important; font-weight: 500; font-size: 16px; border-bottom: 1px solid #21262d; padding-bottom: 5px; }
     .stDeployButton { display:none; }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1 style='text-align: center; color: #ffffff; font-weight: 800; margin-top: 5px;'>📊 FULL CANDLESTICK PATTERN SIMULATOR</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #64748b; font-size: 16px;'>ระบบจำลองชุดกราฟเทรดเสมือนจริงทุกรูปแบบยอดฮิต เพื่อฝึกตัดสินใจออก Order ซื้อ (B) / ขาย (S)</p>", unsafe_allow_html=True)
-st.markdown("<div style='border-bottom: 1px solid #1e293b; margin-bottom: 25px;'></div>", unsafe_allow_html=True)
+st.markdown("<h1 style='color: #2ea043; margin-top: -10px;'>💻 ZTE OLT & PC COMMAND CENTER</h1>", unsafe_allow_html=True)
+st.markdown("<p style='color: #8b949e;'>ศูนย์รวมคำสั่งด่วน ZTE OLT C300/C600 และคำสั่ง CMD สำหรับวิเคราะห์ระบบหน้างาน</p>", unsafe_allow_html=True)
+st.markdown("---")
 
+# --- 2. SIDEBAR : LIVE INJECTION ---
+st.sidebar.markdown("### 🔍 ตัวแปรหน้างาน")
+input_slot = st.sidebar.text_input("พิกัดพอร์ต (Slot/Port:ID)", "1/5/1:1")
+input_circuit = st.sidebar.text_input("เลขวงจร / VLAN", "34")
 
-# -----------------------------------------------------------------
-# 🗂️ ฟังก์ชันสร้างข้อมูลกราฟจำลอง (เสมือนจริง 8 แท่งตามแต่ละ Pattern)
-# -----------------------------------------------------------------
-def generate_pattern_data(pattern_name):
-    base_time = datetime.now() - timedelta(hours=10)
-    times = [base_time + timedelta(hours=i) for i in range(8)]
-    
-    if pattern_name == "🔨 Hammer (ค้อนกลับตัวขึ้น)":
-        opens  = [45.0, 43.5, 42.0, 41.2, 38.5, 39.0, 41.5, 43.0]
-        highs  = [45.5, 44.0, 42.2, 41.5, 39.2, 41.0, 42.5, 44.2]
-        lows   = [43.0, 41.5, 40.0, 38.0, 34.0, 38.8, 40.5, 42.0]
-        closes = [43.5, 42.0, 41.2, 38.5, 39.0, 41.5, 43.0, 44.0]
-        action_idx, action_type, text_label = 5, "B", "🎯 BUY Point (ไม้ 1)<br>หลังแท่งเขียวคอนเฟิร์ม"
-        
-    elif pattern_name == "📐 Inverted Hammer (ค้อนหงายหักศอก)":
-        opens  = [50.0, 48.0, 46.5, 44.0, 41.0, 41.5, 44.5, 46.0]
-        highs  = [50.5, 48.5, 47.0, 44.5, 45.0, 42.0, 45.5, 47.0]
-        lows   = [47.5, 46.0, 43.5, 40.5, 40.8, 41.0, 43.0, 45.0]
-        closes = [48.0, 46.5, 44.0, 41.0, 41.5, 44.5, 46.0, 47.5]
-        action_idx, action_type, text_label = 5, "B", "🎯 BUY Point (ไม้ 1)<br>เมื่อแท่งคอนเฟิร์มปิดเขียว"
-        
-    elif pattern_name == "📈 Bullish Engulfing (เขียวใหญ่กลืนกิน)":
-        opens  = [35.0, 33.5, 32.0, 30.5, 29.8, 28.0, 32.5, 34.5]
-        highs  = [35.5, 34.0, 32.5, 31.0, 30.0, 33.0, 33.0, 35.0]
-        lows   = [33.0, 31.5, 30.0, 29.5, 27.5, 27.8, 31.5, 33.0]
-        closes = [33.5, 32.0, 30.5, 29.8, 28.0, 32.5, 34.5, 35.0]
-        action_idx, action_type, text_label = 5, "B", "🎯 STRONG BUY (B+)<br>เข้าด่วนราคาปิดแท่งกลืนกิน"
-        
-    elif pattern_name == "🌅 Morning Star (สามสหายกลับตัวขึ้น)":
-        # แท่ง 4 แดงใหญ่ -> แท่ง 5 เนื้อสั้นโดจิ -> แท่ง 6 เขียวยาวลากสวน
-        opens  = [60.0, 58.5, 57.0, 55.5, 52.0, 49.8, 50.5, 54.0]
-        highs  = [60.5, 59.0, 57.5, 56.0, 52.5, 50.5, 54.2, 55.5]
-        lows   = [58.0, 56.5, 55.0, 51.5, 49.0, 49.5, 50.0, 53.0]
-        closes = [58.5, 57.0, 55.5, 52.0, 49.8, 53.8, 54.0, 55.0]
-        action_idx, action_type, text_label = 5, "B", "🎯 BUY Point (ไม้ 1)<br>จบชุดดาวรุ่งสามสหาย"
+# แปลงค่าพอร์ตย่อยสำหรับคำสั่งคุมพอร์ต PON ภาพรวม (ตัดเครื่องหมาย : ออกถ้ามี)
+clean_slot = input_slot.split(':')[0] if ':' in input_slot else input_slot
 
-    elif pattern_name == "☄️ Shooting Star (ดาวตกยอดดอย)":
-        opens  = [38.0, 40.2, 42.0, 43.8, 45.0, 44.8, 42.0, 39.5]
-        highs  = [40.5, 42.5, 44.0, 45.5, 50.0, 45.2, 42.5, 40.0]
-        lows   = [37.8, 40.0, 41.8, 43.5, 44.2, 41.5, 39.0, 37.0]
-        closes = [40.2, 42.0, 43.8, 45.0, 44.8, 42.0, 39.5, 37.5]
-        action_idx, action_type, text_label = 5, "S", "⚠️ SELL POINT (S)<br>กดขายล็อกกำไร/หนีตาย"
-        
-    elif pattern_name == "📉 Bearish Engulfing (แดงใหญ่กลืนกิน)":
-        opens  = [20.0, 21.5, 23.0, 24.2, 25.0, 26.5, 22.0, 19.5]
-        highs  = [21.8, 23.2, 24.5, 25.2, 26.8, 27.0, 22.5, 20.0]
-        lows   = [19.8, 21.2, 22.8, 24.0, 24.8, 21.8, 19.0, 18.0]
-        closes = [21.5, 23.0, 24.2, 25.0, 26.5, 22.0, 19.5, 18.5]
-        action_idx, action_type, text_label = 5, "S", "⚠️ FORCE SELL (S+)<br>คัทลอสทันทีโดนกลืนกิน"
-        
-    else: # Evening Star (สามสหายกลับตัวลง)
-        opens  = [70.0, 72.5, 75.0, 77.5, 80.0, 81.5, 81.0, 76.5]
-        highs  = [72.8, 75.3, 77.8, 80.5, 82.0, 82.2, 81.5, 77.0]
-        lows   = [69.5, 72.0, 74.5, 77.0, 79.5, 80.8, 76.0, 73.5]
-        closes = [72.5, 75.0, 77.5, 80.0, 81.5, 76.5, 74.0, 74.0]
-        action_idx, action_type, text_label = 5, "S", "⚠️ SELL POINT (S)<br>แนวโน้มพังถอนทุนด่วน"
-
-    df = pd.DataFrame({'Time': times, 'Open': opens, 'High': highs, 'Low': lows, 'Close': closes})
-    df['EMA12'] = df['Close'].ewm(span=3, adjust=False).mean()
-    df['EMA26'] = df['Close'].ewm(span=5, adjust=False).mean()
-    return df, action_idx, action_type, text_label
-
-
-# -----------------------------------------------------------------
-# 🎛️ แผงแบ่งกลุ่มเมนูใหญ่ (ฝั่งซื้อ VS ฝั่งขาย)
-# -----------------------------------------------------------------
-main_tab1, main_tab2 = st.tabs(["🟢 หมวดสัญญาณเข้าซื้อ (Buy Signals)", "🔴 หมวดสัญญาณเข้าขาย (Sell Signals)"])
 
 # =================================================================
-# 🟢 MAIN TAB 1: สัญญาณเข้าซื้อ (BUY)
+# ⚙️ Dictionary คลังคำสั่งที่แยกเก็บอย่างเป็นระเบียบ (แก้ไข/เพิ่มตรงนี้ได้ตลอด)
 # =================================================================
-with main_tab1:
-    pattern_buy = st.radio(
-        "🎯 เลือกรูปแบบแท่งเทียนฝั่งขาขึ้น (Bullish) ที่ต้องการฝึกดูหน้างาน:",
-        [
-            "🔨 Hammer (ค้อนกลับตัวขึ้น)", 
-            "📐 Inverted Hammer (ค้อนหงายหักศอก)", 
-            "📈 Bullish Engulfing (เขียวใหญ่กลืนกิน)",
-            "🌅 Morning Star (สามสหายกลับตัวขึ้น)"
-        ],
-        horizontal=True
-    )
-    
-    df, act_idx, act_type, lbl_text = generate_pattern_data(pattern_buy)
-    
-    col1, col2 = st.columns([1.8, 1.2])
-    with col1:
-        st.markdown(f"#### 📊 กราฟจำลองตลาดจริง: {pattern_buy}")
-        fig = go.Figure(data=[go.Candlestick(
-            x=df['Time'].dt.strftime('%H:%M'),
-            open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'],
-            increasing_line_color='#00ff66', decreasing_line_color='#ff3b30', name="ราคา"
-        )])
-        fig.add_trace(go.Scatter(x=df['Time'].dt.strftime('%H:%M'), y=df['EMA12'], mode='lines', name='EMA 12 (เขียว)', line=dict(color='#00ff66', width=2)))
-        fig.add_trace(go.Scatter(x=df['Time'].dt.strftime('%H:%M'), y=df['EMA26'], mode='lines', name='EMA 26 (ส้ม)', line=dict(color='#ff9f0a', width=2)))
-        
-        # ปักหมุดลูกศรชี้จุดซื้อ B
-        fig.add_annotation(
-            x=df['Time'].dt.strftime('%H:%M').iloc[act_idx], y=df['Low'].iloc[act_idx] - 1.2,
-            text=lbl_text, showarrow=True, arrowhead=2, arrowcolor="#00ff66",
-            bgcolor="#00ff66", font=dict(color="black", size=12, family="Anuphan"),
-            bordercolor="#00ff66", borderwidth=1, borderpad=5, ay=-45
-        )
-        fig.update_layout(plot_bgcolor='#05070a', paper_bgcolor='#05070a', xaxis_rangeslider_visible=False, font=dict(color='#cbd5e1'), margin=dict(l=10, r=10, t=10, b=10), height=450)
-        st.plotly_chart(fig, use_container_width=True)
 
-    with col2:
-        st.markdown("#### 💡 กลยุทธ์ประเมินหน้าเทรดเพื่อกดออเดอร์")
-        
-        if "Hammer" in pattern_buy:
-            st.markdown("""
-            <div class="decision-card-buy">
-                <h4 style="color:#00ff66; margin-top:0;">🔨 เจาะลึกรูปค้อน (Hammer):</h4>
-                <p>• <b>พฤติกรรมเจ้ามือ:</b> กราฟไหลลงมาแรงๆ แท่งที่ 5 เปิดมาปุ๊บโดนทุบลากลงลึกทันทีเพื่อบังคับให้รายย่อยยอมคัทลอสล้างพอร์ต แต่สุดท้ายแรงช้อนของวาฬดันสวนขึ้นมาปิดยอดบนสุด ทิ้งไส้ล่างยาวเฟี้ยว</p>
-                <p>• <b>เงื่อนไขคอนเฟิร์ม:</b> รอดูดังแท่งที่ 6 ถ้าปิดเป็นแท่งเขียวหนุนชัดเจน แสดงว่าแรงซื้อกลับมาคุมตลาดสมบูรณ์</p>
-                <p style="color:#00ff66; font-weight:bold; margin-bottom:0;">🎯 การออก Order (B): กดเข้าซื้อไม้ที่ 1 ที่ราคาปิดของแท่งคอนเฟิร์มสีเขียว (แท่งที่ 6) ได้เลยครับ!</p>
-            </div>
-            """, unsafe_allow_html=True)
-        elif "Inverted Hammer" in pattern_buy:
-            st.markdown("""
-            <div class="decision-card-buy">
-                <h4 style="color:#00ff66; margin-top:0;">📐 เจาะลึกค้อนหงาย (Inverted Hammer):</h4>
-                <p>• <b>พฤติกรรมเจ้ามือ:</b> เกิดช่วงปลายเทรนด์ขาลง แท่งที่ 5 มีการดันราคาพุ่งขึ้นไปยาวมาก (ไส้บนยาว) เพื่อทดสอบแรงขายด้านบน แม้จะโดนกดลงมาปิดต่ำ แต่เนื้อเทียนยกตัวเปลี่ยนเป็นสีเขียว บ่งบอกว่าฝั่งซื้อเริ่มลองดีส่งสัญญาณยึดพื้นที่</p>
-                <p>• <b>เงื่อนไขคอนเฟิร์ม:</b> รอแท่งถัดไปปิดเขียวยกฐานข้ามเส้น EMA 12</p>
-                <p style="color:#00ff66; font-weight:bold; margin-bottom:0;">🎯 การออก Order (B): เปิดออเดอร์ซื้อตามน้ำไม้ที่ 1 เมื่อจบบทพิสูจน์แท่งเขียวคอนเฟิร์มครับ</p>
-            </div>
-            """, unsafe_allow_html=True)
-        elif "Engulfing" in pattern_buy:
-            st.markdown("""
-            <div class="decision-card-buy">
-                <h4 style="color:#00ff66; margin-top:0;">📈 เจาะลึกเขียวกลืนกิน (Bullish Engulfing):</h4>
-                <p>• <b>พฤติกรรมเจ้ามือ:</b> กราฟกำลังซึมลงอยู่ดีๆ แท่งที่ 6 ก็มีแรงซื้อถล่มเข้ามามหาศาล ลากราคาเป็นแท่งเขียวยาวใหญ่ ร่างกายสูงใหญ่อ้วนท้วนกลืนกินเนื้อเทียนสีแดงของแท่งที่ 5 จนมิดจมหายไป</p>
-                <p>• <b>เงื่อนไขคอนเฟิร์ม:</b> ไม่ต้องรอแท่งอื่น คอนเฟิร์มจบในตัวเองทันทีเพราะแรงซื้อชนะฝั่งขายแบบเด็ดขาด 100%</p>
-                <p style="color:#00ff66; font-weight:bold; margin-bottom:0;">🎯 การออก Order (B): จังหวะนี้สัญญาณแรงจัด (B+) กดเปิดออเดอร์ซื้อ Market Order ทันทีที่ราคาปิดแท่งเขียวยักษ์นี้ครับพี่!</p>
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown("""
-            <div class="decision-card-buy">
-                <h4 style="color:#00ff66; margin-top:0;">🌅 เจาะลึกดาวรุ่งสามสหาย (Morning Star):</h4>
-                <p>• <b>พฤติกรรมเจ้ามือ:</b> ประกอบด้วย 3 แท่งเทียนในตำนาน (แดงใหญ่เทลงมา -> เกิดแท่งเล็กๆ โดจิหมดแรงวิ่ง -> เกิดแท่งเขียวยาวดีดสวนข้ามกึ่งกลางแท่งแดงแรก) สัญญาณนี้แสดงถึงการเปลี่ยนขั้วอำนาจตลาดจากลงเป็นขึ้นถาวร</p>
-                <p>• <b>เงื่อนไขคอนเฟิร์ม:</b> สมบูรณ์แบบเมื่อแท่งสีเขียวที่สามปิดตัวอย่างทรงพลัง</p>
-                <p style="color:#00ff66; font-weight:bold; margin-bottom:0;">🎯 การออก Order (B): ออกออเดอร์ซื้อไม้ 1 หรืออัดเพิ่มไม้ 2 ได้ทันทีหลังจากเห็นสัญญาณสามสหายนี้ฟอร์มตัวเสร็จครับ</p>
-            </div>
-            """, unsafe_allow_html=True)
+# 1. หมวดหมู่สำหรับตู้รุ่นเดิม (C300 ซีรีส์)
+c300_commands = {
+    "🔦 เช็คระดับแสง (Optical Monitoring)": [
+        ["เช็คระดับแสงทั้ง OLT และ ONU พร้อมค่า Attenuation", f"show pon power attenuation gpon-onu_{input_slot}"],
+        ["เช็คแสงผ่านพอร์ตย่อยอินเตอร์เฟส PON", f"show gpon remote-onu interface pon gpon-onu_{input_slot}"]
+    ],
+    "📝 ตรวจสอบ Configuration & วงจร": [
+        ["ดู Config รวมอินเตอร์เฟส (เข้าตำแหน่งเบอร์)", f"show running-config interface gpon-onu_{input_slot}"],
+        ["ดูเนื้อหา Config หลัง ONU (Profile / VLAN Port)", f"show running-config | begin pon-onu-mng gpon-onu_{input_slot}"],
+        ["ส่องดูเฉพาะฝั่ง PON Profile ของลูกค้า", f"show onu running-config gpon-onu_{input_slot}"],
+        ["ค้นหาเลขวงจรลูกค้าที่ผูกอยู่ข้างในพอร์ต PON", f"show running-config | begin gpon-onu_{input_slot}"]
+    ],
+    "🌐 ตรวจสอบสถานะอุปกรณ์ (MAC / IP / LAN Ports)": [
+        ["ส่องดูหมายเลข MAC Address ที่เรียนรู้ผ่านตัว ONU ล่าสุด", f"show mac gpon onu gpon-onu_{input_slot}"],
+        ["ดู MAC Address ทั้งหมดในพอร์ต PON ย่อย (ตาม Slot/Port)", f"show mac gpon onu gpon-onu_{clean_slot}/"],
+        ["ตรวจสอบหมายเลข IP Address ฝั่ง WAN/Host ของตัว ONU", f"show gpon remote-onu ip-host gpon-onu_{input_slot}"],
+        ["ตรวจสอบสถานะพอร์ตแลน (Ethernet) แต่ละช่องที่ตัว ONU ในบ้าน", f"show gpon remote-onu interface eth gpon-onu_{input_slot}"]
+    ],
+    "📊 ตรวจสอบข้อมูลประวัติ & Log ย้อนหลัง": [
+        ["เช็คประวัติอย่างละเอียดของการ Up/Down และสาเหตุสายหลุด", f"show gpon onu detail-info gpon-onu_{input_slot}"],
+        ["เช็คสถานะภาพรวม ONU ออนไลน์/ออฟไลน์ ทั้งหมดในการ์ด PON", f"show gpon onu state gpon-olt_{clean_slot}"],
+        ["เช็คประวัติ Log ย้อนหลังเพื่อดูพฤติกรรมสายลูกค้า", f"show pon onu information gpon-onu_{input_slot}"]
+    ]
+}
 
-# =================================================================
-# 🔴 MAIN TAB 2: สัญญาณเข้าขาย (SELL)
-# =================================================================
-with main_tab2:
-    pattern_sell = st.radio(
-        "⚠️ เลือกรูปแบบแท่งเทียนฝั่งขาลง (Bearish) ที่ต้องการฝึกดูหน้างาน:",
-        [
-            "☄️ Shooting Star (ดาวตกยอดดอย)", 
-            "📉 Bearish Engulfing (แดงใหญ่กลืนกิน)", 
-            "🌌 Evening Star (สามสหายกลับตัวลง)"
-        ],
-        horizontal=True
-    )
-    
-    df, act_idx, act_type, lbl_text = generate_pattern_data(pattern_sell)
-    
-    col1, col2 = st.columns([1.8, 1.2])
-    with col1:
-        st.markdown(f"#### 📊 กราฟจำลองตลาดจริง: {pattern_sell}")
-        fig = go.Figure(data=[go.Candlestick(
-            x=df['Time'].dt.strftime('%H:%M'),
-            open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'],
-            increasing_line_color='#00ff66', decreasing_line_color='#ff3b30', name="ราคา"
-        )])
-        fig.add_trace(go.Scatter(x=df['Time'].dt.strftime('%H:%M'), y=df['EMA12'], mode='lines', name='EMA 12 (เขียว)', line=dict(color='#00ff66', width=2)))
-        fig.add_trace(go.Scatter(x=df['Time'].dt.strftime('%H:%M'), y=df['EMA26'], mode='lines', name='EMA 26 (ส้ม)', line=dict(color='#ff9f0a', width=2)))
-        
-        # ปักหมุดลูกศรชี้จุดขาย S
-        fig.add_annotation(
-            x=df['Time'].dt.strftime('%H:%M').iloc[act_idx], y=df['High'].iloc[act_idx] + 1.2,
-            text=lbl_text, showarrow=True, arrowhead=2, arrowcolor="#ff3b30",
-            bgcolor="#ff3b30", font=dict(color="white", size=12, family="Anuphan"),
-            bordercolor="#ff3b30", borderwidth=1, borderpad=5, ay=45
-        )
-        fig.update_layout(plot_bgcolor='#05070a', paper_bgcolor='#05070a', xaxis_rangeslider_visible=False, font=dict(color='#cbd5e1'), margin=dict(l=10, r=10, t=10, b=10), height=450)
-        st.plotly_chart(fig, use_container_width=True)
+# 2. หมวดหมู่สำหรับตู้รุ่นใหม่ (C600 ซีรีส์)
+c600_commands = {
+    "🔦 เช็คระดับแสง (Optical Monitoring)": [
+        ["เช็คระดับแสงขาเข้าที่ตัว ONU (C600)", f"show pon power onu-rx gpon_onu-{input_slot}"],
+        ["เช็คระดับแสงขาเข้าที่การ์ดตู้ OLT (C600)", f"show pon power olt-rx gpon_onu-{input_slot}"]
+    ],
+    "📝 ตรวจสอบ Configuration & วงจร": [
+        ["เช็ค Running Config บนพอร์ต ONU ล่าสุด (C600)", f"show running-config-interface gpon_onu-{input_slot}"],
+        ["เช็คโครงสร้างพอร์ตแลนและพอร์ตแมป VLAN (vport C600)", f"show running-config-interface vport-1/{input_slot}"]
+    ],
+    "📊 ตรวจสอบข้อมูลประวัติ & Log ย้อนหลัง": [
+        ["เช็คประวัติอย่างละเอียดและสาเหตุการ Up/Down ล่าสุด (C600)", f"show gpon onu detail-info gpon_onu-{input_slot}"]
+    ]
+}
 
-    with col2:
-        st.markdown("#### 💡 กลยุทธ์ประเมินหน้าเทรดเพื่อกดออเดอร์")
-        
-        if "Shooting Star" in pattern_sell:
-            st.markdown("""
-            <div class="decision-card-sell">
-                <h4 style="color:#ff3b30; margin-top:0;">☄️ เจาะลึกดาวตก (Shooting Star):</h4>
-                <p>• <b>พฤติกรรมเจ้ามือ:</b> ราคาพุ่งขึ้นร้อนแรงติดต่อกันหลายชั่วโมง ล่อให้รายย่อยกระโดดโฟโมตาม แท่งที่ 5 เปิดมาราคาพุ่งปรี๊ดขึ้นฟ้า ก่อนจะโดนวาฬใหญ่ตั้งป้อมทุบสวนแจกของโครมเดียวร่วงมาปิดข้างล่าง ทิ้งไส้บนยาวดั่งเสาอากาศ</p>
-                <p>• <b>เงื่อนไขตัดสินใจ:</b> เกิดบริเวณแนวต้านยอดยอดดอย หรือราคาฉีกห่างเส้น EMA 26 มากเกินไป</p>
-                <p style="color:#ff3b30; font-weight:bold; margin-bottom:0;">🎯 การออก Order (S): จังหวะนี้อันตรายสุดขีด ให้ "กดขายล็อกกำไร (Sell Order)" ออกมาถือเงินสดทันทีเพื่อความปลอดภัยครับพี่!</p>
-            </div>
-            """, unsafe_allow_html=True)
-        elif "Engulfing" in pattern_sell:
-            st.markdown("""
-            <div class="decision-card-sell">
-                <h4 style="color:#ff3b30; margin-top:0;">📉 เจาะลึกแดงกลืนกิน (Bearish Engulfing):</h4>
-                <p>• <b>พฤติกรรมเจ้ามือ:</b> ราคาลอยอยู่ด้านบนจู่ๆ เกิดแท่งแดงยักษ์เทกระจาดลากดิ่งลงมายาวมาก ตัวเนื้อเทียนหนาใหญ่กลืนกินแท่งเขียวก่อนหน้าจมมิดหายไปอย่างไร้ร่องรอย บ่งบอกว่าเจ้ามือล้างพอร์ตหนีตายกันหมดแล้ว</p>
-                <p>• <b>เงื่อนไขตัดสินใจ:</b> แรงขายคุมตลาดเบ็ดเสร็จ กราฟพังแนวรับทันที</p>
-                <p style="color:#ff3b30; font-weight:bold; margin-bottom:0;">🎯 การออก Order (S): สัญญาณนี้หนีตายด่วน (S+) มีออเดอร์ฝั่งซื้อค้างอยู่ให้กดสั่งขายล้างพอร์ตคัทลอสทิ้งทุกราคา ห้ามฝืนถัวเด็ดขาด!</p>
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown("""
-            <div class="decision-card-sell">
-                <h4 style="color:#ff3b30; margin-top:0;">🌌 เจาะลึกดาวดับสามสหาย (Evening Star):</h4>
-                <p>• <b>พฤติกรรมเจ้ามือ:</b> รูปแบบแดนสนธยาตรงข้ามกับ Morning Star (แท่งเขียวยาวขึ้นมา -> แท่งโดจิเล็กๆ หมดแรงวิ่งที่ยอดดอย -> แท่งแดงยาวทุบดิ่งสวนลงมา) เป็นการจบรอบขาขึ้นอย่างเป็นทางการ</p>
-                <p>• <b>เงื่อนไขตัดสินใจ:</b> เมื่อแท่งแดงที่สามลากกินลึกเกินกึ่งกลางของแท่งเขียวแรก</p>
-                <p style="color:#ff3b30; font-weight:bold; margin-bottom:0;">🎯 การออก Order (S): ยืนยันจังหวะเปลี่ยนเป็นเทรนด์ขาลง ให้กดเปิดออเดอร์ขายถอนทุนและล็อกกำไรออกมาก่อนกราฟจะไหลลึกครับ</p>
-            </div>
-            """, unsafe_allow_html=True)
+# 3. หมวดหมู่คำสั่งระบบและพอร์ตเชื่อมต่อหลัก (Uplink / System / Config OLT ล่าสุด)
+system_commands = {
+    "🏗️ ชุดคำสั่งเริ่มต้นตู้ใหม่ (Initial Config)": [
+        ["คำสั่งรวดเดียว สำหรับจัดบอร์ดตั้งชื่อระบบ แฟน เทส และสร้างโพรไฟล์บนตู้ OLT ตัวใหม่", 
+"""configure terminal 
+hostname kri-sigm4-24kolt02
+username nex password N3x@autoconfig privilege 15
+
+vlan database
+vlan 16 name nex-wifi24k
+exit
+
+interface vlan16
+ip address 10.223.194.116 255.255.255.0
+byname nex-wifi24k
+exit
+ip route 0.0.0.0 0.0.0.0 10.223.194.1
+
+interface xgei_1/3/2
+no shutdown
+hybrid-attribute fiber
+description link to kri_kph_lpe1,Ethernet0 
+switchport mode trunk
+switchport vlan 16 tag
+exit
+
+ntp server 10.223.194.1 priority 1
+ntp enable
+clock timezone Thailand 7 0
+snmp-server community ntx_public view AllView rw
+snmp-server host 1.179.233.29 version 2c ntx_public enable NOTIFICATIONS target-addr-name EMS_1.179.233.29 isnmsserver
+auto-write enable
+auto-write 02:00:00 everyday
+
+no fan env-card-device
+no fan env-uplink-device
+no fan env-serial-baudrate
+fan epm enable
+
+pon
+onu-type ZTEG-F600 gpon description 4ETH
+onu-type-if ZTEG-F600 eth_0/1-4
+exit
+
+gpon
+profile tcont MDES-10M-IN type 2 assured 13000
+exit
+
+traffic-profile MDES-30M-OUT ip cir 39000 cbs 128 pir 39000 pbs 256
+exit
+write"""]
+    ],
+    "📡 ตรวจสอบพอร์ตเชื่อมต่อหลัก (Uplink)": [
+        ["เช็คสถานะทางกายภาพและระดับความเร็ว (Speed) พอร์ต Uplink", f"show interface port-status xgei_1/"],
+        ["เช็คข้อมูลโมดูลแสงและระดับแสงของพอร์ต Uplink ล่าสุด (วิธีที่ 1)", f"show interface optical-module-info xgei_1/"],
+        ["เช็คระดับความแรงแสงโมดูลพอร์ต Uplink (วิธีที่ 2)", f"show optical-module-info xgei-1/4"]
+    ],
+    "❌ คำสั่งลบค่า / เคลียร์ระบบ": [
+        ["ล้างตารางเคลียร์ตารางค้าง MAC Address บน VLAN", f"mac delete vlan {input_circuit}"],
+        ["เข้าโหมดคอนฟิกเพื่อสั่งลบ MAC vlan ขยะ (เคลียร์ Session ค้าง)", f"configure terminal\nmac delete vlan {input_circuit}"],
+        ["สั่งเคลียร์ค่าตัวนับข้อผิดพลาดสายแลน (แก้ไขปัญหา CRC Error)", f"Clear counter ethernet"]
+    ],
+    "🔍 การค้นหาข้อมูลภาพรวมตู้": [
+        ["ค้นหาจุดเริ่มต้น Config บนตู้ตามเลขวงจรลูกค้า", f"show run | begin {input_circuit}"],
+        ["โชว์รายชื่อ ONU ป้ายแดงที่พึ่งเสียบสายเข้ามา (หาเลข S/N ลอย)", f"show gpon onu uncfg"]
+    ]
+}
+
+# 4. หมวดหมู่คำสั่งรันบนคอมพิวเตอร์หน้างาน (Windows CMD)
+pc_cmd_commands = {
+    "💻 คำสั่งวิเคราะห์เน็ตหน้างานผ่านคอมพิวเตอร์": [
+        ["ipconfig", "ipconfig"],
+        ["ipconfig /all (เช็คไอพี, แมคแอดเดรส และการ์ดแลนทั้งหมดในคอม)", "ipconfig /all"],
+        ["arp -a (ตรวจสอบหมายเลขไอพีและแมคของอุปกรณ์อื่นๆ ในวง LAN เดียวกัน)", "arp -a"],
+        ["nslookup (ใช้ตรวจสอบการทำงานและแปลชื่อโดเมน/DNS)", "nslookup google.com"],
+        ["tracert (ทดสอบวิ่งหาเส้นทาง Network ยิงเช็คว่าเน็ตไปติดคอขวดที่ฮอปไหน)", "tracert 8.8.8.8"]
+    ]
+}
+
+
+# --- 3. DISPLAY ENGINE (สลับแท็บแบบใช้งานสะดวกรวดเร็ว) ---
+
+tab_c300, tab_c600, tab_sys, tab_pc = st.tabs([
+    "🍏 1. ตู้ซีรีส์เดิม ZTE C300", 
+    "⚡ 2. ตู้ซีรีส์ใหม่ ZTE C600", 
+    "📡 3. คำสั่ง Uplink / ชุดตั้งตู้ OLT ใหม่",
+    "💻 4. คำสั่ง CMD บนคอมพิวเตอร์ (Windows)"
+])
+
+# แสดงผลพาร์ท C300
+with tab_c300:
+    st.markdown("<h2>🍏 หมวดคำสั่งสำหรับตู้ซีรีส์ ZTE C300</h2>", unsafe_allow_html=True)
+    search_c300 = st.text_input("🔍 ค้นหาคำสั่งภายในตู้ C300:", "", key="search_c300_key").lower()
+    
+    for sub_category, items in c300_commands.items():
+        filtered_items = [i for i in items if search_c300 in i[0].lower() or search_c300 in i[1].lower()]
+        if filtered_items:
+            st.markdown(f"### {sub_category}")
+            for description, cli_command in filtered_items:
+                col_desc, col_code = st.columns([1.1, 1.9])
+                with col_desc: st.markdown(f"📌 **{description}**")
+                with col_code: st.code(cli_command, language="routeros")
+
+# แสดงผลพาร์ท C600
+with tab_c600:
+    st.markdown("<h2>⚡ หมวดคำสั่งสำหรับตู้ซีรีส์ใหม่ ZTE C600</h2>", unsafe_allow_html=True)
+    search_c600 = st.text_input("🔍 ค้นหาคำสั่งภายในตู้ C600:", "", key="search_c600_key").lower()
+    
+    for sub_category, items in c600_commands.items():
+        filtered_items = [i for i in items if search_c600 in i[0].lower() or search_c600 in i[1].lower()]
+        if filtered_items:
+            st.markdown(f"### {sub_category}")
+            for description, cli_command in filtered_items:
+                col_desc, col_code = st.columns([1.1, 1.9])
+                with col_desc: st.markdown(f"📌 **{description}**")
+                with col_code: st.code(cli_command, language="routeros")
+
+# แสดงผลพาร์ท System / Uplink / Initial Config ตัวใหม่
+with tab_sys:
+    st.markdown("<h2>📡 หมวดคำสั่งระบบ Uplink และการตั้งค่าตู้ OLT เริ่มต้น</h2>", unsafe_allow_html=True)
+    search_sys = st.text_input("🔍 ค้นหาคำสั่งระบบ:", "", key="search_sys_key").lower()
+    
+    for sub_category, items in system_commands.items():
+        filtered_items = [i for i in items if search_sys in i[0].lower() or search_sys in i[1].lower()]
+        if filtered_items:
+            st.markdown(f"### {sub_category}")
+            for description, cli_command in filtered_items:
+                # กรณีสคริปต์ยาวมาก (Initial Config) ให้กินพื้นที่เต็มยาวลงมาสวยๆ
+                if len(cli_command) > 500:
+                    st.markdown(f"📌 **{description}**")
+                    st.code(cli_command, language="routeros")
+                else:
+                    col_desc, col_code = st.columns([1.1, 1.9])
+                    with col_desc: st.markdown(f"📌 **{description}**")
+                    with col_code: st.code(cli_command, language="routeros")
+
+# แสดงผลพาร์ท PC CMD ยิงเช็คเน็ตฝั่งคอมลูกค้า
+with tab_pc:
+    st.markdown("<h2>💻 หมวดคำสั่ง CMD บนคอมพิวเตอร์ (Windows) สำหรับวิเคราะห์หน้างาน</h2>", unsafe_allow_html=True)
+    search_pc = st.text_input("🔍 ค้นหาคำสั่งคอมพิวเตอร์:", "", key="search_pc_key").lower()
+    
+    for sub_category, items in pc_cmd_commands.items():
+        filtered_items = [i for i in items if search_pc in i[0].lower() or search_pc in i[1].lower()]
+        if filtered_items:
+            st.markdown(f"### {sub_category}")
+            for description, cli_command in filtered_items:
+                col_desc, col_code = st.columns([1.1, 1.9])
+                with col_desc: st.markdown(f"📌 **{description}**")
+                with col_code: st.code(cli_command, language="batch")
+
+# --- 5. FOOTER TEMPLATE PROFILE EXTRA ---
+st.markdown("---")
+with st.expander("📝 ส่องดูรูปแบบตัวอย่างหน้าโปรไฟล์จัดพอร์ต ONU"):
+    st.code("""service internet gemport 1 vlan 10
+ interface eth eth_0/2 state lock
+ interface eth eth_0/3 state lock
+ interface eth eth_0/4 state lock
+ vlan port eth_0/1 mode tag vlan 10
+ dhcp-ip ethuni eth_0/1 forbidden""", language="routeros")

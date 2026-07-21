@@ -201,7 +201,7 @@ with st.sidebar.expander("⚙️ Config", expanded=True):
     ]
     selected_menu = st.radio("เลือกหมวดหมู่การใช้งาน:", config_options, label_visibility="collapsed")
 
-# 2. แถบเมนู Web (เพิ่มใหม่ พร้อมลิงก์ภายนอก)
+# 2. แถบเมนู Web (รวมลิงก์ทั้งหมด 11 เว็บ)
 with st.sidebar.expander("🌐 Web", expanded=True):
     st.markdown("🔗 [Data Kan](https://sites.google.com/view/datakan)")
     st.markdown("🔗 [182.52.113.237](http://182.52.113.237/)")
@@ -210,6 +210,10 @@ with st.sidebar.expander("🌐 Web", expanded=True):
     st.markdown("🔗 [Umbo System](http://10.228.59.45/umbo/login.php?uri=%2Fumbo%2F)")
     st.markdown("🔗 [NT 1888 Request](https://nt1888.ntplc.co.th/request)")
     st.markdown("🔗 [TOP NT Central](https://top.ntcentral.net/login)")
+    st.markdown("🔗 [NEX Intra NT](https://nex.intra.ntplc.co.th/ip/nex/)")
+    st.markdown("🔗 [Ruijie Cloud](https://cloud-as.ruijienetworks.com/sso/login)")
+    st.markdown("🔗 [IP Server (10.0.105.85)](http://10.0.105.85/)")
+    st.markdown("🔗 [System Login (203.113.70.137)](http://203.113.70.137/login)")
 
 
 # --- 3. MAIN CONTENT DISPLAY ---

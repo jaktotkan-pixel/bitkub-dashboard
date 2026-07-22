@@ -135,6 +135,42 @@ write"""]
     ]
 }
 
+zte_pracharath_commands = {
+    "🔑 รหัสผ่านเข้าใช้งาน (Account & Credentials)": [
+        ["ข้อมูลการเข้าใช้งาน SW ZTE ประชารัฐ", 
+"""User: nex
+Pass: N3x@autoconfig 
+Login enable Pass: zxr10"""]
+    ],
+    "🔍 คำสั่งตรวจสอบและเช็คแสง (Switch ZTE)": [
+        ["แสดงสถานะ Port Up / Down", "show interface description"],
+        ["เช็คสถานะ Port โดยรวมทั้งหมด", "show running-config"],
+        ["เช็คแสงออกจาก SFP (TX Power)", "show optical-inform details tx-power interface xgei_0/"],
+        ["เช็คแสงกลับมาจาก SFP (RX Power)", "show optical-inform details rx-power interface xgei_0/"],
+        ["คำสั่งสำหรับ Sw 24k (เปิด/ปิด ระบบเช็คแสง)", "# optical-inform monitor enable"]
+    ]
+}
+
+extreme_commands = {
+    "🔍 คำสั่งตรวจสอบสถานะ & MAC Address": [
+        ["ดู Status (แสดงแบบ No-Refresh ไม่ใช่ Real-time)", "show port no-refresh"],
+        ["ดู MAC Address ภายใน VLAN ที่กำหนด", "show fdb vlan v..."],
+        ["ดูว่าพอร์ตที่ระบุ มี VLAN อะไรผ่านบ้าง", "show fdb port ..."],
+        ["ล้างข้อมูล FDB ในพอร์ตที่ระบุ", "cler fdb ports ..."]
+    ],
+    "⚙️ คำสั่งจัดการ VLAN & Configuration": [
+        ["เพิ่ม VLAN แบบ Tagged ใส่พอร์ต", "config vlan v... add port ... tagged"],
+        ["ลบ VLAN ออกจากพอร์ต", "config vlan v... delete port ..."],
+        ["ตรวจสอบว่า VLAN ถูกใส่ไปที่พอร์ตไหนบ้าง", "show vlan v..."],
+        ["สร้าง VLAN ใหม่พร้อมกำหนด Tag", "create vlan v... tag ..."],
+        ["แสดงการตั้งค่าเฉพาะพอร์ต", "configure ports 17 display"]
+    ],
+    "🔦 คำสั่งตรวจสอบค่าแสง SFP (Transceiver)": [
+        ["เช็คระดับแสงภาพรวมทุกพอร์ต", "show ports transceiver information detail"],
+        ["เช็คระดับแสงแยกเฉพาะพอร์ต (ตัวอย่างพอร์ต 11)", "show ports 11 transceiver information detail"]
+    ]
+}
+
 pc_cmd_commands = {
     "🚀 ทางลัดเปิดโปรแกรมระบบ & หน้าต่างด่วน (Shortcut)": [
         ["javis (คำสั่งด่วนเรียกเปิดระบบช่วยเหลือ หรือเปิดลิงก์ Javis ผ่านบราวเซอร์หลัก)", "start https://javis.nt.co.th"],
@@ -195,6 +231,8 @@ with st.sidebar.expander("⚙️ Config", expanded=True):
     config_options = [
         "🍏 ZTE C300 Series",
         "⚡ ZTE C600 Series",
+        "🟢 SW ZTE ประชารัฐ",
+        "🟣 Extreme Switch",
         "📡 Uplink & Initial Config",
         "💻 Windows CMD Shortcuts",
         "🤖 Javis Line Bot"
@@ -202,7 +240,7 @@ with st.sidebar.expander("⚙️ Config", expanded=True):
     selected_menu = st.radio("เลือกหมวดหมู่การใช้งาน:", config_options, label_visibility="collapsed")
 
 # 2. แถบเมนู Web (รวมลิงก์ทั้งหมด 11 เว็บ)
-with st.sidebar.expander("🌐 Web", expanded=True):
+with st.sidebar.expander("🌐 Web", expanded=False):
     st.markdown("🔗 [Data Kan](https://sites.google.com/view/datakan)")
     st.markdown("🔗 [182.52.113.237](http://182.52.113.237/)")
     st.markdown("🔗 [TSP Login](https://tsp.totbb.net/index.php?r=tbl-users%2Flogin)")
@@ -214,6 +252,39 @@ with st.sidebar.expander("🌐 Web", expanded=True):
     st.markdown("🔗 [Ruijie Cloud](https://cloud-as.ruijienetworks.com/sso/login)")
     st.markdown("🔗 [IP Server (10.0.105.85)](http://10.0.105.85/)")
     st.markdown("🔗 [System Login (203.113.70.137)](http://203.113.70.137/login)")
+
+# 3. แถบเมนู เลขวงจรลูกค้า (เพิ่มใหม่)
+with st.sidebar.expander("🆔 เลขวงจรลูกค้า", expanded=False):
+    st.markdown("• `3452J1796` : พี่ปุ๋ย")
+    st.markdown("• `3452J1425`, `3452J3606` : หวานเย็น")
+    st.markdown("• `3452J1426` : น้าแดง")
+    st.markdown("• `3451J9174` : พี่นก")
+    st.markdown("• `3451J2660` : นุ่น")
+    st.markdown("• `3452J8002` : ตาคิด")
+    st.markdown("• `3451J5651` : อ.เดชา")
+    st.markdown("• `3452J2060` : บ้านอ้อน")
+
+# 4. แถบเมนู ที่อยู่ NT (เพิ่มใหม่)
+with st.sidebar.expander("📍 ที่อยู่ NT", expanded=False):
+    st.markdown("**ตึกเก่า:**\n111/2 ถ.อู่ทอง ต.บ้านเหนือ อ.เมือง จ.กาญจนบุรี 71000")
+    st.markdown("---")
+    st.markdown("**ตึกเขาตอง:**\n1/11 ม.9 ต.ปากแพรก อ.เมือง จ.กาญจนบุรี 71000")
+
+# 5. แถบเมนู IP Phone (เพิ่มใหม่)
+with st.sidebar.expander("📞 IP Phone", expanded=False):
+    st.markdown("• `sipp11.totbb.net`")
+    st.markdown("• `sipp12.totbb.net`")
+    st.markdown("• `sipp13.totbb.net`")
+    st.markdown("• `172.31.83.4` (อยุธยา)")
+    st.markdown("• `172.31.92.4` (เพชร)")
+    st.markdown("• `172.30.202.4`")
+
+# 6. แถบเมนู SecureCRT (เพิ่มใหม่)
+with st.sidebar.expander("🔐 SecureCRT", expanded=False):
+    st.markdown("• `10.227.102.190` *(ใช้อยู่)*")
+    st.markdown("• `10.224.55.121`")
+    st.markdown("• `10.224.55.125`")
+    st.markdown("• `10.224.55.129`")
 
 
 # --- 3. MAIN CONTENT DISPLAY ---
@@ -234,7 +305,7 @@ def render_command_section(title, command_dict, lang="routeros"):
         if filtered:
             st.markdown(f"### {sub_cat}")
             for desc, code in filtered:
-                if len(code) > 500:
+                if len(code) > 500 or "\n" in code:
                     st.markdown(f"📌 **{desc}**")
                     st.code(code, language=lang)
                 else:
@@ -248,6 +319,12 @@ if selected_menu == "🍏 ZTE C300 Series":
 
 elif selected_menu == "⚡ ZTE C600 Series":
     render_command_section("⚡ หมวดคำสั่งสำหรับตู้ซีรีส์ใหม่ ZTE C600", c600_commands)
+
+elif selected_menu == "🟢 SW ZTE ประชารัฐ":
+    render_command_section("🟢 หมวดคำสั่งและรหัสผ่าน SW ZTE ประชารัฐ", zte_pracharath_commands)
+
+elif selected_menu == "🟣 Extreme Switch":
+    render_command_section("🟣 หมวดคำสั่งสำหรับ Extreme Switch", extreme_commands)
 
 elif selected_menu == "📡 Uplink & Initial Config":
     render_command_section("📡 หมวดคำสั่งระบบ Uplink และการตั้งค่าตู้ OLT เริ่มต้น", system_commands)

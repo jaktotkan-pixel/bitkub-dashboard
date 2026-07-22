@@ -759,7 +759,7 @@ if dash_search:
         
         if cat_matches:
             found_global = True
-            st.markdown(f"#### {cat_name}")
+            st.markdown(f"#### ⚙️ หมวด Config: {cat_name}")
             for sub_cat, desc, code in cat_matches:
                 h_desc = highlight_text(desc, dash_search)
                 st.markdown(f"📌 [{sub_cat}] **{h_desc}**", unsafe_allow_html=True)

@@ -1,9 +1,10 @@
 import streamlit as st
+import re
 
 # --- 1. SETUP PAGE ---
 st.set_page_config(page_title="ZTE OLT & PC Command Center", layout="wide")
 
-# ปรับดีไซน์เป็นธีมขาว คลีน สบายตา
+# ปรับดีไซน์เป็นธีมขาว คลีน สบายตา + Highlight CSS
 st.markdown("""
 <style>
     /* พื้นหลังสีขาวสะอาดตา */
@@ -17,6 +18,16 @@ st.markdown("""
     h2 { color: #0969da !important; font-weight: 700; margin-top: 15px; margin-bottom: 5px; }
     h3 { color: #24292f !important; font-weight: 600; font-size: 17px; border-bottom: 2px solid #d0d7de; padding-bottom: 6px; margin-top: 15px; }
     
+    /* สไตล์ Highlight สีเหลืองเข้ม */
+    mark.highlight {
+        background-color: #ffeb3b;
+        color: #000000;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: bold;
+        box-shadow: 0 0 2px rgba(0,0,0,0.2);
+    }
+
     /* ปรับแต่ง Sidebar */
     [data-testid="stSidebar"] { background-color: #f8f9fa; border-right: 1px solid #e1e4e8; }
     
@@ -24,6 +35,14 @@ st.markdown("""
     .stDeployButton { display:none; }
 </style>
 """, unsafe_allow_html=True)
+
+
+# ฟังก์ชันทำ Highlight แถบสีเหลือง
+def highlight_text(text, keyword):
+    if not keyword:
+        return text
+    pattern = re.compile(re.escape(keyword), re.IGNORECASE)
+    return pattern.sub(lambda m: f'<mark class="highlight">{m.group(0)}</mark>', str(text))
 
 
 # =================================================================
@@ -282,7 +301,6 @@ javis_bot_commands = {
     ]
 }
 
-# ข้อมูลระยะสาย OFC
 ofc_distances = [
     ("หนองปรือ - เขาโจด", "19.2 km", "Core 17, 16 | Bead core 7 (1.7km จากเขาโจด)"),
     ("เขาโจด - สมเด็จเจริญ", "19.0 km", "Core 14, 18"),
@@ -405,6 +423,31 @@ ofc_distances = [
     ("กาญ - บิ๊กc", "5.5 km", "-")
 ]
 
+circuit_list = [
+    ("3452J1796", "พี่ปุ๋ย"),
+    ("3452J1425, 3452J3606", "หวานเย็น"),
+    ("3452J1426", "น้าแดง"),
+    ("3451J9174", "พี่นก"),
+    ("3451J2660", "นุ่น"),
+    ("3452J8002", "ตาคิด"),
+    ("3451J5651", "อ.เดชา"),
+    ("3452J2060", "บ้านอ้อน")
+]
+
+all_categories = {
+    "🍏 ZTE C300 Series": c300_commands,
+    "⚡ ZTE C600 Series": c600_commands,
+    "🟢 SW ZTE ประชารัฐ": zte_pracharath_commands,
+    "🟣 Extreme Switch": extreme_commands,
+    "🔵 Cisco SG300": sg300_commands,
+    "🔴 Huawei Switch": huawei_commands,
+    "📞 ชุมสาย Fixline": fixline_commands,
+    "📟 DSLAM Forth": dslam_commands,
+    "📡 Uplink & Initial Config": system_commands,
+    "💻 Windows CMD Shortcuts": pc_cmd_commands,
+    "🤖 Javis Line Bot": javis_bot_commands
+}
+
 
 # --- 2. SIDEBAR NAVIGATION ---
 st.sidebar.markdown("## 📌 เมนูหลัก")
@@ -412,20 +455,7 @@ st.sidebar.markdown("## 📌 เมนูหลัก")
 # 1. แถบเมนู Config
 selected_menu = None
 with st.sidebar.expander("⚙️ Config", expanded=True):
-    config_options = [
-        "🍏 ZTE C300 Series",
-        "⚡ ZTE C600 Series",
-        "🟢 SW ZTE ประชารัฐ",
-        "🟣 Extreme Switch",
-        "🔵 Cisco SG300",
-        "🔴 Huawei Switch",
-        "📞 ชุมสาย Fixline",
-        "📟 DSLAM Forth",
-        "📡 Uplink & Initial Config",
-        "💻 Windows CMD Shortcuts",
-        "🤖 Javis Line Bot"
-    ]
-    selected_menu = st.radio("เลือกหมวดหมู่การใช้งาน:", config_options, label_visibility="collapsed")
+    selected_menu = st.radio("เลือกหมวดหมู่การใช้งาน:", list(all_categories.keys()), label_visibility="collapsed")
 
 # 2. แถบเมนู Web (11 เว็บ)
 with st.sidebar.expander("🌐 Web", expanded=False):
@@ -441,10 +471,10 @@ with st.sidebar.expander("🌐 Web", expanded=False):
     st.markdown("🔗 [IP Server (10.0.105.85)](http://10.0.105.85/)")
     st.markdown("🔗 [System Login (203.113.70.137)](http://203.113.70.137/login)")
 
-# 3. แถบเมนู ระยะสาย Optic (อัปเดตข้อมูลเต็ม)
+# 3. แถบเมนู ระยะสาย Optic
 with st.sidebar.expander("📏 ระยะสาย Optic", expanded=False):
     st.markdown("#### 🛠️ ข้อมูลระยะสาย OFC หน้างาน")
-    search_ofc = st.text_input("🔍 ค้นหาเส้นทางสาย OFC:", "", key="search_ofc_sidebar").lower()
+    search_ofc = st.text_input("🔍 ค้นหาเส้นทางสาย OFC:", "", key="search_ofc_sidebar").strip().lower()
     
     filtered_ofc = [
         row for row in ofc_distances 
@@ -462,14 +492,8 @@ with st.sidebar.expander("📏 ระยะสาย Optic", expanded=False):
 
 # 4. แถบเมนู เลขวงจรลูกค้า
 with st.sidebar.expander("🆔 เลขวงจรลูกค้า", expanded=False):
-    st.markdown("• `3452J1796` : พี่ปุ๋ย")
-    st.markdown("• `3452J1425`, `3452J3606` : หวานเย็น")
-    st.markdown("• `3452J1426` : น้าแดง")
-    st.markdown("• `3451J9174` : พี่นก")
-    st.markdown("• `3451J2660` : นุ่น")
-    st.markdown("• `3452J8002` : ตาคิด")
-    st.markdown("• `3451J5651` : อ.เดชา")
-    st.markdown("• `3452J2060` : บ้านอ้อน")
+    for code, owner in circuit_list:
+        st.markdown(f"• `{code}` : {owner}")
 
 # 5. แถบเมนู ที่อยู่ NT
 with st.sidebar.expander("📍 ที่อยู่ NT", expanded=False):
@@ -494,66 +518,145 @@ with st.sidebar.expander("🔐 SecureCRT", expanded=False):
     st.markdown("• `10.224.55.129`")
 
 
-# --- 3. MAIN CONTENT DISPLAY ---
+# --- 3. MAIN CONTENT DISPLAY & DASHBOARD SEARCH ---
 
 st.markdown("<h1 style='color: #1a7f37; margin-top: -10px; font-weight: 800;'>💻 ZTE OLT & PC COMMAND CENTER</h1>", unsafe_allow_html=True)
+
+# 🔍 เพิ่ม Tab ค้นหาหลักตรง Dashboard + ปุ่มกดค้นหา
+col_input, col_btn = st.columns([5, 1])
+
+with col_input:
+    dash_search = st.text_input(
+        "ค้นหาข้ามระบบ", 
+        placeholder="🔍 พิมพ์คำค้นหาด่วน เช่น หนองบัว, javis, nodelist, show, IP...", 
+        label_visibility="collapsed",
+        key="dash_global_search"
+    ).strip()
+
+with col_btn:
+    search_clicked = st.button("🔍 ค้นหา", use_container_width=True, type="primary")
+
 st.markdown("---")
 
-def render_command_section(title, command_dict, lang="routeros"):
-    st.markdown(f"<h2>{title}</h2>", unsafe_allow_html=True)
-    search_term = st.text_input(f"🔍 ค้นหาคำสั่งในหมวดนี้:", "", key=f"search_{title}").lower()
-    
-    for sub_cat, items in command_dict.items():
-        filtered = [
-            i for i in items 
-            if search_term in i[0].lower() or search_term in i[1].lower()
-        ]
+# กรณีมีการพิมพ์คำค้นหาในช่อง Global Search
+if dash_search:
+    st.markdown(f"### 🎯 ผลการค้นหาสำหรับ: `<mark class='highlight'>{dash_search}</mark>`", unsafe_allow_html=True)
+    found_global = False
+
+    # 1. ค้นหาในระยะสาย OFC
+    matched_ofc = [row for row in ofc_distances if dash_search.lower() in row[0].lower() or dash_search.lower() in row[1].lower() or dash_search.lower() in row[2].lower()]
+    if matched_ofc:
+        found_global = True
+        st.markdown("#### 📏 พบใน: ระยะสาย Optic (OFC)")
+        for route, dist, note in matched_ofc:
+            h_route = highlight_text(route, dash_search)
+            h_note = highlight_text(note, dash_search)
+            st.markdown(f"• **{h_route}** : `{dist}` (หมายเหตุ: {h_note})", unsafe_allow_html=True)
+        st.markdown("---")
+
+    # 2. ค้นหาในเลขวงจรลูกค้า
+    matched_circuits = [c for c in circuit_list if dash_search.lower() in c[0].lower() or dash_search.lower() in c[1].lower()]
+    if matched_circuits:
+        found_global = True
+        st.markdown("#### 🆔 พบใน: เลขวงจรลูกค้า")
+        for code, owner in matched_circuits:
+            h_code = highlight_text(code, dash_search)
+            h_owner = highlight_text(owner, dash_search)
+            st.markdown(f"• **{h_code}** : {h_owner}", unsafe_allow_html=True)
+        st.markdown("---")
+
+    # 3. ค้นหาในคำสั่ง Config ทุกหมวด
+    for cat_name, cat_dict in all_categories.items():
+        cat_matches = []
+        for sub_cat, items in cat_dict.items():
+            for desc, code in items:
+                if dash_search.lower() in desc.lower() or dash_search.lower() in code.lower():
+                    cat_matches.append((sub_cat, desc, code))
         
-        if filtered:
-            st.markdown(f"### {sub_cat}")
-            for desc, code in filtered:
-                if len(code) > 500 or "\n" in code:
-                    st.markdown(f"📌 **{desc}**")
-                    st.code(code, language=lang)
-                else:
-                    c1, c2 = st.columns([1.1, 1.9])
-                    with c1: st.markdown(f"📌 **{desc}**")
-                    with c2: st.code(code, language=lang)
+        if cat_matches:
+            found_global = True
+            st.markdown(f"#### {cat_name}")
+            for sub_cat, desc, code in cat_matches:
+                h_desc = highlight_text(desc, dash_search)
+                st.markdown(f"📌 [{sub_cat}] **{h_desc}**", unsafe_allow_html=True)
+                
+                # เลือกโหมดภาษาการแสดงผล Code ให้เหมาะสม
+                lang = "routeros"
+                if cat_name in ["📞 ชุมสาย Fixline", "📟 DSLAM Forth", "🤖 Javis Line Bot"]:
+                    lang = "text"
+                elif cat_name == "💻 Windows CMD Shortcuts":
+                    lang = "batch"
+                    
+                st.code(code, language=lang)
+            st.markdown("---")
 
-# แสดงผลตามหน้าใน Config
-if selected_menu == "🍏 ZTE C300 Series":
-    render_command_section("🍏 หมวดคำสั่งสำหรับตู้ซีรีส์ ZTE C300", c300_commands)
+    if not found_global:
+        st.warning(f"❌ ไม่พบข้อมูลใดๆ ที่ตรงกับคำว่า '{dash_search}'")
 
-elif selected_menu == "⚡ ZTE C600 Series":
-    render_command_section("⚡ หมวดคำสั่งสำหรับตู้ซีรีส์ใหม่ ZTE C600", c600_commands)
+else:
+    # แสดงผลตามหมวดหมู่ที่เลือกจาก Sidebar เมื่อไม่มีการพิมพ์ค้นหา
+    def render_command_section(title, command_dict, lang="routeros"):
+        st.markdown(f"<h2>{title}</h2>", unsafe_allow_html=True)
+        
+        # ช่องค้นหาเฉพาะหมวดนี้
+        sec_search = st.text_input(f"🔍 ค้นหาเฉพาะหมวดนี้:", "", key=f"search_{title}").strip().lower()
+        
+        found_any = False
+        for sub_cat, items in command_dict.items():
+            filtered = [
+                i for i in items 
+                if sec_search in i[0].lower() or sec_search in i[1].lower()
+            ]
+            
+            if filtered:
+                found_any = True
+                st.markdown(f"### {sub_cat}")
+                for desc, code in filtered:
+                    h_desc = highlight_text(desc, sec_search) if sec_search else desc
+                    if len(code) > 500 or "\n" in code:
+                        st.markdown(f"📌 **{h_desc}**", unsafe_allow_html=True)
+                        st.code(code, language=lang)
+                    else:
+                        c1, c2 = st.columns([1.1, 1.9])
+                        with c1: st.markdown(f"📌 **{h_desc}**", unsafe_allow_html=True)
+                        with c2: st.code(code, language=lang)
+        
+        if not found_any and sec_search:
+            st.warning(f"ไม่พบข้อมูลคำสั่งที่ตรงกับ '{sec_search}' ในหมวดนี้")
 
-elif selected_menu == "🟢 SW ZTE ประชารัฐ":
-    render_command_section("🟢 หมวดคำสั่งและรหัสผ่าน SW ZTE ประชารัฐ", zte_pracharath_commands)
+    if selected_menu == "🍏 ZTE C300 Series":
+        render_command_section("🍏 หมวดคำสั่งสำหรับตู้ซีรีส์ ZTE C300", c300_commands)
 
-elif selected_menu == "🟣 Extreme Switch":
-    render_command_section("🟣 หมวดคำสั่งสำหรับ Extreme Switch", extreme_commands)
+    elif selected_menu == "⚡ ZTE C600 Series":
+        render_command_section("⚡ หมวดคำสั่งสำหรับตู้ซีรีส์ใหม่ ZTE C600", c600_commands)
 
-elif selected_menu == "🔵 Cisco SG300":
-    render_command_section("🔵 หมวดคำสั่งสำหรับ Cisco SG300", sg300_commands)
+    elif selected_menu == "🟢 SW ZTE ประชารัฐ":
+        render_command_section("🟢 หมวดคำสั่งและรหัสผ่าน SW ZTE ประชารัฐ", zte_pracharath_commands)
 
-elif selected_menu == "🔴 Huawei Switch":
-    render_command_section("🔴 หมวดคำสั่งสำหรับ Huawei Switch", huawei_commands)
+    elif selected_menu == "🟣 Extreme Switch":
+        render_command_section("🟣 หมวดคำสั่งสำหรับ Extreme Switch", extreme_commands)
 
-elif selected_menu == "📞 ชุมสาย Fixline":
-    render_command_section("📞 หมวดคำสั่งระบบชุมสาย Fixline", fixline_commands, lang="text")
+    elif selected_menu == "🔵 Cisco SG300":
+        render_command_section("🔵 หมวดคำสั่งสำหรับ Cisco SG300", sg300_commands)
 
-elif selected_menu == "📟 DSLAM Forth":
-    render_command_section("📟 ข้อมูลการเชื่อมต่อ DSLAM Forth", dslam_commands, lang="text")
+    elif selected_menu == "🔴 Huawei Switch":
+        render_command_section("🔴 หมวดคำสั่งสำหรับ Huawei Switch", huawei_commands)
 
-elif selected_menu == "📡 Uplink & Initial Config":
-    render_command_section("📡 หมวดคำสั่งระบบ Uplink และการตั้งค่าตู้ OLT เริ่มต้น", system_commands)
+    elif selected_menu == "📞 ชุมสาย Fixline":
+        render_command_section("📞 หมวดคำสั่งระบบชุมสาย Fixline", fixline_commands, lang="text")
 
-elif selected_menu == "💻 Windows CMD Shortcuts":
-    render_command_section("💻 หมวดคำสั่ง CMD บนคอมพิวเตอร์ (Windows)", pc_cmd_commands, lang="batch")
+    elif selected_menu == "📟 DSLAM Forth":
+        render_command_section("📟 ข้อมูลการเชื่อมต่อ DSLAM Forth", dslam_commands, lang="text")
 
-elif selected_menu == "🤖 Javis Line Bot":
-    st.info("ℹ️ คำแจ้งเตือน: Javis เป็น LINE Bot ช่วยจัดการ Configuration ของ ZTE รูปแบบการพิมพ์ต้องใช้เครื่องหมายคอมม่า ( , ) เป็นตัวแยกชุดคำสั่งเสมอ")
-    render_command_section("🤖 Javis Line Bot Help Center", javis_bot_commands, lang="text")
+    elif selected_menu == "📡 Uplink & Initial Config":
+        render_command_section("📡 หมวดคำสั่งระบบ Uplink และการตั้งค่าตู้ OLT เริ่มต้น", system_commands)
+
+    elif selected_menu == "💻 Windows CMD Shortcuts":
+        render_command_section("💻 หมวดคำสั่ง CMD บนคอมพิวเตอร์ (Windows)", pc_cmd_commands, lang="batch")
+
+    elif selected_menu == "🤖 Javis Line Bot":
+        st.info("ℹ️ คำแจ้งเตือน: Javis เป็น LINE Bot ช่วยจัดการ Configuration ของ ZTE รูปแบบการพิมพ์ต้องใช้เครื่องหมายคอมม่า ( , ) เป็นตัวแยกชุดคำสั่งเสมอ")
+        render_command_section("🤖 Javis Line Bot Help Center", javis_bot_commands, lang="text")
 
 
 # --- 4. FOOTER EXTRA ---

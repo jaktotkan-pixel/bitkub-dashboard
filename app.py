@@ -68,6 +68,103 @@ c600_commands = {
     ]
 }
 
+zte_pracharath_commands = {
+    "🔑 รหัสผ่านเข้าใช้งาน (Account & Credentials)": [
+        ["ข้อมูลการเข้าใช้งาน SW ZTE ประชารัฐ", 
+"""User: nex
+Pass: N3x@autoconfig 
+Login enable Pass: zxr10"""]
+    ],
+    "🔍 คำสั่งตรวจสอบและเช็คแสง (Switch ZTE)": [
+        ["แสดงสถานะ Port Up / Down", "show interface description"],
+        ["เช็คสถานะ Port โดยรวมทั้งหมด", "show running-config"],
+        ["เช็คแสงออกจาก SFP (TX Power)", "show optical-inform details tx-power interface xgei_0/"],
+        ["เช็คแสงกลับมาจาก SFP (RX Power)", "show optical-inform details rx-power interface xgei_0/"],
+        ["คำสั่งสำหรับ Sw 24k (เปิด/ปิด ระบบเช็คแสง)", "# optical-inform monitor enable"]
+    ]
+}
+
+extreme_commands = {
+    "🔍 คำสั่งตรวจสอบสถานะ & MAC Address": [
+        ["ดู Status (แสดงแบบ No-Refresh ไม่ใช่ Real-time)", "show port no-refresh"],
+        ["ดู MAC Address ภายใน VLAN ที่กำหนด", "show fdb vlan v..."],
+        ["ดูว่าพอร์ตที่ระบุ มี VLAN อะไรผ่านบ้าง", "show fdb port ..."],
+        ["ล้างข้อมูล FDB ในพอร์ตที่ระบุ", "cler fdb ports ..."]
+    ],
+    "⚙️ คำสั่งจัดการ VLAN & Configuration": [
+        ["เพิ่ม VLAN แบบ Tagged ใส่พอร์ต", "config vlan v... add port ... tagged"],
+        ["ลบ VLAN ออกจากพอร์ต", "config vlan v... delete port ..."],
+        ["ตรวจสอบว่า VLAN ถูกใส่ไปที่พอร์ตไหนบ้าง", "show vlan v..."],
+        ["สร้าง VLAN ใหม่พร้อมกำหนด Tag", "create vlan v... tag ..."],
+        ["แสดงการตั้งค่าเฉพาะพอร์ต", "configure ports 17 display"]
+    ],
+    "🔦 คำสั่งตรวจสอบค่าแสง SFP (Transceiver)": [
+        ["เช็คระดับแสงภาพรวมทุกพอร์ต", "show ports transceiver information detail"],
+        ["เช็คระดับแสงแยกเฉพาะพอร์ต (ตัวอย่างพอร์ต 11)", "show ports 11 transceiver information detail"]
+    ]
+}
+
+fixline_commands = {
+    "🔍 คำสั่งตรวจสอบสถานะ & ตำแหน่ง": [
+        ["ดูสถานะเลขหมาย", "stsup:sub=xxxx ;"],
+        ["ดูตำแหน่งวงจร/พอร์ต", "exdrp:dev=li3-xxxx ;"],
+        ["ดู Category (cat)", "suscp:snb=xxxx ;"],
+        ["ดูสถานะภาพรวมชุมสาย", "ststp:emg=xxxx ; emts=all ;"]
+    ],
+    "🔒 คำสั่งบล็อค & ปลดบล็อค (Block/Unblock)": [
+        ["สั่งบล็อคพอร์ตอุปกรณ์", "blodi:dev=li3-xxxx;"],
+        ["สั่งปลดบล็อคพอร์ตอุปกรณ์", "blode:dev=li3-xxxx;"],
+        ["สั่งบล็อคที่ระดับชุมสาย", "remei:emg=xxxx,pcb=emrp-a-meu,mag=em-xx;"],
+        ["สั่งปลดบล็อคที่ระดับ MAC", "blece:emg=xxxx,em=xx;"],
+        ["สั่งปลดบล็อคทั้งหมด", "recei:emg=xxxx,emrp=o-a;"]
+    ]
+}
+
+sg300_commands = {
+    "⚙️ คำสั่งพื้นฐาน & จัดการ VLAN (Cisco SG300)": [
+        ["เช็คการตั้งค่า Switch", "show running-config"],
+        ["เข้าสู่โหมด Configuration", "config terminal"],
+        ["สร้าง/เพิ่ม VLAN ใน Switch", "vlan ..."],
+        ["เข้าจัดการพอร์ตที่ต้องการ", "interface gigabitethernet ..."],
+        ["เพิ่ม VLAN แบบ Trunk ใส่พอร์ต", "switchport trunk allowed vlan add ..."],
+        ["ปิดระบบป้องกัน VLAN หลุด (Smartport)", "no macro auto smartport"]
+    ],
+    "🌐 การตั้งค่า IP Address & Gateway": [
+        ["ตั้งค่า Gateway ของ Switch", "ip default-gateway ...,...,...,..."],
+        ["ลบค่า Gateway", "no ip default-gateway ...,...,...,..."],
+        ["เข้าอินเตอร์เฟส VLAN เพื่อเปลี่ยน IP", "interface vlan 166"],
+        ["กำหนดหมายเลข IP Address & Subnet", "ip address 10.223.128.33 255.255.255.0"]
+    ]
+}
+
+huawei_commands = {
+    "⚙️ คำสั่งตั้งค่า Switch (Huawei)": [
+        ["เช็คการตั้งค่า Switch", "show running-config"],
+        ["เข้าสู่โหมด Configuration", "config terminal"],
+        ["สร้าง/เพิ่ม VLAN ใน Switch", "vlan ..."],
+        ["เข้าจัดการพอร์ตที่ต้องการ", "interface gigabitethernet ..."],
+        ["เพิ่ม VLAN แบบ Trunk ใส่พอร์ต", "switchport trunk allowed vlan add ..."],
+        ["ตั้งค่า Gateway ของ Switch", "ip default-gateway ...,...,...,..."],
+        ["ลบค่า Gateway", "no ip default-gateway ...,...,...,..."],
+        ["เข้าอินเตอร์เฟส VLAN เพื่อเปลี่ยน IP", "interface vlan 166"],
+        ["กำหนดหมายเลข IP Address & Subnet", "ip address 10.223.128.33 255.255.255.0"],
+        ["ปิดระบบป้องกัน VLAN หลุด (Smartport)", "no macro auto smartport"]
+    ]
+}
+
+dslam_commands = {
+    "📟 ข้อมูลการเชื่อมต่อ DSLAM Forth": [
+        ["Forth โหนด 577 (10.227.11.253)", 
+"""IP: 10.227.11.253
+User: krimsan
+Pass: 577kri"""],
+        ["Forth โหนด 222 (10.227.0.246)", 
+"""IP: 10.227.0.246
+User: kri01, kri02, kri03, kri04, kri05
+Pass: admin1"""]
+    ]
+}
+
 system_commands = {
     "🏗️ ชุดคำสั่งเริ่มต้นตู้ใหม่ (Initial Config)": [
         ["คำสั่งรวดเดียว สำหรับจัดบอร์ดตั้งชื่อระบบ แฟน เทส และสร้างโพรไฟล์บนตู้ OLT ตัวใหม่", 
@@ -135,42 +232,6 @@ write"""]
     ]
 }
 
-zte_pracharath_commands = {
-    "🔑 รหัสผ่านเข้าใช้งาน (Account & Credentials)": [
-        ["ข้อมูลการเข้าใช้งาน SW ZTE ประชารัฐ", 
-"""User: nex
-Pass: N3x@autoconfig 
-Login enable Pass: zxr10"""]
-    ],
-    "🔍 คำสั่งตรวจสอบและเช็คแสง (Switch ZTE)": [
-        ["แสดงสถานะ Port Up / Down", "show interface description"],
-        ["เช็คสถานะ Port โดยรวมทั้งหมด", "show running-config"],
-        ["เช็คแสงออกจาก SFP (TX Power)", "show optical-inform details tx-power interface xgei_0/"],
-        ["เช็คแสงกลับมาจาก SFP (RX Power)", "show optical-inform details rx-power interface xgei_0/"],
-        ["คำสั่งสำหรับ Sw 24k (เปิด/ปิด ระบบเช็คแสง)", "# optical-inform monitor enable"]
-    ]
-}
-
-extreme_commands = {
-    "🔍 คำสั่งตรวจสอบสถานะ & MAC Address": [
-        ["ดู Status (แสดงแบบ No-Refresh ไม่ใช่ Real-time)", "show port no-refresh"],
-        ["ดู MAC Address ภายใน VLAN ที่กำหนด", "show fdb vlan v..."],
-        ["ดูว่าพอร์ตที่ระบุ มี VLAN อะไรผ่านบ้าง", "show fdb port ..."],
-        ["ล้างข้อมูล FDB ในพอร์ตที่ระบุ", "cler fdb ports ..."]
-    ],
-    "⚙️ คำสั่งจัดการ VLAN & Configuration": [
-        ["เพิ่ม VLAN แบบ Tagged ใส่พอร์ต", "config vlan v... add port ... tagged"],
-        ["ลบ VLAN ออกจากพอร์ต", "config vlan v... delete port ..."],
-        ["ตรวจสอบว่า VLAN ถูกใส่ไปที่พอร์ตไหนบ้าง", "show vlan v..."],
-        ["สร้าง VLAN ใหม่พร้อมกำหนด Tag", "create vlan v... tag ..."],
-        ["แสดงการตั้งค่าเฉพาะพอร์ต", "configure ports 17 display"]
-    ],
-    "🔦 คำสั่งตรวจสอบค่าแสง SFP (Transceiver)": [
-        ["เช็คระดับแสงภาพรวมทุกพอร์ต", "show ports transceiver information detail"],
-        ["เช็คระดับแสงแยกเฉพาะพอร์ต (ตัวอย่างพอร์ต 11)", "show ports 11 transceiver information detail"]
-    ]
-}
-
 pc_cmd_commands = {
     "🚀 ทางลัดเปิดโปรแกรมระบบ & หน้าต่างด่วน (Shortcut)": [
         ["javis (คำสั่งด่วนเรียกเปิดระบบช่วยเหลือ หรือเปิดลิงก์ Javis ผ่านบราวเซอร์หลัก)", "start https://javis.nt.co.th"],
@@ -233,13 +294,17 @@ with st.sidebar.expander("⚙️ Config", expanded=True):
         "⚡ ZTE C600 Series",
         "🟢 SW ZTE ประชารัฐ",
         "🟣 Extreme Switch",
+        "🔵 Cisco SG300",
+        "🔴 Huawei Switch",
+        "📞 ชุมสาย Fixline",
+        "📟 DSLAM Forth",
         "📡 Uplink & Initial Config",
         "💻 Windows CMD Shortcuts",
         "🤖 Javis Line Bot"
     ]
     selected_menu = st.radio("เลือกหมวดหมู่การใช้งาน:", config_options, label_visibility="collapsed")
 
-# 2. แถบเมนู Web (รวมลิงก์ทั้งหมด 11 เว็บ)
+# 2. แถบเมนู Web (11 เว็บ)
 with st.sidebar.expander("🌐 Web", expanded=False):
     st.markdown("🔗 [Data Kan](https://sites.google.com/view/datakan)")
     st.markdown("🔗 [182.52.113.237](http://182.52.113.237/)")
@@ -253,7 +318,12 @@ with st.sidebar.expander("🌐 Web", expanded=False):
     st.markdown("🔗 [IP Server (10.0.105.85)](http://10.0.105.85/)")
     st.markdown("🔗 [System Login (203.113.70.137)](http://203.113.70.137/login)")
 
-# 3. แถบเมนู เลขวงจรลูกค้า (เพิ่มใหม่)
+# 3. แถบเมนู ระยะสาย Optic (เพิ่มใหม่)
+with st.sidebar.expander("📏 ระยะสาย Optic", expanded=False):
+    st.markdown("📌 **ข้อมูล / บันทึกระยะสาย Fiber Optic หน้างาน**")
+    st.info("พี่สามารถใส่ข้อมูลระยะสาย ค่า Loss หรือข้อมูลระยะทางสำหรับเก็บไว้บันทึกหน้างานตรงนี้ได้ครับ")
+
+# 4. แถบเมนู เลขวงจรลูกค้า
 with st.sidebar.expander("🆔 เลขวงจรลูกค้า", expanded=False):
     st.markdown("• `3452J1796` : พี่ปุ๋ย")
     st.markdown("• `3452J1425`, `3452J3606` : หวานเย็น")
@@ -264,13 +334,13 @@ with st.sidebar.expander("🆔 เลขวงจรลูกค้า", expande
     st.markdown("• `3451J5651` : อ.เดชา")
     st.markdown("• `3452J2060` : บ้านอ้อน")
 
-# 4. แถบเมนู ที่อยู่ NT (เพิ่มใหม่)
+# 5. แถบเมนู ที่อยู่ NT
 with st.sidebar.expander("📍 ที่อยู่ NT", expanded=False):
     st.markdown("**ตึกเก่า:**\n111/2 ถ.อู่ทอง ต.บ้านเหนือ อ.เมือง จ.กาญจนบุรี 71000")
     st.markdown("---")
     st.markdown("**ตึกเขาตอง:**\n1/11 ม.9 ต.ปากแพรก อ.เมือง จ.กาญจนบุรี 71000")
 
-# 5. แถบเมนู IP Phone (เพิ่มใหม่)
+# 6. แถบเมนู IP Phone
 with st.sidebar.expander("📞 IP Phone", expanded=False):
     st.markdown("• `sipp11.totbb.net`")
     st.markdown("• `sipp12.totbb.net`")
@@ -279,7 +349,7 @@ with st.sidebar.expander("📞 IP Phone", expanded=False):
     st.markdown("• `172.31.92.4` (เพชร)")
     st.markdown("• `172.30.202.4`")
 
-# 6. แถบเมนู SecureCRT (เพิ่มใหม่)
+# 7. แถบเมนู SecureCRT
 with st.sidebar.expander("🔐 SecureCRT", expanded=False):
     st.markdown("• `10.227.102.190` *(ใช้อยู่)*")
     st.markdown("• `10.224.55.121`")
@@ -325,6 +395,18 @@ elif selected_menu == "🟢 SW ZTE ประชารัฐ":
 
 elif selected_menu == "🟣 Extreme Switch":
     render_command_section("🟣 หมวดคำสั่งสำหรับ Extreme Switch", extreme_commands)
+
+elif selected_menu == "🔵 Cisco SG300":
+    render_command_section("🔵 หมวดคำสั่งสำหรับ Cisco SG300", sg300_commands)
+
+elif selected_menu == "🔴 Huawei Switch":
+    render_command_section("🔴 หมวดคำสั่งสำหรับ Huawei Switch", huawei_commands)
+
+elif selected_menu == "📞 ชุมสาย Fixline":
+    render_command_section("📞 หมวดคำสั่งระบบชุมสาย Fixline", fixline_commands, lang="text")
+
+elif selected_menu == "📟 DSLAM Forth":
+    render_command_section("📟 ข้อมูลการเชื่อมต่อ DSLAM Forth", dslam_commands, lang="text")
 
 elif selected_menu == "📡 Uplink & Initial Config":
     render_command_section("📡 หมวดคำสั่งระบบ Uplink และการตั้งค่าตู้ OLT เริ่มต้น", system_commands)

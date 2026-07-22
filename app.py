@@ -184,6 +184,200 @@ Pass: admin1"""]
     ]
 }
 
+olt_ip_commands = {
+    "📍 รายชื่อ IP OLT ในพื้นที่ & โครงข่าย": [
+        ["รายการ IP OLT ทั้งหมดในระบบ (รวมชุดเดิมและชุดใหม่ล่าสุด)", 
+"""• OLT-วังปลาหมู729 : 10.223.194.3
+• OLT-ท่าอ้อ : 10.223.194.4
+• OLT-บ้านดอนขลุบ737 : 10.223.194.8
+• OLT-หนองสองห้อง812 : 10.223.194.10
+• OLT-ทุ่งสมอ730 : 10.223.194.6
+• OLT-ด่านมะขามเตี้ย : 10.223.194.14
+• OLT-บ้านไทรทอง : 10.223.194.13
+• OLT-หนองไผ่ม.6 : 10.223.194.15
+• OLT-บ้านยางเกาะ : 10.223.194.16
+• OLT-กลอนโดม.2vlan 736 : 10.223.194.17
+• OLT-ตะเคียนงาม : 10.223.194.19
+• OLT-รางสาลี่739 : 10.223.194.23
+• OLT-หนองหญ้า : 10.223.194.29
+• OLT-วังเย็น ม.3 : 10.223.194.30
+• OLT-ดอนคราม743 : 10.223.194.27
+• OLT-สำรอง740 : 10.223.194.24
+• OLT-บ้านใหม่ : 10.223.194.25
+• OLT-ห้วยไร่ : 10.223.194.28
+• OLT-หนองเสือ742 : 10.223.194.26
+• OLT-ดอนเจดีย์ : 10.223.194.22
+• OLT-ดอนตาเพชร ม.6 : 10.223.194.55
+• OLT-เบญจพาส : 10.223.194.54
+• OLT_ห้วยสะพาน : 10.223.194.50
+• OLT-พังตรุใน : 10.223.194.47
+• OLT-หนองโรงม.4 750 : 10.223.194.49
+• OLT-หนองตาขำ752 : 10.223.194.51
+• OLT-เขากรวด : 10.223.194.52
+• OLT-พังตรุ : 10.223.194.48
+• OLT-หนองสาหร่าย : 10.223.194.57
+• OLT-หนองลาน ม.4 : 10.223.194.56
+• OLT_อุโลกสี่หมื่น ม.5 : 10.223.194.58
+• OLT-ดอนแสลบ ม.8 : 10.223.194.53
+• OLT_บ้านเก่า ม.1 : 10.223.194.66
+• OLT- ท่ากระดาน ม.1 : 10.223.194.78
+• OLT-สามยอด770 : 10.223.194.45
+• OLT- พุพรม : 10.223.194.70
+• OLT-บ่อพลอย : 10.223.194.71
+• OLT- วังไผ่ ม.7 : 10.223.194.73
+• OLT- หนองย่างช้าง : 10.223.194.44
+• OLT-ช่องด่าน : 10.223.194.74
+• OLT- บ้านยางสูง : 10.223.194.75
+• OLT- สมเด็จเจริญ ม.5 : 10.223.194.76
+• OLT- ห้วยกระเจา ม.3 : 10.223.194.69
+• OLT- ด่านแม่แฉลบ ม.4 : 10.223.194.77
+• OLT- ท่ากระดาน ม.4 : 10.223.194.79
+• OLT- หนองปลาไหล : 10.223.194.83
+• OLT- หนองกร่าง ม.2 : 10.223.194.81
+• OLT- หนองขอนเทพพนม : 10.223.194.85
+• OLT- หนองสาหร่าย : 10.223.194.84
+• OLT-หนองปลิง ม.8 : 10.223.194.94
+• OLT- โป่งช้าง : 10.223.194.82
+• OLT- หนองกร่าง ม.9 : 10.223.194.89
+• OLT- บ้านเขาวงพระจันทร์ ม.3 : 10.223.194.91
+• OLT- บ้านทุ่งกระบ่ำ ม.8 : 10.223.194.86
+• OLT- วัดหนองใหญ่เจริญพร : 10.223.194.88
+• OLT- หนองปลิง ม.1 : 10.223.194.93
+• OLT- หนองประดู่ : 10.223.194.95
+• OLT-พุบอน : 10.223.194.92
+• OLT-บ้านแก่งระเบิด : 10.223.194.103
+• OLT-ต้นมะม่วง : 10.223.194.104
+• OLT-วังกระแจะ : 10.223.194.102
+• OLT-ช่องสะเดา : 10.223.194.98
+• OLT-ลุ่มผึ้ง713 : 10.223.194.101
+• OLT-สามัคคีธรรม : 10.223.194.99
+• OLT-ท่าเสา : 10.223.194.115
+• OLT-สะพานลาว : 10.223.194.110
+• OLT-สิง ม.4 : 10.223.194.116
+• OLT-ปากนาสวน : 10.223.194.108
+• OLT-จะเลาะ : 10.223.194.109
+• OLT-ห้วยเขย่ง ม.4 : 10.223.194.111
+• OLT-หนองตากยาประชารัฐ : 10.223.194.114
+• OLT-บ้านบึง : 10.223.194.118
+• OLT-ทุ่งกระบ่ำ ม.6 : 10.223.194.122
+• OLT-แยกบ่อยาง : 10.223.194.124
+• OLT-หนองโสน : 10.223.194.125
+• OLT-บ้านห้วยยาง : 10.223.194.126
+• OLT-บ้านเขาหินตั้ง : 10.223.194.129
+• OLT-พนมทวน : 10.223.194.128
+• OLT-แก่งประลอม : 10.223.194.127
+• OLT-หนองมะสังข์ : 10.223.194.123
+• OLT-บ้านปากบาง : 10.223.194.119
+• OLT บ้านท่าโป่ง(Bigrock) : 10.223.194.121
+• OLT-บ้านภูเตย : 10.223.194.130
+• olt-บ้านบ้องตี้ : 10.223.194.120
+• OLT-บ้านโคกตะบอง : 10.223.194.117
+• OLT- ห้วยกระเจา ม.8 : 10.223.194.46
+• OLT-อีต่อง : 10.223.194.107
+• OLT-บ้านเก่า ม.9 : 10.223.194.67
+• OLT-หนองกุ่ม ม.7 : 10.223.194.59
+• OLT-คีรีวงศ์ : 10.223.194.60
+• OLT-หนองสามพราน : 10.223.194.61
+• OLT-หนองกุ่ม ม.5 : 10.223.194.62
+• OLT-อบต. แก่งเสี้ยน : 10.223.194.63
+• OLT- หนองหญ้าปล้อง : 10.223.194.64
+• OLT-จรเข้เผือก : 10.223.194.65
+• OLT-หนองบ้านเก่า : 10.223.194.68
+• OLT-วังใหญ่ : 10.223.194.72
+• OLT- บ้านลำอีซู : 10.223.194.80
+• OLT- วัดหนองขอน : 10.223.194.87
+• OLT- บ้านหนองไม้เอื้อย : 10.223.194.90
+• OLT-ศรีมงคล : 10.223.194.100
+• OLT-พุเตย : 10.223.194.106
+• บ่อพลอย(FTTx) : 10.233.17.249
+• หลุมรัง (FTTx) : 10.233.17.208
+• พนมทวน(FTTX) : 10.233.17.206
+• สำนักคร้อ(FTTx) : 10.233.17.183
+• ด่านมะขามเตี้ย(FTTx) : 10.233.17.212
+• ท่าขนุน ม.5(FTTX) : 10.233.17.207
+• หินดาด : 10.233.17.204
+• เลาขวัญ(FTTx) : 10.233.17.226
+• หนองตากยา(FTTX) : 10.233.17.252
+• ดอนขมิ้น (FTTx) : 10.233.17.211
+• ไทรโยค(FTTx) : 10.233.17.210
+• สขาภิบาลลาดหญ้า(FTTX) : 10.233.17.242
+• ศรีสวัสดิ์(FTTX) : 10.233.17.228
+• ท่ามะกาZTE(ศูนย์บริการฯ) : 10.233.17.203
+• สถานีโทรคมเขาป่าห้าม(FTTx) : 10.233.17.219
+• OLT บ้านดอนแสลบ : 10.233.17.41
+• หนองปรือ(FTTX) : 10.233.17.240
+• แยกพุถ่อง(FTTX) : 10.233.17.202
+• หนองฝ้าย (FTTx) : 10.233.17.209
+• ท่ากระดาน ม.1 Fttx : 10.233.17.220
+• ท่าม่วง (FTTx) : 10.233.17.243
+• ยางม่วง(FTTX) : 10.233.17.234
+• ท่ามะกา(FTTX) : 10.233.17.244
+• ห้วยปากคอก(FTTX) : 10.233.17.10
+• วังกระแจะ FTTx : 10.233.17.214
+• ชะแล(FTTX) : 10.233.17.215
+• พระแท่น (FTTx) : 10.233.17.225
+• เขาตอง(FTTx) : 10.233.17.251
+• ท่ามะขาม(FTTX) : 10.233.17.62
+• หนองหญ้า(FTTx) : 10.233.17.218
+• หนองสองตอน(FTTX) : 10.233.17.83
+• ดอนชะเอม(FTTX) : 10.233.17.49
+• ทุ่งทอง 2 (FTTx) : 10.233.17.43
+• ทองผาภูมิ (FTTx) : 10.233.17.245
+• หวายเหนียว(FTTx) : 10.233.17.122
+• สังขละบุรี (FTTx) : 10.233.17.246
+• พุน้ำร้อน(FTTx) : 10.233.17.248
+• ด่านเจดีย์สามองค์(FTTx) : 10.233.17.216
+• ท่าล้อ(FTTX) : 10.233.17.6
+• เขาสามสิบหาบFttx : 10.233.17.51
+• โคกตะบอง(FTTX) : 10.233.17.75
+• OLT จองอั่ว : 10.233.17.99
+• OLT หนองบัว ม.7 : 10.233.17.79
+• Huawei_ตลุงเหนือ : 10.233.17.17
+• Huawei_พาวิลเลี่ยน : 10.233.17.130
+• ZTE_NongRee : 10.233.17.196
+• OLT_ช่องกลิ้ง : 10.233.17.134
+• OLT_ZTE_แก่งเรียง : 10.233.17.31
+• Huawei_เขาน้อย : 10.233.17.131
+• OLT ทุ่งทอง หมู่ 1 : 10.233.17.86
+• โป่งนก : 10.233.17.29
+• บ้านน้ำมุด(Bigrock) : 10.223.194.131
+• huawei_หนองพังตรุ : 10.233.17.137
+• kri_c600_01 : 10.233.17.138
+• TMG-C600 : 10.233.17.241
+• SCT_C600 : 10.233.17.238
+• OLT ดอนตาเพชร ม.1 : 10.233.17.144
+• ลิ่นถิ่น2 : 10.233.17.236
+• Huawei_สระลงเรือ : 10.233.17.135
+• พฤกษากาญจน์(FTTx) : 10.233.17.250
+• ม่วงชุม(FTTX) : 10.233.17.18
+• NT1_ท่ากระทุ่ม_10.158.5.158 : 10.158.5.158
+• หนองลู ม.6 (DE) : 10.223.194.113
+• ปรังเผล(FTTx) : 10.233.17.30
+• ไทรโยค ม.2 : 10.233.17.121
+• ZTE_แสนตอ : 10.233.17.221
+• OLT-เขาปูน : 10.233.17.20
+• วังศาลา(FTTX) : 10.233.17.227
+• ราชภัฎ (FTTx) : 10.233.17.229
+• ศูนย์ราชการ(FTTx) : 10.233.17.217
+• OLT-ท่าไม้-ม.3 : 10.233.17.154
+• หนองขาว_FiberHome_2 : 10.233.17.247
+• บึงชะโค(FTTx) : 10.233.17.213
+• OLT_หนองบัว : 10.233.17.28
+• บ้านห้วยเขย่ง_ม.5 : 10.233.17.184
+• NT1_หนองไผ่_10.158.90.7 : 10.158.90.7
+• NT1_ตลาดสำรอง_10.158.95.3 : 10.158.95.3
+• NT1_สมเด็จเจริญ_10.158.5.137 : 10.158.5.137
+• อู่ล่อง : 10.233.17.149
+• บ่อพลอย_c620 : 10.233.17.109
+• NT1_ท่าพุ_10.158.90.3 : 10.158.90.3
+• สระกลอย_FTTx : 10.233.17.132
+• วังกระแจะ FIBERHOME : 10.233.17.231
+• หม่องกะลา(Fttx) : 10.233.17.224
+• Zte_หนองอำเภอจีน : 10.233.17.133
+• OLT_หนองเข้ : 10.233.17.150"""]
+    ]
+}
+
 system_commands = {
     "🏗️ ชุดคำสั่งเริ่มต้นตู้ใหม่ (Initial Config)": [
         ["คำสั่งรวดเดียว สำหรับจัดบอร์ดตั้งชื่อระบบ แฟน เทส และสร้างโพรไฟล์บนตู้ OLT ตัวใหม่", 
@@ -295,7 +489,7 @@ javis_bot_commands = {
         ["11. เปลี่ยน route to bridge (สลับโหมดจาก Route ไปเป็น Bridge)", "rtob,3451j0000"],
         ["12. เปลี่ยน bridge to route (สลับโหมดจาก Bridge กลับมาเป็น Route)", "btor,3451j0000"],
         ["15. config ด้าน interface (จัดการระบบเชื่อมต่อพอร์ตโครงสร้าง)", "interface,3451j0000"],
-        ["16. config ด้าน pon (ตั้งค่าโปรไฟล์ฝั่งเครือข่าย PON)", "ponconfig,3451j0000"],
+        ["16. configด้าน pon (ตั้งค่าโปรไฟล์ฝั่งเครือข่าย PON)", "ponconfig,3451j0000"],
         ["17. config autoroute (คำสั่งสร้างเส้นทางแบบระบุรายละเอียดโหนดคริ)", "autoroute,kri,ZTEGC1E1E1EE,3001,3451j0000"],
         ["18. setdhcpfromnet (สั่งกำหนดดึง IP รับแจกผ่านระบบเครือข่าย)", "dhcpfromnet,3459j5063"]
     ]
@@ -423,7 +617,6 @@ ofc_distances = [
     ("กาญ - บิ๊กc", "5.5 km", "-")
 ]
 
-# 📌 อัปเดตเพิ่มเลขวงจร "3451J4720 : บ้านเป้" เรียบร้อยครับ
 circuit_list = [
     ("3452J1796", "พี่ปุ๋ย"),
     ("3452J1425, 3452J3606", "หวานเย็น"),
@@ -445,6 +638,7 @@ all_categories = {
     "🔴 Huawei Switch": huawei_commands,
     "📞 ชุมสาย Fixline": fixline_commands,
     "📟 DSLAM Forth": dslam_commands,
+    "📍 IP OLT ในพื้นที่": olt_ip_commands,
     "📡 Uplink & Initial Config": system_commands,
     "💻 Windows CMD Shortcuts": pc_cmd_commands,
     "🤖 Javis Line Bot": javis_bot_commands
@@ -454,12 +648,10 @@ all_categories = {
 # --- 2. SIDEBAR NAVIGATION ---
 st.sidebar.markdown("## 📌 เมนูหลัก")
 
-# 1. แถบเมนู Config
 selected_menu = None
 with st.sidebar.expander("⚙️ Config", expanded=True):
     selected_menu = st.radio("เลือกหมวดหมู่การใช้งาน:", list(all_categories.keys()), label_visibility="collapsed")
 
-# 2. แถบเมนู Web (11 เว็บ)
 with st.sidebar.expander("🌐 Web", expanded=False):
     st.markdown("🔗 [Data Kan](https://sites.google.com/view/datakan)")
     st.markdown("🔗 [182.52.113.237](http://182.52.113.237/)")
@@ -473,7 +665,6 @@ with st.sidebar.expander("🌐 Web", expanded=False):
     st.markdown("🔗 [IP Server (10.0.105.85)](http://10.0.105.85/)")
     st.markdown("🔗 [System Login (203.113.70.137)](http://203.113.70.137/login)")
 
-# 3. แถบเมนู ระยะสาย Optic
 with st.sidebar.expander("📏 ระยะสาย Optic", expanded=False):
     st.markdown("#### 🛠️ ข้อมูลระยะสาย OFC หน้างาน")
     search_ofc = st.text_input("🔍 ค้นหาเส้นทางสาย OFC:", "", key="search_ofc_sidebar").strip().lower()
@@ -492,18 +683,15 @@ with st.sidebar.expander("📏 ระยะสาย Optic", expanded=False):
     else:
         st.write("ไม่พบข้อมูลเส้นทางที่ค้นหา")
 
-# 4. แถบเมนู เลขวงจรลูกค้า
 with st.sidebar.expander("🆔 เลขวงจรลูกค้า", expanded=False):
     for code, owner in circuit_list:
         st.markdown(f"• `{code}` : {owner}")
 
-# 5. แถบเมนู ที่อยู่ NT
 with st.sidebar.expander("📍 ที่อยู่ NT", expanded=False):
     st.markdown("**ตึกเก่า:**\n111/2 ถ.อู่ทอง ต.บ้านเหนือ อ.เมือง จ.กาญจนบุรี 71000")
     st.markdown("---")
     st.markdown("**ตึกเขาตอง:**\n1/11 ม.9 ต.ปากแพรก อ.เมือง จ.กาญจนบุรี 71000")
 
-# 6. แถบเมนู IP Phone
 with st.sidebar.expander("📞 IP Phone", expanded=False):
     st.markdown("• `sipp11.totbb.net`")
     st.markdown("• `sipp12.totbb.net`")
@@ -512,7 +700,6 @@ with st.sidebar.expander("📞 IP Phone", expanded=False):
     st.markdown("• `172.31.92.4` (เพชร)")
     st.markdown("• `172.30.202.4`")
 
-# 7. แถบเมนู SecureCRT
 with st.sidebar.expander("🔐 SecureCRT", expanded=False):
     st.markdown("• `10.227.102.190` *(ใช้อยู่)*")
     st.markdown("• `10.224.55.121`")
@@ -524,13 +711,12 @@ with st.sidebar.expander("🔐 SecureCRT", expanded=False):
 
 st.markdown("<h1 style='color: #1a7f37; margin-top: -10px; font-weight: 800;'>💻 ZTE OLT & PC COMMAND CENTER</h1>", unsafe_allow_html=True)
 
-# 🔍 เพิ่ม Tab ค้นหาหลักตรง Dashboard + ปุ่มกดค้นหา
 col_input, col_btn = st.columns([5, 1])
 
 with col_input:
     dash_search = st.text_input(
         "ค้นหาข้ามระบบ", 
-        placeholder="🔍 พิมพ์คำค้นหาด่วน เช่น หนองบัว, javis, nodelist, show, IP...", 
+        placeholder="🔍 พิมพ์คำค้นหาด่วน เช่น โป่งช้าง, ท่าเสา, OLT, nodelist, IP...", 
         label_visibility="collapsed",
         key="dash_global_search"
     ).strip()
@@ -540,12 +726,10 @@ with col_btn:
 
 st.markdown("---")
 
-# กรณีมีการพิมพ์คำค้นหาในช่อง Global Search
 if dash_search:
     st.markdown(f"### 🎯 ผลการค้นหาสำหรับ: `<mark class='highlight'>{dash_search}</mark>`", unsafe_allow_html=True)
     found_global = False
 
-    # 1. ค้นหาในระยะสาย OFC
     matched_ofc = [row for row in ofc_distances if dash_search.lower() in row[0].lower() or dash_search.lower() in row[1].lower() or dash_search.lower() in row[2].lower()]
     if matched_ofc:
         found_global = True
@@ -556,7 +740,6 @@ if dash_search:
             st.markdown(f"• **{h_route}** : `{dist}` (หมายเหตุ: {h_note})", unsafe_allow_html=True)
         st.markdown("---")
 
-    # 2. ค้นหาในเลขวงจรลูกค้า
     matched_circuits = [c for c in circuit_list if dash_search.lower() in c[0].lower() or dash_search.lower() in c[1].lower()]
     if matched_circuits:
         found_global = True
@@ -567,7 +750,6 @@ if dash_search:
             st.markdown(f"• **{h_code}** : {h_owner}", unsafe_allow_html=True)
         st.markdown("---")
 
-    # 3. ค้นหาในคำสั่ง Config ทุกหมวด
     for cat_name, cat_dict in all_categories.items():
         cat_matches = []
         for sub_cat, items in cat_dict.items():
@@ -582,9 +764,8 @@ if dash_search:
                 h_desc = highlight_text(desc, dash_search)
                 st.markdown(f"📌 [{sub_cat}] **{h_desc}**", unsafe_allow_html=True)
                 
-                # เลือกโหมดภาษาการแสดงผล Code ให้เหมาะสม
                 lang = "routeros"
-                if cat_name in ["📞 ชุมสาย Fixline", "📟 DSLAM Forth", "🤖 Javis Line Bot"]:
+                if cat_name in ["📞 ชุมสาย Fixline", "📟 DSLAM Forth", "📍 IP OLT ในพื้นที่", "🤖 Javis Line Bot"]:
                     lang = "text"
                 elif cat_name == "💻 Windows CMD Shortcuts":
                     lang = "batch"
@@ -596,11 +777,9 @@ if dash_search:
         st.warning(f"❌ ไม่พบข้อมูลใดๆ ที่ตรงกับคำว่า '{dash_search}'")
 
 else:
-    # แสดงผลตามหมวดหมู่ที่เลือกจาก Sidebar เมื่อไม่มีการพิมพ์ค้นหา
     def render_command_section(title, command_dict, lang="routeros"):
         st.markdown(f"<h2>{title}</h2>", unsafe_allow_html=True)
         
-        # ช่องค้นหาเฉพาะหมวดนี้
         sec_search = st.text_input(f"🔍 ค้นหาเฉพาะหมวดนี้:", "", key=f"search_{title}").strip().lower()
         
         found_any = False
@@ -649,6 +828,9 @@ else:
 
     elif selected_menu == "📟 DSLAM Forth":
         render_command_section("📟 ข้อมูลการเชื่อมต่อ DSLAM Forth", dslam_commands, lang="text")
+
+    elif selected_menu == "📍 IP OLT ในพื้นที่":
+        render_command_section("📍 ข้อมูลหมายเลข IP ของตู้ OLT ในพื้นที่", olt_ip_commands, lang="text")
 
     elif selected_menu == "📡 Uplink & Initial Config":
         render_command_section("📡 หมวดคำสั่งระบบ Uplink และการตั้งค่าตู้ OLT เริ่มต้น", system_commands)

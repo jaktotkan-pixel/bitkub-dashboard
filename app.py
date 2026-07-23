@@ -3,6 +3,62 @@ import re
 
 # --- 1. SETUP PAGE ---
 st.set_page_config(page_title="ZTE OLT & PC Command Center", layout="wide")
+# --- ฟังก์ชันตรวจสอบรหัสผ่าน ---
+
+def check_password():
+
+    """Returns `True` if the user had the correct password."""
+
+
+
+    def password_entered():
+
+        """Checks whether a password entered by the user is correct."""
+
+        if st.session_state["password"] == "jakntkan":  # <-- เปลี่ยนรหัสผ่านตรงนี้
+
+            st.session_state["password_correct"] = True
+
+            del st.session_state["password"]  # ไม่เก็บบันทึกรหัสผ่านไว้ใน memory
+
+        else:
+
+            st.session_state["password_correct"] = False
+
+
+
+    # หากผ่านการตรวจสอบแล้ว ให้คืนค่า True เพื่อให้แสดงผลหน้าเว็บปกติ
+
+    if st.session_state.get("password_correct", False):
+
+        return True
+
+
+
+    # หากยังไม่กรอกรหัส หรือกรอกผิด ให้แสดงหน้าต่างให้กรอกรหัสผ่าน
+
+    st.markdown("<h2 style='text-align: center;'>🔒 กรุณาใส่รหัสผ่านเพื่อเข้าใช้งานระบบ</h2>", unsafe_allow_html=True)
+
+    st.text_input(
+
+        "รหัสผ่าน", type="password", on_change=password_entered, key="password"
+
+    )
+
+    if "password_correct" in st.session_state:
+
+        st.error("😕 รหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้งครับ")
+
+    return False
+
+
+
+# ครอบโค้ดหลักทั้งหมดด้วยฟังก์ชันเช็ครหัสผ่าน
+
+if not check_password():
+
+    st.stop()  # หยุดการทำงานของหน้าเว็บไว้ตรงนี้หากยังไม่ใส่รหัสผ่านที่ถูกต้อง 
+
 
 # ปรับดีไซน์เป็นธีมขาว คลีน สบายตา + Highlight CSS
 st.markdown("""

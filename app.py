@@ -348,7 +348,7 @@ olt_ip_commands = {
 • OLT ดอนตาเพชร ม.1 : 10.233.17.144
 • ลิ่นถิ่น2 : 10.233.17.236
 • Huawei_สระลงเรือ : 10.233.17.135
-• พฤกษากาญจน์(FTTx) : 10.233.17.250
+• พฤษากาญจน์(FTTx) : 10.233.17.250
 • ม่วงชุม(FTTX) : 10.233.17.18
 • NT1_ท่ากระทุ่ม_10.158.5.158 : 10.158.5.158
 • หนองลู ม.6 (DE) : 10.223.194.113
@@ -490,7 +490,7 @@ javis_bot_commands = {
         ["12. เปลี่ยน bridge to route (สลับโหมดจาก Bridge กลับมาเป็น Route)", "btor,3451j0000"],
         ["15. config ด้าน interface (จัดการระบบเชื่อมต่อพอร์ตโครงสร้าง)", "interface,3451j0000"],
         ["16. configด้าน pon (ตั้งค่าโปรไฟล์ฝั่งเครือข่าย PON)", "ponconfig,3451j0000"],
-        ["17. config autoroute (คำสั่งสร้างเส้นทางแบบระบุรายละเอียดโหนดคริ)", "autoroute,kri,ZTEGC1E1E1EE,3001,3451j0000"],
+        ["17. config autoroute (คำสั่งสร้างเส้นทางแบบระบุรายละเอียดโหนดคริ)", "autoroute,kri,ZTEGC1E1E1EE,3001,3451j8888"],
         ["18. setdhcpfromnet (สั่งกำหนดดึง IP รับแจกผ่านระบบเครือข่าย)", "dhcpfromnet,3459j5063"]
     ]
 }
@@ -761,94 +761,36 @@ if dash_search:
             found_global = True
             st.markdown(f"#### ⚙️ หมวด Config: {cat_name}")
             for sub_cat, desc, code in cat_matches:
-                h_desc = highlight_text(desc, dash_search)
-                st.markdown(f"📌 [{sub_cat}] **{h_desc}**", unsafe_allow_html=True)
+                st.markdown(f"🔹 **{sub_cat}** ➔ {highlight_text(desc, dash_search)}", unsafe_allow_html=True)
                 
-                lang = "routeros"
-                if cat_name in ["📞 ชุมสาย Fixline", "📟 DSLAM Forth", "📍 IP OLT ในพื้นที่", "🤖 Javis Line Bot"]:
-                    lang = "text"
-                elif cat_name == "💻 Windows CMD Shortcuts":
-                    lang = "batch"
-                    
-                st.code(code, language=lang)
+                # ตรวจสอบเงื่อนไขหมวด IP OLT แยกบรรทัดทำไฮไลต์
+                if cat_name == "📍 IP OLT ในพื้นที่":
+                    lines = code.strip().split("\n")
+                    highlighted_lines = []
+                    for line in lines:
+                        if dash_search.lower() in line.lower():
+                            h_line = highlight_text(line, dash_search)
+                            highlighted_lines.append(f"• {h_line}")
+                        else:
+                            highlighted_lines.append(f"• {line}")
+                    final_html = "<br>".join(highlighted_lines)
+                    st.markdown(f"<div style='background-color: #f6f8fa; border: 1px solid #d0d7de; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 14px;'>{final_html}</div>", unsafe_allow_html=True)
+                else:
+                    st.code(code, language="text")
             st.markdown("---")
 
     if not found_global:
-        st.warning(f"❌ ไม่พบข้อมูลใดๆ ที่ตรงกับคำว่า '{dash_search}'")
+        st.warning("❌ ไม่พบข้อมูลที่ตรงกับคำค้นหาของคุณในระบบ")
 
 else:
-    def render_command_section(title, command_dict, lang="routeros"):
-        st.markdown(f"<h2>{title}</h2>", unsafe_allow_html=True)
-        
-        sec_search = st.text_input(f"🔍 ค้นหาเฉพาะหมวดนี้:", "", key=f"search_{title}").strip().lower()
-        
-        found_any = False
-        for sub_cat, items in command_dict.items():
-            filtered = [
-                i for i in items 
-                if sec_search in i[0].lower() or sec_search in i[1].lower()
-            ]
-            
-            if filtered:
-                found_any = True
-                st.markdown(f"### {sub_cat}")
-                for desc, code in filtered:
-                    h_desc = highlight_text(desc, sec_search) if sec_search else desc
-                    if len(code) > 500 or "\n" in code:
-                        st.markdown(f"📌 **{h_desc}**", unsafe_allow_html=True)
-                        st.code(code, language=lang)
-                    else:
-                        c1, c2 = st.columns([1.1, 1.9])
-                        with c1: st.markdown(f"📌 **{h_desc}**", unsafe_allow_html=True)
-                        with c2: st.code(code, language=lang)
-        
-        if not found_any and sec_search:
-            st.warning(f"ไม่พบข้อมูลคำสั่งที่ตรงกับ '{sec_search}' ในหมวดนี้")
+    # แสดงผลตามเมนู Sidebar ปกติกรณีไม่ได้กดค้นหา
+    current_dict = all_categories[selected_menu]
+    st.markdown(f"## {selected_menu}")
+    st.markdown("---")
 
-    if selected_menu == "🍏 ZTE C300 Series":
-        render_command_section("🍏 หมวดคำสั่งสำหรับตู้ซีรีส์ ZTE C300", c300_commands)
-
-    elif selected_menu == "⚡ ZTE C600 Series":
-        render_command_section("⚡ หมวดคำสั่งสำหรับตู้ซีรีส์ใหม่ ZTE C600", c600_commands)
-
-    elif selected_menu == "🟢 SW ZTE ประชารัฐ":
-        render_command_section("🟢 หมวดคำสั่งและรหัสผ่าน SW ZTE ประชารัฐ", zte_pracharath_commands)
-
-    elif selected_menu == "🟣 Extreme Switch":
-        render_command_section("🟣 หมวดคำสั่งสำหรับ Extreme Switch", extreme_commands)
-
-    elif selected_menu == "🔵 Cisco SG300":
-        render_command_section("🔵 หมวดคำสั่งสำหรับ Cisco SG300", sg300_commands)
-
-    elif selected_menu == "🔴 Huawei Switch":
-        render_command_section("🔴 หมวดคำสั่งสำหรับ Huawei Switch", huawei_commands)
-
-    elif selected_menu == "📞 ชุมสาย Fixline":
-        render_command_section("📞 หมวดคำสั่งระบบชุมสาย Fixline", fixline_commands, lang="text")
-
-    elif selected_menu == "📟 DSLAM Forth":
-        render_command_section("📟 ข้อมูลการเชื่อมต่อ DSLAM Forth", dslam_commands, lang="text")
-
-    elif selected_menu == "📍 IP OLT ในพื้นที่":
-        render_command_section("📍 ข้อมูลหมายเลข IP ของตู้ OLT ในพื้นที่", olt_ip_commands, lang="text")
-
-    elif selected_menu == "📡 Uplink & Initial Config":
-        render_command_section("📡 หมวดคำสั่งระบบ Uplink และการตั้งค่าตู้ OLT เริ่มต้น", system_commands)
-
-    elif selected_menu == "💻 Windows CMD Shortcuts":
-        render_command_section("💻 หมวดคำสั่ง CMD บนคอมพิวเตอร์ (Windows)", pc_cmd_commands, lang="batch")
-
-    elif selected_menu == "🤖 Javis Line Bot":
-        st.info("ℹ️ คำแจ้งเตือน: Javis เป็น LINE Bot ช่วยจัดการ Configuration ของ ZTE รูปแบบการพิมพ์ต้องใช้เครื่องหมายคอมม่า ( , ) เป็นตัวแยกชุดคำสั่งเสมอ")
-        render_command_section("🤖 Javis Line Bot Help Center", javis_bot_commands, lang="text")
-
-
-# --- 4. FOOTER EXTRA ---
-st.markdown("---")
-with st.expander("📝 ตัวอย่างหน้าโปรไฟล์จัดพอร์ต ONU"):
-    st.code("""service internet gemport 1 vlan 10
- interface eth eth_0/2 state lock
- interface eth eth_0/3 state lock
- interface eth eth_0/4 state lock
- vlan port eth_0/1 mode tag vlan 10
- dhcp-ip ethuni eth_0/1 forbidden""", language="routeros")
+    for sub_cat, items in current_dict.items():
+        st.markdown(f"### {sub_cat}")
+        for desc, code in items:
+            st.markdown(f"**📌 {desc}**")
+            st.code(code, language="text")
+        st.markdown("")

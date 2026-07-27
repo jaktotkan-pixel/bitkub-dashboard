@@ -1,64 +1,41 @@
 import streamlit as st
 import re
+import base64
 from pathlib import Path
 
 # --- 1. SETUP PAGE ---
 st.set_page_config(page_title="ZTE OLT & PC Command Center", layout="wide")
+
+
 # --- ฟังก์ชันตรวจสอบรหัสผ่าน ---
-
 def check_password():
-
     """Returns `True` if the user had the correct password."""
 
-
-
     def password_entered():
-
         """Checks whether a password entered by the user is correct."""
-
         if st.session_state["password"] == "jakntkan":  # <-- เปลี่ยนรหัสผ่านตรงนี้
-
             st.session_state["password_correct"] = True
-
             del st.session_state["password"]  # ไม่เก็บบันทึกรหัสผ่านไว้ใน memory
-
         else:
-
             st.session_state["password_correct"] = False
 
-
-
     # หากผ่านการตรวจสอบแล้ว ให้คืนค่า True เพื่อให้แสดงผลหน้าเว็บปกติ
-
     if st.session_state.get("password_correct", False):
-
         return True
 
-
-
     # หากยังไม่กรอกรหัส หรือกรอกผิด ให้แสดงหน้าต่างให้กรอกรหัสผ่าน
-
     st.markdown("<h2 style='text-align: center;'>🔒 กรุณาใส่รหัสผ่านเพื่อเข้าใช้งานระบบ</h2>", unsafe_allow_html=True)
-
     st.text_input(
-
         "รหัสผ่าน", type="password", on_change=password_entered, key="password"
-
     )
-
     if "password_correct" in st.session_state:
-
         st.error("😕 รหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้งครับ")
-
     return False
 
 
-
 # ครอบโค้ดหลักทั้งหมดด้วยฟังก์ชันเช็ครหัสผ่าน
-
 if not check_password():
-
-    st.stop()  # หยุดการทำงานของหน้าเว็บไว้ตรงนี้หากยังไม่ใส่รหัสผ่านที่ถูกต้อง 
+    st.stop()  # หยุดการทำงานของหน้าเว็บไว้ตรงนี้หากยังไม่ใส่รหัสผ่านที่ถูกต้อง
 
 
 # ปรับดีไซน์เป็นธีมขาว คลีน สบายตา + Highlight CSS
@@ -66,15 +43,15 @@ st.markdown("""
 <style>
     /* พื้นหลังสีขาวสะอาดตา */
     .stApp { background-color: #ffffff; color: #1f2328; font-family: sans-serif; }
-    
+
     /* กล่องข้อความ Code Block สีเทาอ่อน ขอบมน ชัดเจน */
     .stCodeBlock { background-color: #f6f8fa !important; border: 1px solid #d0d7de !important; }
     .stCodeBlock code { color: #000000 !important; }
-    
+
     /* หัวข้อหลักสีน้ำเงินเข้ม มองเห็นเด่นชัด */
     h2 { color: #0969da !important; font-weight: 700; margin-top: 15px; margin-bottom: 5px; }
     h3 { color: #24292f !important; font-weight: 600; font-size: 17px; border-bottom: 2px solid #d0d7de; padding-bottom: 6px; margin-top: 15px; }
-    
+
     /* สไตล์ Highlight สีเหลืองเข้ม */
     mark.highlight {
         background-color: #ffeb3b;
@@ -87,7 +64,7 @@ st.markdown("""
 
     /* ปรับแต่ง Sidebar */
     [data-testid="stSidebar"] { background-color: #f8f9fa; border-right: 1px solid #e1e4e8; }
-    
+
     /* ซ่อนปุ่มที่ไม่จำเป็น */
     .stDeployButton { display:none; }
 </style>
@@ -173,21 +150,21 @@ def show_pdf_library():
             st.success(f"ลบไฟล์ “{selected_pdf.name}” เรียบร้อยแล้ว")
             st.rerun()
 
+        # ✅ ส่วนที่แก้ไข: เปิดดู PDF ด้วยวิธี base64 + iframe
+        # (ใช้ได้กับ Streamlit ทุกเวอร์ชัน ไม่ต้องพึ่ง st.pdf ที่มีเฉพาะเวอร์ชันใหม่ๆ)
         if st.checkbox("👁️ เปิดดูเอกสารใน Dashboard", key="pdf_library_preview"):
-            # st.pdf จัดการการรีเฟรชเมื่อเลือกเอกสารใหม่ได้ดีกว่า iframe/data URL
-            if hasattr(st, "pdf"):
-                try:
-                    st.pdf(pdf_data, height=650)
-                except Exception:
-                    st.info(
-                        "ต้องติดตั้งส่วนเสริม PDF ก่อน จึงจะแสดงเอกสารบน Dashboard ได้ "
-                        "แต่ยังดาวน์โหลดไฟล์ได้ตามปกติ"
-                    )
-            else:
-                st.warning(
-                    "Streamlit เวอร์ชันนี้ยังไม่รองรับการแสดง PDF ในหน้าเว็บ "
-                    "กรุณาอัปเดต Streamlit หรือใช้ปุ่มดาวน์โหลดด้านบน"
-                )
+            base64_pdf = base64.b64encode(pdf_data).decode("utf-8")
+            pdf_display = f"""
+            <iframe
+                src="data:application/pdf;base64,{base64_pdf}"
+                width="100%"
+                height="700"
+                type="application/pdf"
+                style="border: 1px solid #d0d7de; border-radius: 6px;">
+            </iframe>
+            """
+            st.markdown(pdf_display, unsafe_allow_html=True)
+            st.caption("ℹ️ หากไม่เห็นตัวอย่างเอกสาร ให้ใช้ปุ่ม “ดาวน์โหลดเอกสาร” ด้านบนแทนครับ (บางเบราว์เซอร์บนมือถือไม่รองรับการแสดง PDF ฝังในหน้าเว็บ)")
 
 
 # =================================================================
@@ -234,9 +211,9 @@ c600_commands = {
 
 zte_pracharath_commands = {
     "🔑 รหัสผ่านเข้าใช้งาน (Account & Credentials)": [
-        ["ข้อมูลการเข้าใช้งาน SW ZTE ประชารัฐ", 
+        ["ข้อมูลการเข้าใช้งาน SW ZTE ประชารัฐ",
 """User: nex
-Pass: N3x@autoconfig 
+Pass: N3x@autoconfig
 Login enable Pass: zxr10"""]
     ],
     "🔍 คำสั่งตรวจสอบและเช็คแสง (Switch ZTE)": [
@@ -318,11 +295,11 @@ huawei_commands = {
 
 dslam_commands = {
     "📟 ข้อมูลการเชื่อมต่อ DSLAM Forth": [
-        ["Forth โหนด 577 (10.227.11.253)", 
+        ["Forth โหนด 577 (10.227.11.253)",
 """IP: 10.227.11.253
 User: krimsan
 Pass: 577kri"""],
-        ["Forth โหนด 222 (10.227.0.246)", 
+        ["Forth โหนด 222 (10.227.0.246)",
 """IP: 10.227.0.246
 User: kri01, kri02, kri03, kri04, kri05
 Pass: admin1"""]
@@ -331,7 +308,7 @@ Pass: admin1"""]
 
 olt_ip_commands = {
     "📍 รายชื่อ IP OLT ในพื้นที่ & โครงข่าย": [
-        ["รายการ IP OLT ทั้งหมดในระบบ (รวมชุดเดิมและชุดใหม่ล่าสุด)", 
+        ["รายการ IP OLT ทั้งหมดในระบบ (รวมชุดเดิมและชุดใหม่ล่าสุด)",
 """• OLT-วังปลาหมู729 : 10.223.194.3
 • OLT-ท่าอ้อ : 10.223.194.4
 • OLT-บ้านดอนขลุบ737 : 10.223.194.8
@@ -493,7 +470,7 @@ olt_ip_commands = {
 • OLT ดอนตาเพชร ม.1 : 10.233.17.144
 • ลิ่นถิ่น2 : 10.233.17.236
 • Huawei_สระลงเรือ : 10.233.17.135
-• พฤษากาญจน์(FTTx) : 10.233.17.250
+• พฤกษากาญจน์(FTTx) : 10.233.17.250
 • ม่วงชุม(FTTX) : 10.233.17.18
 • NT1_ท่ากระทุ่ม_10.158.5.158 : 10.158.5.158
 • หนองลู ม.6 (DE) : 10.223.194.113
@@ -525,8 +502,8 @@ olt_ip_commands = {
 
 system_commands = {
     "🏗️ ชุดคำสั่งเริ่มต้นตู้ใหม่ (Initial Config)": [
-        ["คำสั่งรวดเดียว สำหรับจัดบอร์ดตั้งชื่อระบบ แฟน เทส และสร้างโพรไฟล์บนตู้ OLT ตัวใหม่", 
-"""configure terminal 
+        ["คำสั่งรวดเดียว สำหรับจัดบอร์ดตั้งชื่อระบบ แฟน เทส และสร้างโพรไฟล์บนตู้ OLT ตัวใหม่",
+"""configure terminal
 hostname kri-sigm4-24kolt02
 username nex password N3x@autoconfig privilege 15
 
@@ -543,7 +520,7 @@ ip route 0.0.0.0 0.0.0.0 10.223.194.1
 interface xgei_1/3/2
 no shutdown
 hybrid-attribute fiber
-description link to kri_kph_lpe1,Ethernet0 
+description link to kri_kph_lpe1,Ethernet0
 switchport mode trunk
 switchport vlan 16 tag
 exit
@@ -809,17 +786,16 @@ with st.sidebar.expander("🌐 Web", expanded=False):
     st.markdown("🔗 [Ruijie Cloud](https://cloud-as.ruijienetworks.com/sso/login)")
     st.markdown("🔗 [IP Server (10.0.105.85)](http://10.0.105.85/)")
     st.markdown("🔗 [System Login (203.113.70.137)](http://203.113.70.137/login)")
-    st.markdown("🔗 [CPE (https://pete.intra.ntplc.co.th/#/login])")
-    
+
 with st.sidebar.expander("📏 ระยะสาย Optic", expanded=False):
     st.markdown("#### 🛠️ ข้อมูลระยะสาย OFC หน้างาน")
     search_ofc = st.text_input("🔍 ค้นหาเส้นทางสาย OFC:", "", key="search_ofc_sidebar").strip().lower()
-    
+
     filtered_ofc = [
-        row for row in ofc_distances 
+        row for row in ofc_distances
         if search_ofc in row[0].lower() or search_ofc in row[1].lower() or search_ofc in row[2].lower()
     ]
-    
+
     if filtered_ofc:
         for route, dist, note in filtered_ofc:
             if note != "-":
@@ -852,20 +828,21 @@ with st.sidebar.expander("🔐 SecureCRT", expanded=False):
     st.markdown("• `10.224.55.125`")
     st.markdown("• `10.224.55.129`")
 
+# ✅ คลังเอกสาร PDF (แสดงในแถบ Sidebar เช่นกัน)
+with st.sidebar:
+    show_pdf_library()
+
 
 # --- 3. MAIN CONTENT DISPLAY & DASHBOARD SEARCH ---
 
 st.markdown("<h1 style='color: #1a7f37; margin-top: -10px; font-weight: 800;'>💻 ZTE OLT & PC COMMAND CENTER</h1>", unsafe_allow_html=True)
 
-# แสดงคลังเอกสารส่วนกลางบนหน้า Dashboard
-show_pdf_library()
-
 col_input, col_btn = st.columns([5, 1])
 
 with col_input:
     dash_search = st.text_input(
-        "ค้นหาข้ามระบบ", 
-        placeholder="🔍 พิมพ์คำค้นหาด่วน เช่น โป่งช้าง, ท่าเสา, OLT, nodelist, IP...", 
+        "ค้นหาข้ามระบบ",
+        placeholder="🔍 พิมพ์คำค้นหาด่วน เช่น โป่งช้าง, ท่าเสา, OLT, nodelist, IP...",
         label_visibility="collapsed",
         key="dash_global_search"
     ).strip()
@@ -905,13 +882,13 @@ if dash_search:
             for desc, code in items:
                 if dash_search.lower() in desc.lower() or dash_search.lower() in code.lower():
                     cat_matches.append((sub_cat, desc, code))
-        
+
         if cat_matches:
             found_global = True
             st.markdown(f"#### ⚙️ หมวด Config: {cat_name}")
             for sub_cat, desc, code in cat_matches:
                 st.markdown(f"🔹 **{sub_cat}** ➔ {highlight_text(desc, dash_search)}", unsafe_allow_html=True)
-                
+
                 # ตรวจสอบเงื่อนไขหมวด IP OLT แยกบรรทัดทำไฮไลต์
                 if cat_name == "📍 IP OLT ในพื้นที่":
                     lines = code.strip().split("\n")

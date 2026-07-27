@@ -808,6 +808,7 @@ with st.sidebar.expander("🌐 Web", expanded=False):
     st.markdown("🔗 [IP Server (10.0.105.85)](http://10.0.105.85/)")
     st.markdown("🔗 [System Login (203.113.70.137)](http://203.113.70.137/login)")
     st.markdown("🔗 [CPE (https://pete.intra.ntplc.co.th/#/login])")
+    st.markdown("🔗 [NT OS (http://203.113.70.137/employee/profile)")
     
 with st.sidebar.expander("📏 ระยะสาย Optic", expanded=False):
     st.markdown("#### 🛠️ ข้อมูลระยะสาย OFC หน้างาน")

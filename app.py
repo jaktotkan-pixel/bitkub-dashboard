@@ -1,5 +1,6 @@
 import streamlit as st
 import re
+from pathlib import Path
 
 # --- 1. SETUP PAGE ---
 st.set_page_config(page_title="ZTE OLT & PC Command Center", layout="wide")
@@ -99,6 +100,94 @@ def highlight_text(text, keyword):
         return text
     pattern = re.compile(re.escape(keyword), re.IGNORECASE)
     return pattern.sub(lambda m: f'<mark class="highlight">{m.group(0)}</mark>', str(text))
+
+
+# =================================================================
+# 📚 คลังเอกสาร PDF บน Dashboard
+# =================================================================
+PDF_LIBRARY_DIR = Path("pdf_library")
+PDF_LIBRARY_DIR.mkdir(exist_ok=True)
+
+
+def get_pdf_files():
+    """คืนรายการ PDF ที่บันทึกไว้ในคลัง"""
+    return sorted(PDF_LIBRARY_DIR.glob("*.pdf"), key=lambda file: file.name.lower())
+
+
+def show_pdf_library():
+    """แสดงส่วนเพิ่มไฟล์ เปิดดู และดาวน์โหลดเอกสาร PDF"""
+    with st.expander("📚 คลังเอกสาร PDF", expanded=False):
+        st.caption("เพิ่มคู่มือหรือเอกสารที่ต้องใช้ร่วมกันบน Dashboard")
+
+        uploaded_pdf = st.file_uploader(
+            "เลือกไฟล์ PDF เพื่อเพิ่มเข้าคลัง",
+            type=["pdf"],
+            key="pdf_library_uploader"
+        )
+
+        if uploaded_pdf is not None:
+            safe_name = Path(uploaded_pdf.name).name
+            save_path = PDF_LIBRARY_DIR / safe_name
+
+            if save_path.exists():
+                st.warning(f"มีไฟล์ชื่อ {safe_name} อยู่แล้ว การบันทึกจะเขียนทับไฟล์เดิม")
+
+            if st.button("💾 บันทึกไฟล์ PDF", type="primary", key="save_pdf_library"):
+                save_path.write_bytes(uploaded_pdf.getvalue())
+                st.success(f"บันทึกไฟล์ “{safe_name}” เรียบร้อยแล้ว")
+                st.rerun()
+
+        pdf_files = get_pdf_files()
+        if not pdf_files:
+            st.info("ยังไม่มีเอกสาร PDF ในคลัง")
+            return
+
+        selected_pdf = st.selectbox(
+            "เลือกเอกสาร",
+            pdf_files,
+            format_func=lambda file: file.name,
+            key="pdf_library_selected"
+        )
+        pdf_data = selected_pdf.read_bytes()
+
+        st.download_button(
+            "📥 ดาวน์โหลดเอกสาร",
+            data=pdf_data,
+            file_name=selected_pdf.name,
+            mime="application/pdf",
+            use_container_width=True
+        )
+
+        confirm_delete = st.checkbox(
+            f"ยืนยันการลบไฟล์: {selected_pdf.name}",
+            key=f"confirm_delete_{selected_pdf.name}"
+        )
+        if st.button(
+            "🗑️ ลบไฟล์ PDF ที่เลือก",
+            type="secondary",
+            use_container_width=True,
+            disabled=not confirm_delete,
+            key=f"delete_pdf_{selected_pdf.name}"
+        ):
+            selected_pdf.unlink()
+            st.success(f"ลบไฟล์ “{selected_pdf.name}” เรียบร้อยแล้ว")
+            st.rerun()
+
+        if st.checkbox("👁️ เปิดดูเอกสารใน Dashboard", key="pdf_library_preview"):
+            # st.pdf จัดการการรีเฟรชเมื่อเลือกเอกสารใหม่ได้ดีกว่า iframe/data URL
+            if hasattr(st, "pdf"):
+                try:
+                    st.pdf(pdf_data, height=650)
+                except Exception:
+                    st.info(
+                        "ต้องติดตั้งส่วนเสริม PDF ก่อน จึงจะแสดงเอกสารบน Dashboard ได้ "
+                        "แต่ยังดาวน์โหลดไฟล์ได้ตามปกติ"
+                    )
+            else:
+                st.warning(
+                    "Streamlit เวอร์ชันนี้ยังไม่รองรับการแสดง PDF ในหน้าเว็บ "
+                    "กรุณาอัปเดต Streamlit หรือใช้ปุ่มดาวน์โหลดด้านบน"
+                )
 
 
 # =================================================================
@@ -767,6 +856,9 @@ with st.sidebar.expander("🔐 SecureCRT", expanded=False):
 # --- 3. MAIN CONTENT DISPLAY & DASHBOARD SEARCH ---
 
 st.markdown("<h1 style='color: #1a7f37; margin-top: -10px; font-weight: 800;'>💻 ZTE OLT & PC COMMAND CENTER</h1>", unsafe_allow_html=True)
+
+# แสดงคลังเอกสารส่วนกลางบนหน้า Dashboard
+show_pdf_library()
 
 col_input, col_btn = st.columns([5, 1])
 

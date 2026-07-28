@@ -47,10 +47,10 @@ def check_password():
         .lock-title {
             text-align: center; margin-top: 12vh;
             font-family: 'IBM Plex Sans Thai', sans-serif;
-            color: #eaeef4; font-weight: 700; font-size: 22px;
+            color: #e3e7ee; font-weight: 700; font-size: 22px;
         }
         .lock-sub {
-            text-align: center; color: #7c8798; font-family: 'IBM Plex Mono', monospace;
+            text-align: center; color: #8791a0; font-family: 'IBM Plex Mono', monospace;
             font-size: 12.5px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 24px;
         }
     </style>
@@ -89,16 +89,18 @@ st.markdown("""
         --bg-0: #0a0d12;
         --bg-1: #10141b;
         --bg-2: #161b24;
+        --bg-3: #1c222d;
         --line: #232a36;
         --line-soft: #1b212b;
-        --text-hi: #eaeef4;
-        --text-lo: #7c8798;
-        --up: #00d68f;
-        --up-dim: rgba(0, 214, 143, 0.12);
+        --text-hi: #e3e7ee;
+        --text-body: #b7bfca;
+        --text-lo: #8791a0;
+        --up: #00c886;
+        --up-dim: rgba(0, 200, 134, 0.12);
         --down: #ff4d5e;
         --down-dim: rgba(255, 77, 94, 0.12);
         --amber: #ffb020;
-        --blue: #3ea6ff;
+        --blue: #5eb3ff;
     }
 
     html, body, [class*="css"] { font-family: 'IBM Plex Sans Thai', 'IBM Plex Mono', sans-serif; }
@@ -111,8 +113,11 @@ st.markdown("""
     .block-container { padding-top: 1.6rem; max-width: 1200px; }
 
     /* ตัวหนังสือทุกจุดให้คมชัด อ่านง่ายบนพื้นเข้ม */
-    p, span, label, li, div { color: var(--text-hi); }
+    /* ตัวหนังสือทั่วไปให้เป็นสีเทาสว่างนวล อ่านสบายตา ไม่จ้าเกินไป */
+    p, span, label, li, div { color: var(--text-body); }
+    h1, h2, h3, h4, strong, b { color: var(--text-hi) !important; }
     .stCaption, [data-testid="stCaptionContainer"] { color: var(--text-lo) !important; }
+    [data-testid="stMarkdownContainer"] p { color: var(--text-body); }
 
     h1 { font-family: 'IBM Plex Mono', monospace; letter-spacing: -0.5px; }
     h2 {
@@ -160,7 +165,8 @@ st.markdown("""
         background-color: var(--bg-1);
         border-right: 1px solid var(--line);
     }
-    [data-testid="stSidebar"] * { color: var(--text-hi); }
+    [data-testid="stSidebar"] * { color: var(--text-body); }
+    [data-testid="stSidebar"] strong, [data-testid="stSidebar"] b { color: var(--text-hi); }
     [data-testid="stSidebar"] h2 {
         font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase;
         color: var(--text-lo) !important; border-left: none; padding-left: 0;
@@ -209,6 +215,45 @@ st.markdown("""
     }
     .stTextInput input:focus { border-color: var(--up) !important; box-shadow: 0 0 0 1px var(--up) !important; }
     .stTextInput input::placeholder { color: var(--text-lo) !important; }
+
+    /* ===== Selectbox (เลือกไฟล์ PDF ฯลฯ) ===== */
+    div[data-baseweb="select"] > div {
+        background-color: var(--bg-2) !important;
+        border: 1px solid var(--line) !important;
+        border-radius: 8px !important;
+        color: var(--text-hi) !important;
+    }
+    div[data-baseweb="select"] * { color: var(--text-hi) !important; fill: var(--text-hi) !important; }
+    /* เมนู dropdown ของ selectbox (render แยกนอก sidebar/main) */
+    div[data-baseweb="popover"] div[data-baseweb="menu"],
+    ul[role="listbox"] {
+        background-color: var(--bg-2) !important;
+        border: 1px solid var(--line) !important;
+    }
+    li[role="option"] { background-color: var(--bg-2) !important; color: var(--text-hi) !important; }
+    li[role="option"]:hover, li[aria-selected="true"] {
+        background-color: var(--up-dim) !important; color: var(--up) !important;
+    }
+
+    /* ===== File uploader (เพิ่ม PDF เข้าคลัง) ===== */
+    [data-testid="stFileUploaderDropzone"], [data-testid="stFileUploader"] section {
+        background-color: var(--bg-2) !important;
+        border: 1px dashed var(--line) !important;
+        border-radius: 10px !important;
+    }
+    [data-testid="stFileUploaderDropzone"] *, [data-testid="stFileUploader"] section * {
+        color: var(--text-body) !important;
+    }
+    [data-testid="stFileUploaderDropzone"] button, [data-testid="stFileUploader"] section button {
+        background-color: var(--bg-3) !important;
+        color: var(--text-hi) !important;
+        border: 1px solid var(--line) !important;
+    }
+
+    /* ===== Checkbox label ===== */
+    [data-testid="stCheckbox"] label p, [data-testid="stCheckbox"] span {
+        color: var(--text-body) !important;
+    }
 
     /* ปุ่มหลัก */
     .stButton > button, .stDownloadButton > button {
@@ -1068,14 +1113,14 @@ with st.sidebar.expander("🔐 SecureCRT", expanded=False):
 
 st.markdown("""
 <div style="display:flex; align-items:baseline; justify-content:space-between; margin-top:-10px; flex-wrap:wrap; gap:8px;">
-    <h1 style="margin:0; font-weight:800; font-size:30px; color:#eaeef4;">
-        ZTE OLT <span style="color:#00d68f;">&</span> PC COMMAND CENTER
+    <h1 style="margin:0; font-weight:800; font-size:30px; color:#e3e7ee;">
+        ZTE OLT <span style="color:#00c886;">&</span> PC COMMAND CENTER
     </h1>
-    <div style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:#7c8798;">
+    <div style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:#8791a0;">
         <span class="live-dot"></span>SYSTEM ONLINE
     </div>
 </div>
-<div style="font-family:'IBM Plex Mono', monospace; font-size:12.5px; color:#7c8798; margin-top:2px;">
+<div style="font-family:'IBM Plex Mono', monospace; font-size:12.5px; color:#8791a0; margin-top:2px;">
     คลังคำสั่งและข้อมูลหน้างานเครือข่าย ZTE / OLT / DSLAM / Switch — ค้นหาได้จากทุกหมวดในจุดเดียว
 </div>
 """, unsafe_allow_html=True)

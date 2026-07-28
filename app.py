@@ -42,20 +42,24 @@ def check_password():
 
     st.markdown("""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&family=IBM+Plex+Mono:wght@600&display=swap');
-        .stApp { background: radial-gradient(ellipse 120% 80% at 50% -10%, #131a24 0%, #0a0d12 55%); }
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&family=JetBrains+Mono:wght@600&display=swap');
+        .stApp {
+            background-color: #030503;
+            background-image: repeating-linear-gradient(180deg, rgba(51,255,119,0.018) 0px, rgba(51,255,119,0.018) 1px, transparent 1px, transparent 3px);
+        }
         .lock-title {
             text-align: center; margin-top: 12vh;
-            font-family: 'IBM Plex Sans Thai', sans-serif;
-            color: #e3e7ee; font-weight: 700; font-size: 22px;
+            font-family: 'JetBrains Mono', monospace;
+            color: #7bffa0; font-weight: 700; font-size: 20px;
+            text-shadow: 0 0 10px rgba(51,255,119,0.35);
         }
         .lock-sub {
-            text-align: center; color: #8791a0; font-family: 'IBM Plex Mono', monospace;
+            text-align: center; color: #35603f; font-family: 'JetBrains Mono', monospace;
             font-size: 12.5px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 24px;
         }
     </style>
-    <div class="lock-title">🔒 กรุณาใส่รหัสผ่านเพื่อเข้าใช้งานระบบ</div>
-    <div class="lock-sub">ZTE OLT &amp; PC COMMAND CENTER</div>
+    <div class="lock-title">&gt; AUTH REQUIRED — กรุณาใส่รหัสผ่านเพื่อเข้าใช้งานระบบ</div>
+    <div class="lock-sub">root@kri-noc :: zte olt &amp; pc command center</div>
     """, unsafe_allow_html=True)
 
     col_a, col_b, col_c = st.columns([1, 1.2, 1])
@@ -83,84 +87,90 @@ if not check_password():
 # =================================================================
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
     :root {
-        --bg-0: #0a0d12;
-        --bg-1: #10141b;
-        --bg-2: #161b24;
-        --bg-3: #1c222d;
-        --line: #232a36;
-        --line-soft: #1b212b;
-        --text-hi: #e3e7ee;
-        --text-body: #b7bfca;
-        --text-lo: #8791a0;
-        --up: #00c886;
-        --up-dim: rgba(0, 200, 134, 0.12);
-        --down: #ff4d5e;
-        --down-dim: rgba(255, 77, 94, 0.12);
-        --amber: #ffb020;
-        --blue: #5eb3ff;
+        --bg-0: #030503;
+        --bg-1: #070a07;
+        --bg-2: #0c110c;
+        --bg-3: #121a12;
+        --line: #1c3320;
+        --line-soft: #142616;
+        --text-hi: #7bffa0;
+        --text-body: #4fa868;
+        --text-lo: #35603f;
+        --up: #33ff77;
+        --up-dim: rgba(51, 255, 119, 0.10);
+        --down: #ff5c5c;
+        --down-dim: rgba(255, 92, 92, 0.12);
+        --amber: #ffcc33;
+        --blue: #66e0ff;
     }
 
-    html, body, [class*="css"] { font-family: 'IBM Plex Sans Thai', 'IBM Plex Mono', sans-serif; }
+    html, body, [class*="css"] { font-family: 'IBM Plex Sans Thai', 'JetBrains Mono', monospace; }
 
-    /* พื้นหลังหลัก โทนเข้มแบบเทอร์มินัลเทรด */
+    /* พื้นหลังดำสนิทแบบจอเทอร์มินัล + สแกนไลน์บางๆ ให้ฟีล CRT */
     .stApp {
-        background: radial-gradient(ellipse 120% 80% at 50% -10%, #131a24 0%, var(--bg-0) 55%);
-        color: var(--text-hi);
+        background-color: var(--bg-0);
+        color: var(--text-body);
+        background-image:
+            repeating-linear-gradient(180deg, rgba(51,255,119,0.018) 0px, rgba(51,255,119,0.018) 1px, transparent 1px, transparent 3px),
+            radial-gradient(ellipse 100% 60% at 50% -10%, rgba(51,255,119,0.05) 0%, transparent 60%);
     }
     .block-container { padding-top: 1.6rem; max-width: 1200px; }
 
-    /* ตัวหนังสือทุกจุดให้คมชัด อ่านง่ายบนพื้นเข้ม */
-    /* ตัวหนังสือทั่วไปให้เป็นสีเทาสว่างนวล อ่านสบายตา ไม่จ้าเกินไป */
+    /* ตัวหนังสือทั่วไปโทนเขียวฟอสฟอร์ ระดับกลาง อ่านสบายตา ไม่จ้าเกินไป */
     p, span, label, li, div { color: var(--text-body); }
     h1, h2, h3, h4, strong, b { color: var(--text-hi) !important; }
     .stCaption, [data-testid="stCaptionContainer"] { color: var(--text-lo) !important; }
     [data-testid="stMarkdownContainer"] p { color: var(--text-body); }
 
-    h1 { font-family: 'IBM Plex Mono', monospace; letter-spacing: -0.5px; }
+    h1 {
+        font-family: 'JetBrains Mono', monospace; letter-spacing: -0.5px;
+        text-shadow: 0 0 10px rgba(51,255,119,0.35);
+    }
     h2 {
         color: var(--text-hi) !important;
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: 'JetBrains Mono', monospace;
         font-weight: 700;
-        font-size: 21px;
+        font-size: 20px;
         margin-top: 6px; margin-bottom: 4px;
-        padding-left: 12px;
-        border-left: 3px solid var(--up);
+        padding-left: 4px;
     }
+    h2::before { content: "$ "; color: var(--text-lo); }
     h3 {
         color: var(--text-hi) !important;
-        font-weight: 600; font-size: 15.5px;
+        font-weight: 600; font-size: 14.5px;
         text-transform: uppercase; letter-spacing: 0.6px;
-        border-bottom: 1px solid var(--line);
+        border-bottom: 1px dashed var(--line);
         padding-bottom: 8px; margin-top: 22px;
+        font-family: 'JetBrains Mono', monospace;
     }
-    h3::before { content: "▍"; color: var(--up); margin-right: 6px; }
+    h3::before { content: "> "; color: var(--up); }
 
-    /* กล่องข้อความ Code Block แบบคอนโซล มืด คมชัด */
+    /* กล่องข้อความ Code Block แบบคอนโซลดำสนิท ตัวหนังสือเขียวสว่าง */
     .stCodeBlock, div[data-testid="stCodeBlock"] {
-        background-color: var(--bg-2) !important;
+        background-color: #050a06 !important;
         border: 1px solid var(--line) !important;
-        border-radius: 8px !important;
-        box-shadow: inset 0 0 0 1px rgba(0,214,143,0.03);
+        border-radius: 6px !important;
+        box-shadow: inset 0 0 12px rgba(51,255,119,0.04);
     }
     .stCodeBlock code, div[data-testid="stCodeBlock"] code {
-        color: #cdebff !important;
-        font-family: 'IBM Plex Mono', monospace !important;
+        color: var(--up) !important;
+        font-family: 'JetBrains Mono', monospace !important;
         font-size: 13.5px !important;
     }
 
-    /* Highlight คำค้นหา แบบสีอำพันเรืองแสงบนพื้นเข้ม */
+    /* Highlight คำค้นหา แบบสีอำพันเรืองแสงบนพื้นดำ */
     mark.highlight {
         background-color: var(--amber);
-        color: #14110a;
+        color: #1a1300;
         padding: 1px 6px;
-        border-radius: 3px;
+        border-radius: 2px;
         font-weight: 700;
     }
 
-    /* ===== SIDEBAR: กระดานฝั่งซ้ายโทนเข้มกว่าเนื้อหา ===== */
+    /* ===== SIDEBAR: กระดานฝั่งซ้ายดำสนิทกว่าเนื้อหา ===== */
     [data-testid="stSidebar"] {
         background-color: var(--bg-1);
         border-right: 1px solid var(--line);
@@ -168,69 +178,74 @@ st.markdown("""
     [data-testid="stSidebar"] * { color: var(--text-body); }
     [data-testid="stSidebar"] strong, [data-testid="stSidebar"] b { color: var(--text-hi); }
     [data-testid="stSidebar"] h2 {
-        font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase;
-        color: var(--text-lo) !important; border-left: none; padding-left: 0;
+        font-size: 12.5px; letter-spacing: 1.5px; text-transform: uppercase;
+        color: var(--text-lo) !important; padding-left: 0;
     }
+    [data-testid="stSidebar"] h2::before { content: ""; }
     [data-testid="stSidebar"] a { color: var(--blue) !important; text-decoration: none; }
     [data-testid="stSidebar"] a:hover { text-decoration: underline; }
 
-    /* Expander ใน Sidebar ให้ดูเป็นการ์ดโมดูล */
+    /* Expander ใน Sidebar ให้ดูเป็นการ์ดโมดูลคอนโซล */
     [data-testid="stSidebar"] details {
         background-color: var(--bg-2);
         border: 1px solid var(--line-soft);
-        border-radius: 8px;
+        border-radius: 6px;
         margin-bottom: 8px;
         overflow: hidden;
     }
     [data-testid="stSidebar"] summary {
-        font-weight: 600; font-size: 14px;
+        font-weight: 600; font-size: 13.5px;
+        font-family: 'JetBrains Mono', monospace;
         padding: 2px 0;
     }
 
-    /* ปุ่มตัวเลือกหมวดหมู่ (radio) ให้ดูเหมือนรายการวอชลิสต์หุ้น */
+    /* ปุ่มตัวเลือกหมวดหมู่ (radio) ให้ดูเหมือนเมนูคำสั่งคอนโซล */
     [data-testid="stSidebar"] .stRadio > div { gap: 2px; }
     [data-testid="stSidebar"] .stRadio label {
         border: 1px solid transparent;
-        border-radius: 6px;
+        border-radius: 4px;
         padding: 7px 8px !important;
         width: 100%;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px;
         transition: background-color 0.12s ease, border-color 0.12s ease;
     }
     [data-testid="stSidebar"] .stRadio label:hover {
-        background-color: rgba(62, 166, 255, 0.08);
+        background-color: var(--up-dim);
         border-color: var(--line);
     }
     [data-testid="stSidebar"] .stRadio label[data-checked="true"],
     [data-testid="stSidebar"] .stRadio input:checked + div {
         color: var(--up) !important;
+        text-shadow: 0 0 6px rgba(51,255,119,0.4);
     }
 
     /* Text input ทั่วทั้งแอป */
     .stTextInput input, [data-testid="stSidebar"] .stTextInput input {
-        background-color: var(--bg-2) !important;
-        color: var(--text-hi) !important;
+        background-color: #050a06 !important;
+        color: var(--up) !important;
+        caret-color: var(--up) !important;
         border: 1px solid var(--line) !important;
-        border-radius: 8px !important;
-        font-family: 'IBM Plex Mono', monospace;
+        border-radius: 6px !important;
+        font-family: 'JetBrains Mono', monospace;
     }
     .stTextInput input:focus { border-color: var(--up) !important; box-shadow: 0 0 0 1px var(--up) !important; }
     .stTextInput input::placeholder { color: var(--text-lo) !important; }
 
     /* ===== Selectbox (เลือกไฟล์ PDF ฯลฯ) ===== */
     div[data-baseweb="select"] > div {
-        background-color: var(--bg-2) !important;
+        background-color: #050a06 !important;
         border: 1px solid var(--line) !important;
-        border-radius: 8px !important;
-        color: var(--text-hi) !important;
+        border-radius: 6px !important;
+        color: var(--up) !important;
     }
-    div[data-baseweb="select"] * { color: var(--text-hi) !important; fill: var(--text-hi) !important; }
-    /* เมนู dropdown ของ selectbox (render แยกนอก sidebar/main) */
+    div[data-baseweb="select"] * { color: var(--up) !important; fill: var(--up) !important; }
     div[data-baseweb="popover"] div[data-baseweb="menu"],
     ul[role="listbox"] {
         background-color: var(--bg-2) !important;
         border: 1px solid var(--line) !important;
     }
-    li[role="option"] { background-color: var(--bg-2) !important; color: var(--text-hi) !important; }
+    li[role="option"] { background-color: var(--bg-2) !important; color: var(--text-body) !important; }
     li[role="option"]:hover, li[aria-selected="true"] {
         background-color: var(--up-dim) !important; color: var(--up) !important;
     }
@@ -239,7 +254,7 @@ st.markdown("""
     [data-testid="stFileUploaderDropzone"], [data-testid="stFileUploader"] section {
         background-color: var(--bg-2) !important;
         border: 1px dashed var(--line) !important;
-        border-radius: 10px !important;
+        border-radius: 8px !important;
     }
     [data-testid="stFileUploaderDropzone"] *, [data-testid="stFileUploader"] section * {
         color: var(--text-body) !important;
@@ -260,21 +275,22 @@ st.markdown("""
         background-color: var(--bg-2);
         color: var(--text-hi);
         border: 1px solid var(--line);
-        border-radius: 8px;
+        border-radius: 6px;
         font-weight: 600;
+        font-family: 'JetBrains Mono', monospace;
     }
     .stButton > button[kind="primary"] {
         background-color: var(--up);
-        color: #06140f;
+        color: #041006;
         border: none;
     }
-    .stButton > button[kind="primary"]:hover { background-color: #04c283; }
+    .stButton > button[kind="primary"]:hover { background-color: #58ff93; }
     .stButton > button:hover, .stDownloadButton > button:hover {
         border-color: var(--up); color: var(--up);
     }
 
-    /* Alert boxes (success / warning / error / info) โทนเข้ม */
-    div[data-testid="stAlert"] { border-radius: 8px; border: 1px solid var(--line); }
+    /* Alert boxes (success / warning / error / info) โทนดำ */
+    div[data-testid="stAlert"] { border-radius: 6px; border: 1px solid var(--line); }
 
     /* เส้นแบ่ง */
     hr { border-color: var(--line) !important; }
@@ -283,55 +299,67 @@ st.markdown("""
     div[data-testid="stExpander"] {
         background-color: var(--bg-1);
         border: 1px solid var(--line);
-        border-radius: 10px;
+        border-radius: 8px;
     }
 
-    /* ===== Ticker แถบสรุปสถานะด้านบน ===== */
+    /* ===== Ticker แถบสรุปสถานะด้านบน สไตล์ terminal readout ===== */
     .ticker-wrap {
         display: flex; flex-wrap: wrap; gap: 0;
         background-color: var(--bg-1);
         border: 1px solid var(--line);
-        border-radius: 10px;
+        border-radius: 8px;
         overflow: hidden;
         margin: 14px 0 20px 0;
     }
     .ticker-item {
         flex: 1 1 150px;
         padding: 12px 18px;
-        border-right: 1px solid var(--line-soft);
+        border-right: 1px dashed var(--line);
         min-width: 140px;
     }
     .ticker-item:last-child { border-right: none; }
     .ticker-label {
-        font-family: 'IBM Plex Mono', monospace;
-        font-size: 10.5px; letter-spacing: 1.2px; text-transform: uppercase;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase;
         color: var(--text-lo); margin-bottom: 4px;
     }
+    .ticker-label::before { content: "// "; }
     .ticker-value {
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: 'JetBrains Mono', monospace;
         font-size: 22px; font-weight: 700; color: var(--text-hi);
         display: flex; align-items: baseline; gap: 6px;
     }
-    .ticker-value.up { color: var(--up); }
+    .ticker-value.up { color: var(--up); text-shadow: 0 0 8px rgba(51,255,119,0.45); }
     .ticker-unit { font-size: 11px; color: var(--text-lo); font-weight: 500; }
     .live-dot {
         display: inline-block; width: 7px; height: 7px; border-radius: 50%;
         background-color: var(--up); margin-right: 6px;
-        box-shadow: 0 0 0 0 rgba(0,214,143, 0.6);
+        box-shadow: 0 0 0 0 rgba(51,255,119, 0.6);
         animation: pulse 1.8s infinite;
     }
     @keyframes pulse {
-        0%   { box-shadow: 0 0 0 0 rgba(0,214,143, 0.5); }
-        70%  { box-shadow: 0 0 0 6px rgba(0,214,143, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(0,214,143, 0); }
+        0%   { box-shadow: 0 0 0 0 rgba(51,255,119, 0.5); }
+        70%  { box-shadow: 0 0 0 6px rgba(51,255,119, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(51,255,119, 0); }
     }
+
+    /* เคอร์เซอร์กระพริบท้ายหัวข้อหลัก — จุดเด่นของธีมนี้ */
+    .blink-cursor {
+        display: inline-block; width: 10px; height: 1.05em;
+        background-color: var(--up); margin-left: 4px; vertical-align: text-bottom;
+        animation: blink 1s steps(1) infinite;
+        box-shadow: 0 0 8px rgba(51,255,119,0.6);
+    }
+    @keyframes blink { 50% { opacity: 0; } }
 
     /* ป้ายชื่อคำสั่ง */
     .cmd-label {
-        font-size: 14px; font-weight: 600; color: var(--text-hi);
-        border-left: 2px solid var(--line); padding-left: 10px;
+        font-size: 13.5px; font-weight: 600; color: var(--text-hi);
+        font-family: 'JetBrains Mono', monospace;
+        padding-left: 4px;
         margin: 14px 0 4px 0;
     }
+    .cmd-label::before { content: "λ "; color: var(--up); }
 
     /* ซ่อนปุ่มที่ไม่จำเป็น */
     .stDeployButton { display:none; }
@@ -1113,15 +1141,15 @@ with st.sidebar.expander("🔐 SecureCRT", expanded=False):
 
 st.markdown("""
 <div style="display:flex; align-items:baseline; justify-content:space-between; margin-top:-10px; flex-wrap:wrap; gap:8px;">
-    <h1 style="margin:0; font-weight:800; font-size:30px; color:#e3e7ee;">
-        ZTE OLT <span style="color:#00c886;">&</span> PC COMMAND CENTER
+    <h1 style="margin:0; font-weight:800; font-size:28px; color:#7bffa0; letter-spacing:-0.5px;">
+        root@kri-noc:~$ ZTE_OLT_COMMAND_CENTER<span class="blink-cursor"></span>
     </h1>
-    <div style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:#8791a0;">
+    <div style="font-family:'JetBrains Mono', monospace; font-size:12px; color:#35603f;">
         <span class="live-dot"></span>SYSTEM ONLINE
     </div>
 </div>
-<div style="font-family:'IBM Plex Mono', monospace; font-size:12.5px; color:#8791a0; margin-top:2px;">
-    คลังคำสั่งและข้อมูลหน้างานเครือข่าย ZTE / OLT / DSLAM / Switch — ค้นหาได้จากทุกหมวดในจุดเดียว
+<div style="font-family:'JetBrains Mono', monospace; font-size:12.5px; color:#4fa868; margin-top:6px;">
+    # คลังคำสั่งและข้อมูลหน้างานเครือข่าย ZTE / OLT / DSLAM / Switch — ค้นหาได้จากทุกหมวดในจุดเดียว
 </div>
 """, unsafe_allow_html=True)
 

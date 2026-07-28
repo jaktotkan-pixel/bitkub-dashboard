@@ -40,17 +40,32 @@ def check_password():
 
     # หากยังไม่กรอกรหัส หรือกรอกผิด ให้แสดงหน้าต่างให้กรอกรหัสผ่าน
 
-    st.markdown("<h2 style='text-align: center;'>🔒 กรุณาใส่รหัสผ่านเพื่อเข้าใช้งานระบบ</h2>", unsafe_allow_html=True)
+    st.markdown("""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&family=IBM+Plex+Mono:wght@600&display=swap');
+        .stApp { background: radial-gradient(ellipse 120% 80% at 50% -10%, #131a24 0%, #0a0d12 55%); }
+        .lock-title {
+            text-align: center; margin-top: 12vh;
+            font-family: 'IBM Plex Sans Thai', sans-serif;
+            color: #eaeef4; font-weight: 700; font-size: 22px;
+        }
+        .lock-sub {
+            text-align: center; color: #7c8798; font-family: 'IBM Plex Mono', monospace;
+            font-size: 12.5px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 24px;
+        }
+    </style>
+    <div class="lock-title">🔒 กรุณาใส่รหัสผ่านเพื่อเข้าใช้งานระบบ</div>
+    <div class="lock-sub">ZTE OLT &amp; PC COMMAND CENTER</div>
+    """, unsafe_allow_html=True)
 
-    st.text_input(
+    col_a, col_b, col_c = st.columns([1, 1.2, 1])
+    with col_b:
+        st.text_input(
+            "รหัสผ่าน", type="password", on_change=password_entered, key="password"
+        )
 
-        "รหัสผ่าน", type="password", on_change=password_entered, key="password"
-
-    )
-
-    if "password_correct" in st.session_state:
-
-        st.error("😕 รหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้งครับ")
+        if "password_correct" in st.session_state:
+            st.error("😕 รหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้งครับ")
 
     return False
 
@@ -63,35 +78,220 @@ if not check_password():
     st.stop()  # หยุดการทำงานของหน้าเว็บไว้ตรงนี้หากยังไม่ใส่รหัสผ่านที่ถูกต้อง 
 
 
-# ปรับดีไซน์เป็นธีมขาว คลีน สบายตา + Highlight CSS
+# =================================================================
+# 🎨 ธีม "Trading Terminal" — พื้นหลังเข้ม ตัวหนังสือคมชัด อ่านง่าย
+# =================================================================
 st.markdown("""
 <style>
-    /* พื้นหลังสีขาวสะอาดตา */
-    .stApp { background-color: #ffffff; color: #1f2328; font-family: sans-serif; }
-    
-    /* กล่องข้อความ Code Block สีเทาอ่อน ขอบมน ชัดเจน */
-    .stCodeBlock { background-color: #f6f8fa !important; border: 1px solid #d0d7de !important; }
-    .stCodeBlock code { color: #000000 !important; }
-    
-    /* หัวข้อหลักสีน้ำเงินเข้ม มองเห็นเด่นชัด */
-    h2 { color: #0969da !important; font-weight: 700; margin-top: 15px; margin-bottom: 5px; }
-    h3 { color: #24292f !important; font-weight: 600; font-size: 17px; border-bottom: 2px solid #d0d7de; padding-bottom: 6px; margin-top: 15px; }
-    
-    /* สไตล์ Highlight สีเหลืองเข้ม */
-    mark.highlight {
-        background-color: #ffeb3b;
-        color: #000000;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-weight: bold;
-        box-shadow: 0 0 2px rgba(0,0,0,0.2);
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+
+    :root {
+        --bg-0: #0a0d12;
+        --bg-1: #10141b;
+        --bg-2: #161b24;
+        --line: #232a36;
+        --line-soft: #1b212b;
+        --text-hi: #eaeef4;
+        --text-lo: #7c8798;
+        --up: #00d68f;
+        --up-dim: rgba(0, 214, 143, 0.12);
+        --down: #ff4d5e;
+        --down-dim: rgba(255, 77, 94, 0.12);
+        --amber: #ffb020;
+        --blue: #3ea6ff;
     }
 
-    /* ปรับแต่ง Sidebar */
-    [data-testid="stSidebar"] { background-color: #f8f9fa; border-right: 1px solid #e1e4e8; }
-    
+    html, body, [class*="css"] { font-family: 'IBM Plex Sans Thai', 'IBM Plex Mono', sans-serif; }
+
+    /* พื้นหลังหลัก โทนเข้มแบบเทอร์มินัลเทรด */
+    .stApp {
+        background: radial-gradient(ellipse 120% 80% at 50% -10%, #131a24 0%, var(--bg-0) 55%);
+        color: var(--text-hi);
+    }
+    .block-container { padding-top: 1.6rem; max-width: 1200px; }
+
+    /* ตัวหนังสือทุกจุดให้คมชัด อ่านง่ายบนพื้นเข้ม */
+    p, span, label, li, div { color: var(--text-hi); }
+    .stCaption, [data-testid="stCaptionContainer"] { color: var(--text-lo) !important; }
+
+    h1 { font-family: 'IBM Plex Mono', monospace; letter-spacing: -0.5px; }
+    h2 {
+        color: var(--text-hi) !important;
+        font-family: 'IBM Plex Mono', monospace;
+        font-weight: 700;
+        font-size: 21px;
+        margin-top: 6px; margin-bottom: 4px;
+        padding-left: 12px;
+        border-left: 3px solid var(--up);
+    }
+    h3 {
+        color: var(--text-hi) !important;
+        font-weight: 600; font-size: 15.5px;
+        text-transform: uppercase; letter-spacing: 0.6px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 8px; margin-top: 22px;
+    }
+    h3::before { content: "▍"; color: var(--up); margin-right: 6px; }
+
+    /* กล่องข้อความ Code Block แบบคอนโซล มืด คมชัด */
+    .stCodeBlock, div[data-testid="stCodeBlock"] {
+        background-color: var(--bg-2) !important;
+        border: 1px solid var(--line) !important;
+        border-radius: 8px !important;
+        box-shadow: inset 0 0 0 1px rgba(0,214,143,0.03);
+    }
+    .stCodeBlock code, div[data-testid="stCodeBlock"] code {
+        color: #cdebff !important;
+        font-family: 'IBM Plex Mono', monospace !important;
+        font-size: 13.5px !important;
+    }
+
+    /* Highlight คำค้นหา แบบสีอำพันเรืองแสงบนพื้นเข้ม */
+    mark.highlight {
+        background-color: var(--amber);
+        color: #14110a;
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-weight: 700;
+    }
+
+    /* ===== SIDEBAR: กระดานฝั่งซ้ายโทนเข้มกว่าเนื้อหา ===== */
+    [data-testid="stSidebar"] {
+        background-color: var(--bg-1);
+        border-right: 1px solid var(--line);
+    }
+    [data-testid="stSidebar"] * { color: var(--text-hi); }
+    [data-testid="stSidebar"] h2 {
+        font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase;
+        color: var(--text-lo) !important; border-left: none; padding-left: 0;
+    }
+    [data-testid="stSidebar"] a { color: var(--blue) !important; text-decoration: none; }
+    [data-testid="stSidebar"] a:hover { text-decoration: underline; }
+
+    /* Expander ใน Sidebar ให้ดูเป็นการ์ดโมดูล */
+    [data-testid="stSidebar"] details {
+        background-color: var(--bg-2);
+        border: 1px solid var(--line-soft);
+        border-radius: 8px;
+        margin-bottom: 8px;
+        overflow: hidden;
+    }
+    [data-testid="stSidebar"] summary {
+        font-weight: 600; font-size: 14px;
+        padding: 2px 0;
+    }
+
+    /* ปุ่มตัวเลือกหมวดหมู่ (radio) ให้ดูเหมือนรายการวอชลิสต์หุ้น */
+    [data-testid="stSidebar"] .stRadio > div { gap: 2px; }
+    [data-testid="stSidebar"] .stRadio label {
+        border: 1px solid transparent;
+        border-radius: 6px;
+        padding: 7px 8px !important;
+        width: 100%;
+        transition: background-color 0.12s ease, border-color 0.12s ease;
+    }
+    [data-testid="stSidebar"] .stRadio label:hover {
+        background-color: rgba(62, 166, 255, 0.08);
+        border-color: var(--line);
+    }
+    [data-testid="stSidebar"] .stRadio label[data-checked="true"],
+    [data-testid="stSidebar"] .stRadio input:checked + div {
+        color: var(--up) !important;
+    }
+
+    /* Text input ทั่วทั้งแอป */
+    .stTextInput input, [data-testid="stSidebar"] .stTextInput input {
+        background-color: var(--bg-2) !important;
+        color: var(--text-hi) !important;
+        border: 1px solid var(--line) !important;
+        border-radius: 8px !important;
+        font-family: 'IBM Plex Mono', monospace;
+    }
+    .stTextInput input:focus { border-color: var(--up) !important; box-shadow: 0 0 0 1px var(--up) !important; }
+    .stTextInput input::placeholder { color: var(--text-lo) !important; }
+
+    /* ปุ่มหลัก */
+    .stButton > button, .stDownloadButton > button {
+        background-color: var(--bg-2);
+        color: var(--text-hi);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        font-weight: 600;
+    }
+    .stButton > button[kind="primary"] {
+        background-color: var(--up);
+        color: #06140f;
+        border: none;
+    }
+    .stButton > button[kind="primary"]:hover { background-color: #04c283; }
+    .stButton > button:hover, .stDownloadButton > button:hover {
+        border-color: var(--up); color: var(--up);
+    }
+
+    /* Alert boxes (success / warning / error / info) โทนเข้ม */
+    div[data-testid="stAlert"] { border-radius: 8px; border: 1px solid var(--line); }
+
+    /* เส้นแบ่ง */
+    hr { border-color: var(--line) !important; }
+
+    /* Expander บนหน้าหลัก (คลังเอกสาร PDF) */
+    div[data-testid="stExpander"] {
+        background-color: var(--bg-1);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+    }
+
+    /* ===== Ticker แถบสรุปสถานะด้านบน ===== */
+    .ticker-wrap {
+        display: flex; flex-wrap: wrap; gap: 0;
+        background-color: var(--bg-1);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 14px 0 20px 0;
+    }
+    .ticker-item {
+        flex: 1 1 150px;
+        padding: 12px 18px;
+        border-right: 1px solid var(--line-soft);
+        min-width: 140px;
+    }
+    .ticker-item:last-child { border-right: none; }
+    .ticker-label {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 10.5px; letter-spacing: 1.2px; text-transform: uppercase;
+        color: var(--text-lo); margin-bottom: 4px;
+    }
+    .ticker-value {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 22px; font-weight: 700; color: var(--text-hi);
+        display: flex; align-items: baseline; gap: 6px;
+    }
+    .ticker-value.up { color: var(--up); }
+    .ticker-unit { font-size: 11px; color: var(--text-lo); font-weight: 500; }
+    .live-dot {
+        display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+        background-color: var(--up); margin-right: 6px;
+        box-shadow: 0 0 0 0 rgba(0,214,143, 0.6);
+        animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+        0%   { box-shadow: 0 0 0 0 rgba(0,214,143, 0.5); }
+        70%  { box-shadow: 0 0 0 6px rgba(0,214,143, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(0,214,143, 0); }
+    }
+
+    /* ป้ายชื่อคำสั่ง */
+    .cmd-label {
+        font-size: 14px; font-weight: 600; color: var(--text-hi);
+        border-left: 2px solid var(--line); padding-left: 10px;
+        margin: 14px 0 4px 0;
+    }
+
     /* ซ่อนปุ่มที่ไม่จำเป็น */
     .stDeployButton { display:none; }
+    #MainMenu { visibility: hidden; }
+    footer { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -788,6 +988,18 @@ all_categories = {
 }
 
 
+# =================================================================
+# 📊 คำนวณสรุปตัวเลขสำหรับแถบ Ticker บนหน้า Dashboard
+# =================================================================
+total_categories = len(all_categories)
+total_commands = sum(
+    len(items) for cat_dict in all_categories.values() for items in cat_dict.values()
+)
+total_olt_ip = len(olt_ip_commands["📍 รายชื่อ IP OLT ในพื้นที่ & โครงข่าย"][0][1].strip().split("\n"))
+total_circuits = len(circuit_list)
+total_ofc_routes = len(ofc_distances)
+
+
 # --- 2. SIDEBAR NAVIGATION ---
 st.sidebar.markdown("## 📌 เมนูหลัก")
 
@@ -854,7 +1066,45 @@ with st.sidebar.expander("🔐 SecureCRT", expanded=False):
 
 # --- 3. MAIN CONTENT DISPLAY & DASHBOARD SEARCH ---
 
-st.markdown("<h1 style='color: #1a7f37; margin-top: -10px; font-weight: 800;'>💻 ZTE OLT & PC COMMAND CENTER</h1>", unsafe_allow_html=True)
+st.markdown("""
+<div style="display:flex; align-items:baseline; justify-content:space-between; margin-top:-10px; flex-wrap:wrap; gap:8px;">
+    <h1 style="margin:0; font-weight:800; font-size:30px; color:#eaeef4;">
+        ZTE OLT <span style="color:#00d68f;">&</span> PC COMMAND CENTER
+    </h1>
+    <div style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:#7c8798;">
+        <span class="live-dot"></span>SYSTEM ONLINE
+    </div>
+</div>
+<div style="font-family:'IBM Plex Mono', monospace; font-size:12.5px; color:#7c8798; margin-top:2px;">
+    คลังคำสั่งและข้อมูลหน้างานเครือข่าย ZTE / OLT / DSLAM / Switch — ค้นหาได้จากทุกหมวดในจุดเดียว
+</div>
+""", unsafe_allow_html=True)
+
+# แถบสรุปตัวเลขภาพรวมระบบ แบบ Stock Ticker
+st.markdown(f"""
+<div class="ticker-wrap">
+    <div class="ticker-item">
+        <div class="ticker-label">หมวดคำสั่งทั้งหมด</div>
+        <div class="ticker-value up">{total_categories}<span class="ticker-unit">หมวด</span></div>
+    </div>
+    <div class="ticker-item">
+        <div class="ticker-label">คำสั่ง / เอกสารในคลัง</div>
+        <div class="ticker-value up">{total_commands}<span class="ticker-unit">รายการ</span></div>
+    </div>
+    <div class="ticker-item">
+        <div class="ticker-label">IP OLT ในพื้นที่</div>
+        <div class="ticker-value up">{total_olt_ip}<span class="ticker-unit">จุด</span></div>
+    </div>
+    <div class="ticker-item">
+        <div class="ticker-label">เส้นทางสาย OFC</div>
+        <div class="ticker-value">{total_ofc_routes}<span class="ticker-unit">เส้นทาง</span></div>
+    </div>
+    <div class="ticker-item">
+        <div class="ticker-label">เลขวงจรลูกค้า</div>
+        <div class="ticker-value">{total_circuits}<span class="ticker-unit">วงจร</span></div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 # แสดงคลังเอกสารส่วนกลางบนหน้า Dashboard
 show_pdf_library()
@@ -909,7 +1159,10 @@ if dash_search:
             found_global = True
             st.markdown(f"#### ⚙️ หมวด Config: {cat_name}")
             for sub_cat, desc, code in cat_matches:
-                st.markdown(f"🔹 **{sub_cat}** ➔ {highlight_text(desc, dash_search)}", unsafe_allow_html=True)
+                st.markdown(
+                    f"<div class='cmd-label'>🔹 {sub_cat} ➔ {highlight_text(desc, dash_search)}</div>",
+                    unsafe_allow_html=True
+                )
                 
                 # ตรวจสอบเงื่อนไขหมวด IP OLT แยกบรรทัดทำไฮไลต์
                 if cat_name == "📍 IP OLT ในพื้นที่":
@@ -939,6 +1192,6 @@ else:
     for sub_cat, items in current_dict.items():
         st.markdown(f"### {sub_cat}")
         for desc, code in items:
-            st.markdown(f"**📌 {desc}**")
+            st.markdown(f"<div class='cmd-label'>📌 {desc}</div>", unsafe_allow_html=True)
             st.code(code, language="text")
         st.markdown("")

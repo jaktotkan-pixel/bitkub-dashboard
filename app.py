@@ -125,6 +125,21 @@ st.markdown("""
     .stCaption, [data-testid="stCaptionContainer"] { color: var(--text-lo) !important; }
     [data-testid="stMarkdownContainer"] p { color: var(--text-body); }
 
+    /* Inline code (ตัวอักษรที่ครอบด้วย backtick ในข้อความ markdown เช่นค่าระยะทาง, IP ฯลฯ) */
+    [data-testid="stMarkdownContainer"] code {
+        background-color: #050a06 !important;
+        color: var(--up) !important;
+        border: 1px solid var(--line) !important;
+        border-radius: 4px !important;
+        padding: 1px 6px !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: 0.92em !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] code {
+        background-color: #050a06 !important;
+        color: var(--up) !important;
+    }
+
     h1 {
         font-family: 'JetBrains Mono', monospace; letter-spacing: -0.5px;
         text-shadow: 0 0 10px rgba(51,255,119,0.35);

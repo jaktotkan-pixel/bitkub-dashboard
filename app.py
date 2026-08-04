@@ -1076,11 +1076,7 @@ total_ofc_routes = len(ofc_distances)
 # --- 2. SIDEBAR NAVIGATION ---
 st.sidebar.markdown("## 📌 เมนูหลัก")
 
-selected_menu = None
-with st.sidebar.expander("⚙️ Config", expanded=True):
-    selected_menu = st.radio("เลือกหมวดหมู่การใช้งาน:", list(all_categories.keys()), label_visibility="collapsed")
-
-with st.sidebar.expander("🌐 Web", expanded=False):
+with st.sidebar.expander("🌐 Web", expanded=True):
     st.markdown("🔗 [Data Kan](https://sites.google.com/view/datakan)")
     st.markdown("🔗 [182.52.113.237](http://182.52.113.237/)")
     st.markdown("🔗 [TSP Login](https://tsp.totbb.net/index.php?r=tbl-users%2Flogin)")
@@ -1095,7 +1091,7 @@ with st.sidebar.expander("🌐 Web", expanded=False):
     st.markdown("🔗 [CPE (https://pete.intra.ntplc.co.th/#/login])")
     st.markdown("🔗 [NT OS (http://203.113.70.137/employee/profile)")
     st.markdown("🔗 [CCTV OBJ (https://script.google.com/macros/s/AKfycbwRHsxi7OasLOreOmTe0JboHWmEo4KY8OEOrLy7xn8xsPiOOSKBK-vCzMq4P4ngNrvu/exec)")
-                
+
 with st.sidebar.expander("📏 ระยะสาย Optic", expanded=False):
     st.markdown("#### 🛠️ ข้อมูลระยะสาย OFC หน้างาน")
     search_ofc = st.text_input("🔍 ค้นหาเส้นทางสาย OFC:", "", key="search_ofc_sidebar").strip().lower()
@@ -1136,6 +1132,13 @@ with st.sidebar.expander("🔐 SecureCRT", expanded=False):
     st.markdown("• `10.224.55.121`")
     st.markdown("• `10.224.55.125`")
     st.markdown("• `10.224.55.129`")
+
+selected_menu = None
+with st.sidebar.expander("⚙️ Config", expanded=False):
+    selected_menu = st.radio("เลือกหมวดหมู่การใช้งาน:", list(all_categories.keys()), label_visibility="collapsed")
+
+if selected_menu is None:
+    selected_menu = list(all_categories.keys())[0]
 
 
 # --- 3. MAIN CONTENT DISPLAY & DASHBOARD SEARCH ---

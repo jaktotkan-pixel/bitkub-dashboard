@@ -1290,7 +1290,7 @@ if dash_search:
                         else:
                             highlighted_lines.append(f"• {line}")
                     final_html = "<br>".join(highlighted_lines)
-                    st.markdown(f"<div style='background-color: #f6f8fa; border: 1px solid #d0d7de; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 14px;'>{final_html}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='background-color: #050a06; border: 1px solid #1c3320; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 14px; color: #33ff77;'>{final_html}</div>", unsafe_allow_html=True)
                 else:
                     st.code(code, language="text")
             st.markdown("---")

@@ -149,16 +149,39 @@ st.markdown("""
     h3::before { content: "> "; color: var(--up); }
 
     /* กล่องข้อความ Code Block แบบคอนโซลดำสนิท ตัวหนังสือเขียวสว่าง */
-    .stCodeBlock, div[data-testid="stCodeBlock"] {
+    .stCodeBlock,
+    div[data-testid="stCodeBlock"],
+    div[data-testid="stCode"],
+    div[data-testid="stCodeBlock"] > div,
+    div[data-testid="stCode"] > div,
+    .stCodeBlock pre,
+    div[data-testid="stCodeBlock"] pre,
+    div[data-testid="stCode"] pre {
         background-color: #050a06 !important;
         border: 1px solid var(--line) !important;
         border-radius: 6px !important;
         box-shadow: inset 0 0 12px rgba(51,255,119,0.04);
     }
-    .stCodeBlock code, div[data-testid="stCodeBlock"] code {
+    .stCodeBlock code,
+    div[data-testid="stCodeBlock"] code,
+    div[data-testid="stCode"] code,
+    .stCodeBlock pre code,
+    div[data-testid="stCodeBlock"] pre code,
+    div[data-testid="stCode"] pre code,
+    .stCodeBlock span,
+    div[data-testid="stCodeBlock"] span,
+    div[data-testid="stCode"] span {
+        background-color: transparent !important;
         color: var(--up) !important;
         font-family: 'JetBrains Mono', monospace !important;
         font-size: 13.5px !important;
+    }
+    /* ปุ่ม Copy มุมขวาบนของ Code Block ให้กลืนกับพื้นหลังดำ */
+    .stCodeBlock button,
+    div[data-testid="stCodeBlock"] button,
+    div[data-testid="stCode"] button {
+        background-color: #050a06 !important;
+        color: var(--up) !important;
     }
 
     /* Highlight คำค้นหา แบบสีอำพันเรืองแสงบนพื้นดำ */

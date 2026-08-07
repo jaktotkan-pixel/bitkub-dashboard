@@ -1129,6 +1129,7 @@ with st.sidebar.expander("🌐 Web", expanded=True):
     st.markdown("🔗 [CPE (https://pete.intra.ntplc.co.th/#/login])")
     st.markdown("🔗 [NT OS (http://203.113.70.137/employee/profile)")
     st.markdown("🔗 [CCTV OBJ (https://script.google.com/macros/s/AKfycbwRHsxi7OasLOreOmTe0JboHWmEo4KY8OEOrLy7xn8xsPiOOSKBK-vCzMq4P4ngNrvu/exec)")
+    st.markdown("🔗 (NOC CRC ERROR (https://script.google.com/macros/s/AKfycbwaoahEN4lTUpnKlRQs7dA6zOKsZ3ZOsoAL5DtRBcyhoDbtLi-Pq-m_SGnR_yoquDi0sA/exec)")
 
 with st.sidebar.expander("📏 ระยะสาย Optic", expanded=False):
     st.markdown("#### 🛠️ ข้อมูลระยะสาย OFC หน้างาน")

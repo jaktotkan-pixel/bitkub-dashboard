@@ -311,22 +311,44 @@ st.markdown("""
     }
 
     /* ปุ่มหลัก */
-    .stButton > button, .stDownloadButton > button {
-        background-color: var(--bg-2);
-        color: var(--text-hi);
-        border: 1px solid var(--line);
-        border-radius: 6px;
+    .stButton > button,
+    .stDownloadButton > button,
+    [data-testid="stButton"] button,
+    [data-testid="baseButton-secondary"],
+    [data-testid="stBaseButton-secondary"] {
+        background-color: var(--bg-2) !important;
+        color: var(--text-hi) !important;
+        border: 1px solid var(--line) !important;
+        border-radius: 6px !important;
         font-weight: 600;
         font-family: 'JetBrains Mono', monospace;
     }
-    .stButton > button[kind="primary"] {
-        background-color: var(--up);
-        color: #041006;
-        border: none;
+    .stButton > button[kind="primary"],
+    [data-testid="baseButton-primary"],
+    [data-testid="stBaseButton-primary"] {
+        background-color: var(--up) !important;
+        color: #041006 !important;
+        border: none !important;
     }
-    .stButton > button[kind="primary"]:hover { background-color: #58ff93; }
+    .stButton > button[kind="primary"]:hover { background-color: #58ff93 !important; }
     .stButton > button:hover, .stDownloadButton > button:hover {
         border-color: var(--up); color: var(--up);
+    }
+
+    /* ===== ปุ่มลบ (🗑️) ทุกหัวข้อ — พื้นดำเดียวกับ Dashboard ขอบ/ไอคอนสีแดงเพื่อสื่อว่าเป็นการลบ ===== */
+    [class*="st-key-del_"] button {
+        background-color: var(--bg-0) !important;
+        border: 1px solid #ff5c5c !important;
+        color: #ff5c5c !important;
+        border-radius: 6px !important;
+    }
+    [class*="st-key-del_"] button:hover {
+        background-color: rgba(255, 92, 92, 0.12) !important;
+        border-color: #ff7a7a !important;
+        color: #ff7a7a !important;
+    }
+    [class*="st-key-del_"] button p {
+        color: inherit !important;
     }
 
     /* Alert boxes (success / warning / error / info) โทนดำ */

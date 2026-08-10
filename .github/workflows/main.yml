@@ -1,0 +1,24 @@
+name: Update Dashboard Data
+
+on:
+  schedule:
+    - cron: '0 * * * *' # รันทุกๆ 1 ชั่วโมง
+  workflow_dispatch: # กดรันเองแบบ Manual ได้
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Run update script
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python update_data.py

@@ -405,6 +405,30 @@ st.markdown("""
     .stDeployButton { display:none; }
     #MainMenu { visibility: hidden; }
     footer { visibility: hidden; }
+
+    /* ===== แถบ Header ด้านบนสุดของ Streamlit (Share / ดาว / ดินสอ / GitHub) ===== */
+    [data-testid="stHeader"] {
+        background-color: var(--bg-0) !important;
+        border-bottom: 1px solid var(--line);
+    }
+    [data-testid="stToolbar"],
+    [data-testid="stToolbarActions"],
+    [data-testid="stStatusWidget"],
+    [data-testid="stDecoration"] {
+        background-color: transparent !important;
+    }
+    [data-testid="stHeader"] *,
+    [data-testid="stToolbarActions"] * {
+        color: var(--text-hi) !important;
+        fill: var(--text-hi) !important;
+    }
+    [data-testid="stToolbarActions"] button:hover,
+    [data-testid="stHeader"] button:hover {
+        background-color: var(--up-dim) !important;
+    }
+    [data-testid="stHeader"] a {
+        color: var(--text-hi) !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 

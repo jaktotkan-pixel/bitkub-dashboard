@@ -316,23 +316,20 @@ st.markdown("""
         border-color: var(--up); color: var(--up);
     }
 
-    /* ===== ปุ่มลบ (D) สีแดง — แสดงตัวอักษร D สีแดงแบบเน้นชัดเจน ===== */
+    /* ===== ปุ่มลบ (🗑️) ทุกหัวข้อ — พื้นดำเดียวกับ Dashboard ขอบ/ไอคอนสีแดงเพื่อสื่อว่าเป็นการลบ ===== */
     [class*="st-key-del_"] button {
         background-color: var(--bg-0) !important;
         border: 1px solid #ff5c5c !important;
         color: #ff5c5c !important;
         border-radius: 6px !important;
-        font-weight: 700 !important;
-        font-family: 'JetBrains Mono', monospace !important;
     }
     [class*="st-key-del_"] button:hover {
-        background-color: rgba(255, 92, 92, 0.2) !important;
+        background-color: rgba(255, 92, 92, 0.12) !important;
         border-color: #ff7a7a !important;
         color: #ff7a7a !important;
     }
     [class*="st-key-del_"] button p {
         color: inherit !important;
-        font-weight: 700 !important;
     }
 
     /* Alert boxes (success / warning / error / info) โทนดำ */
@@ -476,13 +473,11 @@ def save_section_data(filename, data):
 
 
 def render_delete_button(filename, data, idx, key):
-    """ปุ่มลบอักษร D สีแดง มี Popover ยืนยันการลบก่อนทำงานจริง"""
-    with st.popover("D", help="ลบรายการนี้"):
-        st.write("⚠️ ยืนยันการลบรายการนี้หรือไม่?")
-        if st.button("🔴 ยืนยันลบ", key=f"confirm_{key}", type="primary", use_container_width=True):
-            data.pop(idx)
-            save_section_data(filename, data)
-            st.rerun()
+    """ปุ่มลบรายการที่ idx แล้วบันทึกและรีเฟรชหน้า"""
+    if st.button("🗑️", key=key, help="ลบรายการนี้"):
+        data.pop(idx)
+        save_section_data(filename, data)
+        st.rerun()
 
 
 def render_web_section(filename, seed):
@@ -710,7 +705,7 @@ def show_pdf_library():
             key=f"confirm_delete_{selected_pdf.name}"
         )
         if st.button(
-            "🔴 ลบไฟล์ PDF ที่เลือก",
+            "🗑️ ลบไฟล์ PDF ที่เลือก",
             type="secondary",
             use_container_width=True,
             disabled=not confirm_delete,
@@ -721,6 +716,7 @@ def show_pdf_library():
             st.rerun()
 
         if st.checkbox("👁️ เปิดดูเอกสารใน Dashboard", key="pdf_library_preview"):
+            # ฝัง PDF ใน component โดยตรง จึงไม่ต้องติดตั้ง streamlit[pdf]
             pdf_base64 = base64.b64encode(pdf_data).decode("utf-8")
             components.html(
                 f'''<object data="data:application/pdf;base64,{pdf_base64}"
@@ -756,7 +752,7 @@ c300_commands = {
     "📊 ตรวจสอบข้อมูลประวัติ & Log ย้อนหลัง": [
         ["เช็คประวัติอย่างละเอียดของการ Up/Down และสาเหตุสายหลุด", "show gpon onu detail-info gpon-onu_{slot}"],
         ["เช็คสถานะภาพรวม ONU ออนไลน์/ออฟไลน์ ทั้งหมดในการ์ด PON", "show gpon onu state gpon-olt_{clean_slot}"],
-        ["เช็คประวัติ Log ย้อนหลังเพื่อดูพฤติกรรมสายลูกค้า", "show pon onu information gpon-onu_{slot}"]
+        ["เช็คประวัติ Log ย้อนหลังเพื่อดูพฤติกรรมสายลูกค้า", "show pon information gpon-onu_{slot}"]
     ]
 }
 
@@ -795,7 +791,7 @@ extreme_commands = {
         ["ดู Status (แสดงแบบ No-Refresh ไม่ใช่ Real-time)", "show port no-refresh"],
         ["ดู MAC Address ภายใน VLAN ที่กำหนด", "show fdb vlan v..."],
         ["ดูว่าพอร์ตที่ระบุ มี VLAN อะไรผ่านบ้าง", "show fdb port ..."],
-        ["ล้างข้อมูล FDB ในพอร์ตที่ระบุ", "cler fdb ports ..."]
+        ["ล้างข้อมูล FDB ในพอร์ตที่ระบุ", "clear fdb ports ..."]
     ],
     "⚙️ คำสั่งจัดการ VLAN & Configuration": [
         ["เพิ่ม VLAN แบบ Tagged ใส่พอร์ต", "config vlan v... add port ... tagged"],
@@ -814,171 +810,169 @@ fixline_commands = {
     "🔍 คำสั่งตรวจสอบสถานะ & ตำแหน่ง": [
         ["ดูสถานะเลขหมาย", "stsup:sub=xxxx ;"],
         ["ดูตำแหน่งวงจร/พอร์ต", "exdrp:dev=li3-xxxx ;"],
-        ["ดู Category (cat)", "suscp:snb=xxxx ;"],
-        ["เช็ค Profile / Service ที่ผูกอยู่", "suprm:sub=xxxx ;"]
-    ],
-    "⚙️ คำสั่งจัดการ & แก้ไขข้อมูล": [
-        ["เปลี่ยน Category เลขหมาย", "sumod:sub=xxxx, cat=xx ;"],
-        ["ล้างสถานะ Block / Lock เลขหมาย", "sucle:sub=xxxx ;"],
-        ["ลบข้อมูลเลขหมายออกจากระบบ", "suder:sub=xxxx ;"]
+        ["ดู Category (cat)", "suscp:snb=xxxx ;"]
     ]
 }
 
-cmd_search_db = {
-    "ZTE C300": c300_commands,
-    "ZTE C600": c600_commands,
-    "ZTE Sw Pracharath": zte_pracharath_commands,
-    "Extreme Switch": extreme_commands,
-    "Fixline System": fixline_commands
-}
+# --- 2. SIDEBAR NAVIGATION & DATA SECTIONS ---
+st.sidebar.title("⚡ COMMAND CENTER")
 
-# =================================================================
-# 🧭 SIDEBAR NAVIGATION & TOOLBOX
-# =================================================================
-with st.sidebar:
-    st.markdown("## ⚡ KRI-NOC DASHBOARD")
-    
-    app_mode = st.radio(
-        "เลือกโหมดการทำงาน",
-        ["💻 Command Center", "📚 คลังเอกสาร PDF", "📂 ข้อมูลโครงข่าย & บันทึก"],
-        index=0
-    )
-    
-    st.markdown("---")
-    
-    if app_mode == "📂 ข้อมูลโครงข่าย & บันทึก":
-        st.markdown("### 🛠️ เลือกจัดการข้อมูล")
-        info_category = st.radio(
-            "หมวดหมู่ข้อมูล",
-            ["🌐 Web Link", "📏 ระยะสาย OFC", "🆔 เลขวงจรลูกค้า", "📍 ที่อยู่ NT", "📞 IP Phone", "🖥️ SecureCRT"],
-            index=0
-        )
+# ตัวเลือกเมนูหมวดหมู่
+category = st.sidebar.radio(
+    "เลือกโหมดใช้งาน",
+    [
+        "ZTE C300",
+        "ZTE C600",
+        "ZTE ประชารัฐ",
+        "Extreme Switch",
+        "Fixline",
+        "ข้อมูลอ้างอิง & บันทึก"
+    ]
+)
 
-# =================================================================
-# 🖥️ PAGE 1: COMMAND CENTER
-# =================================================================
-if app_mode == "💻 Command Center":
-    st.markdown("<h1>ZTE OLT & PC COMMAND CENTER<span class='blink-cursor'></span></h1>", unsafe_allow_html=True)
-    
-    # 📊 Ticker summary bar
-    st.markdown("""
-    <div class="ticker-wrap">
-        <div class="ticker-item">
-            <div class="ticker-label"><span class="live-dot"></span>SYSTEM STATUS</div>
-            <div class="ticker-value up">ONLINE <span class="ticker-unit">100%</span></div>
-        </div>
-        <div class="ticker-item">
-            <div class="ticker-label">SUPPORTED SYSTEMS</div>
-            <div class="ticker-value">5 <span class="ticker-unit">NODES</span></div>
-        </div>
-        <div class="ticker-item">
-            <div class="ticker-label">ENVIRONMENT</div>
-            <div class="ticker-value">PROD <span class="ticker-unit">v2.4</span></div>
-        </div>
+st.sidebar.markdown("---")
+
+# ส่วนแสดงข้อมูลเพิ่มเติมใน Sidebar (โหลดแบบ Dynamic มีการบันทึก/แก้ไข)
+with st.sidebar.expander("🌐 ลิงก์เว็บใช้งานบ่อย", expanded=False):
+    render_web_section("web_links.json", [
+        {"name": "Google", "url": "https://www.google.com"},
+        {"name": "Streamlit Docs", "url": "https://docs.streamlit.io"}
+    ])
+
+with st.sidebar.expander("📏 ระยะสาย Optic", expanded=False):
+    render_ofc_section("ofc_routes.json", [
+        {"route": "Node A - Node B", "distance": "5.2 km", "note": "Main route"}
+    ])
+
+with st.sidebar.expander("🆔 เลขวงจรสำคัญ", expanded=False):
+    render_circuit_section("circuits.json", [
+        {"code": "CIR-100203", "owner": "NOC Center"}
+    ])
+
+with st.sidebar.expander("📍 ที่อยู่ NT / Node", expanded=False):
+    render_address_section("nt_addresses.json", [
+        {"title": "ศูนย์ NT กาญจนบุรี", "detail": "123 ถ.แสงชูโต ต.บ้านเหนือ อ.เมือง จ.กาญจนบุรี"}
+    ])
+
+with st.sidebar.expander("📞 เบอร์ IP Phone", expanded=False):
+    render_simple_value_section("ip_phones.json", [{"value": "1001", "note": "ห้องปฏิบัติการ NOC"}], "เบอร์ IP Phone", "ip_phone")
+
+with st.sidebar.expander("💻 SecureCRT Session", expanded=False):
+    render_simple_value_section("securecrt.json", [{"value": "OLT-C300-SiteA", "note": "10.0.0.1"}], "ชื่อ Session / Host", "securecrt")
+
+
+# --- 3. MAIN CONTENT DISPLAY ---
+
+# Ticker Readout
+st.markdown("""
+<div class="ticker-wrap">
+    <div class="ticker-item">
+        <div class="ticker-label"><span class="live-dot"></span>SYSTEM STATUS</div>
+        <div class="ticker-value up">ONLINE <span class="ticker-unit">100%</span></div>
     </div>
-    """, unsafe_allow_html=True)
+    <div class="ticker-item">
+        <div class="ticker-label">ACTIVE MODE</div>
+        <div class="ticker-value">''' + category + '''</div>
+    </div>
+    <div class="ticker-item">
+        <div class="ticker-label">HOST LOGGED</div>
+        <div class="ticker-value">root@kri-noc</div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-    # Search & Input Area
-    col_input, col_search = st.columns([1, 1])
-    
-    with col_input:
-        slot_input = st.text_input("📍 ระบุตำแหน่ง Slot/Port (เช่น 1/2/3 หรือ 1/2/3:4)", "1/2/3:4").strip()
-    
-    with col_search:
-        search_query = st.text_input("🔍 ค้นหาคำสั่ง (Search Commands Across All Systems)", "").strip()
+st.markdown(f"<h2>{category}<span class='blink-cursor'></span></h2>", unsafe_allow_html=True)
 
-    # Calculate clean_slot for commands needing base port format
-    clean_slot = slot_input.split(":")[0] if ":" in slot_input else slot_input
+# ช่องค้นหาคำสั่งหลัก
+search_query = st.text_input("🔎 ค้นหาคำสั่ง (Search Command / Keyword):", "").strip()
+
+# แสดงคลังเอกสาร PDF
+show_pdf_library()
+
+st.markdown("---")
+
+# ฟังก์ชันแสดงผลกลุ่มคำสั่ง
+def display_command_group(cmd_dict, slot_val="", clean_slot_val=""):
+    found_any = False
+    for group_name, cmds in cmd_dict.items():
+        # กรองรายการตามคำค้นหา
+        matching_cmds = []
+        for item in cmds:
+            desc = item[0]
+            cmd_template = item[1]
+            
+            # แทนค่าพารามิเตอร์ slot ในคำสั่ง (ถ้ามี)
+            formatted_cmd = cmd_template.format(slot=slot_val, clean_slot=clean_slot_val) if slot_val else cmd_template
+            
+            if not search_query or search_query.lower() in desc.lower() or search_query.lower() in formatted_cmd.lower():
+                matching_cmds.append((desc, formatted_cmd))
+
+        if matching_cmds:
+            found_any = True
+            st.markdown(f"### {group_name}")
+            for desc, final_cmd in matching_cmds:
+                highlighted_desc = highlight_text(desc, search_query)
+                st.markdown(f'<div class="cmd-label">{highlighted_desc}</div>', unsafe_allow_html=True)
+                st.code(final_cmd, language="bash")
+
+    if not found_any:
+        st.info("❌ ไม่พบคำสั่งที่ตรงกับคำค้นหา")
+
+
+# การประมวลผลแยกตามหมวดหมู่ที่เลือก
+if category in ["ZTE C300", "ZTE C600"]:
+    st.caption("ระบุตำแหน่ง Slot/Port/ONU เพื่อเจนเนอเรตคำสั่งอัตโนมัติ")
+    
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        slot_input = st.text_input("ระบุตำแหน่ง (เช่น 1/2/3:4 หรือ 1/1/1):", "1/1/1:1").strip()
+    
+    # คำนวณ clean_slot (ตัดส่วน ONU หลังเครื่องหมาย : หรือ / ออกเพื่อใช้กับระดับ Port)
+    clean_slot_input = re.split(r'[:/]', slot_input)[0] if slot_input else ""
+    if slot_input and ":" in slot_input:
+        clean_slot_input = slot_input.split(":")[0]
 
     st.markdown("---")
-
-    # Display Commands Filtered or Categorized
-    if search_query:
-        st.markdown(f"### 🔍 ผลการค้นหาสำหรับ: `{search_query}`")
-        found_any = False
-        
-        for sys_name, sys_cmds in cmd_search_db.items():
-            sys_matches = []
-            for group_name, cmd_list in sys_cmds.items():
-                for desc, cmd in cmd_list:
-                    if search_query.lower() in desc.lower() or search_query.lower() in cmd.lower():
-                        sys_matches.append((group_name, desc, cmd))
-            
-            if sys_matches:
-                found_any = True
-                st.markdown(f"#### 📡 {sys_name}")
-                for group, desc, cmd in sys_matches:
-                    formatted_cmd = cmd.format(slot=slot_input, clean_slot=clean_slot)
-                    highlighted_desc = highlight_text(desc, search_query)
-                    st.markdown(f"<div class='cmd-label'>[{group}] {highlighted_desc}</div>", unsafe_allow_html=True)
-                    st.code(formatted_cmd, language="bash")
-        
-        if not found_any:
-            st.info("ไม่พบคำสั่งที่ตรงกับคำค้นหา")
-            
-    else:
-        # Tab view for structured navigation
-        tabs = st.tabs(list(cmd_search_db.keys()))
-        
-        for idx, (sys_name, sys_cmds) in enumerate(cmd_search_db.items()):
-            with tabs[idx]:
-                for group_name, cmd_list in sys_cmds.items():
-                    st.markdown(f"### {group_name}")
-                    for desc, cmd in cmd_list:
-                        formatted_cmd = cmd.format(slot=slot_input, clean_slot=clean_slot)
-                        st.markdown(f"<div class='cmd-label'>{desc}</div>", unsafe_allow_html=True)
-                        st.code(formatted_cmd, language="bash")
-
-# =================================================================
-# 📚 PAGE 2: PDF LIBRARY
-# =================================================================
-elif app_mode == "📚 คลังเอกสาร PDF":
-    st.markdown("<h1>PDF DOCUMENT LIBRARY<span class='blink-cursor'></span></h1>", unsafe_allow_html=True)
-    show_pdf_library()
-
-# =================================================================
-# 📂 PAGE 3: NETWORK DATA & RECORDS
-# =================================================================
-elif app_mode == "📂 ข้อมูลโครงข่าย & บันทึก":
-    st.markdown("<h1>NETWORK DATA & RECORDS<span class='blink-cursor'></span></h1>", unsafe_allow_html=True)
     
-    if info_category == "🌐 Web Link":
-        st.markdown("### 🌐 จัดการลิงก์เว็บไซต์ที่ใช้งานบ่อย")
-        render_web_section("web_links.json", [
-            {"name": "ZTE NMS System", "url": "https://10.0.0.1"},
-            {"name": "NT Service Portal", "url": "https://portal.nt.ntplc.co.th"}
-        ])
-        
-    elif info_category == "📏 ระยะสาย OFC":
-        st.markdown("### 📏 จัดการข้อมูลระยะสาย Optic Fiber")
-        render_ofc_section("ofc_routes.json", [
-            {"route": "Node A - Node B", "distance": "12.4 km", "note": "Core Main"},
-            {"route": "Node A - Substation 1", "distance": "5.1 km", "note": "Loop Protect"}
-        ])
-        
-    elif info_category == "🆔 เลขวงจรลูกค้า":
-        st.markdown("### 🆔 จัดการเลขวงจรลูกค้า")
-        render_circuit_section("circuits.json", [
-            {"code": "961234567", "owner": "NT Office Main"},
-            {"code": "967654321", "owner": "CCTV Govt Project"}
-        ])
-        
-    elif info_category == "📍 ที่อยู่ NT":
-        st.markdown("### 📍 จัดการที่อยู่ศูนย์งาน / Node NT")
-        render_address_section("nt_addresses.json", [
-            {"title": "ศูนย์บริการลูกค้า NT กาญจนบุรี", "detail": "123 ถ.แสงชูโต ต.บ้านเหนือ อ.เมือง จ.กาญจนบุรี 71000"}
-        ])
-        
-    elif info_category == "📞 IP Phone":
-        st.markdown("### 📞 จัดการเบอร์และ IP Phone")
-        render_simple_value_section("ip_phones.json", [
-            {"value": "1001", "note": "NOC Desk 1"},
-            {"value": "1002", "note": "NOC Desk 2"}
-        ], "หมายเลข IP / Internal Phone", "ip_phone")
-        
-    elif info_category == "🖥️ SecureCRT":
-        st.markdown("### 🖥️ บันทึกการตั้งค่า / Session SecureCRT")
-        render_simple_value_section("secure_crt.json", [
-            {"value": "10.10.10.1", "note": "OLT-ZTE-C300-KAN"},
-            {"value": "10.10.10.2", "note": "SW-ZTE-PRACHARATH"}
-        ], "IP / Hostname / Session Name", "securecrt")
+    if category == "ZTE C300":
+        display_command_group(c300_commands, slot_val=slot_input, clean_slot_val=clean_slot_input)
+    else:
+        display_command_group(c600_commands, slot_val=slot_input, clean_slot_val=clean_slot_input)
+
+elif category == "ZTE ประชารัฐ":
+    display_command_group(zte_pracharath_commands)
+
+elif category == "Extreme Switch":
+    display_command_group(extreme_commands)
+
+elif category == "Fixline":
+    display_command_group(fixline_commands)
+
+elif category == "ข้อมูลอ้างอิง & บันทึก":
+    st.markdown("### 📌 สรุปข้อมูลบันทึกระบบหน้างาน")
+    
+    tab1, tab2, tab3 = st.tabs(["📏 เส้นทาง OFC", "🆔 เลขวงจร", "📍 สถานที่ NT"])
+    
+    with tab1:
+        ofc_data = load_section_data("ofc_routes.json", [])
+        if ofc_data:
+            for item in ofc_data:
+                st.markdown(f"• **{item['route']}** — `{item['distance']}` (หมายเหตุ: {item.get('note', '-')})")
+        else:
+            st.caption("ไม่มีข้อมูลเส้นทาง OFC")
+            
+    with tab2:
+        circuit_data = load_section_data("circuits.json", [])
+        if circuit_data:
+            for item in circuit_data:
+                st.markdown(f"• `{item['code']}` — {item['owner']}")
+        else:
+            st.caption("ไม่มีข้อมูลเลขวงจร")
+            
+    with tab3:
+        addr_data = load_section_data("nt_addresses.json", [])
+        if addr_data:
+            for item in addr_data:
+                st.markdown(f"**{item['title']}**\n{item['detail']}\n---")
+        else:
+            st.caption("ไม่มีข้อมูลสถานที่")

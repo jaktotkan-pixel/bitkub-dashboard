@@ -1,6 +1,7 @@
 import streamlit as st
 import re
 import json
+import copy
 from pathlib import Path
 import base64
 import streamlit.components.v1 as components
@@ -417,64 +418,203 @@ def highlight_text(text, keyword):
 
 
 # =================================================================
-# 🔖 บันทึกลิงก์เว็บ (Bookmark) — เพิ่ม/ลบได้จากหน้า Dashboard เลย
+# 🗃️ ระบบจัดการข้อมูลแบบแก้ไขได้ (เพิ่ม/ลบ) สำหรับหัวข้อต่างๆ ใน Sidebar
+#    เช่น Web, ระยะสาย Optic, เลขวงจร, ที่อยู่, IP Phone, SecureCRT
 # =================================================================
-BOOKMARKS_FILE = Path("bookmarks.json")
+DATA_DIR = Path("data")
+DATA_DIR.mkdir(exist_ok=True)
 
 
-def load_bookmarks():
-    """โหลดรายการลิงก์ที่บันทึกไว้"""
-    if BOOKMARKS_FILE.exists():
+def load_section_data(filename, seed):
+    """โหลดข้อมูลของหัวข้อจากไฟล์ JSON ถ้ายังไม่มีไฟล์จะสร้างจากข้อมูลตั้งต้น (seed)"""
+    path = DATA_DIR / filename
+    if path.exists():
         try:
-            return json.loads(BOOKMARKS_FILE.read_text(encoding="utf-8"))
+            return json.loads(path.read_text(encoding="utf-8"))
         except Exception:
-            return []
-    return []
+            pass
+    seed_copy = copy.deepcopy(seed)
+    save_section_data(filename, seed_copy)
+    return seed_copy
 
 
-def save_bookmarks(bookmarks):
-    """บันทึกรายการลิงก์ลงไฟล์"""
-    BOOKMARKS_FILE.write_text(
-        json.dumps(bookmarks, ensure_ascii=False, indent=2), encoding="utf-8"
+def save_section_data(filename, data):
+    """บันทึกข้อมูลของหัวข้อลงไฟล์ JSON"""
+    (DATA_DIR / filename).write_text(
+        json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
     )
 
 
-def show_bookmark_manager():
-    """แสดงฟอร์มเพิ่มลิงก์ และรายการลิงก์ที่บันทึกไว้ พร้อมปุ่มลบ"""
-    st.markdown("---")
-    st.markdown("#### 🔖 ลิงก์ที่คุณบันทึกเอง")
+def render_delete_button(filename, data, idx, key):
+    """ปุ่มลบรายการที่ idx แล้วบันทึกและรีเฟรชหน้า"""
+    if st.button("🗑️", key=key, help="ลบรายการนี้"):
+        data.pop(idx)
+        save_section_data(filename, data)
+        st.rerun()
 
-    bookmarks = load_bookmarks()
 
-    with st.form("add_bookmark_form", clear_on_submit=True):
-        bm_name = st.text_input("ชื่อเว็บ / คำอธิบาย", key="bm_name_input")
-        bm_url = st.text_input("URL", key="bm_url_input", placeholder="https://...")
-        submitted = st.form_submit_button("➕ บันทึกลิงก์", use_container_width=True)
+def render_web_section(filename, seed):
+    """หัวข้อ 🌐 Web: เพิ่ม/ลบลิงก์เว็บได้"""
+    data = load_section_data(filename, seed)
+
+    with st.form("add_web_form", clear_on_submit=True):
+        name = st.text_input("ชื่อเว็บ", key="web_name_input")
+        url = st.text_input("URL", key="web_url_input", placeholder="https://...")
+        submitted = st.form_submit_button("➕ เพิ่มลิงก์", use_container_width=True)
         if submitted:
-            if not bm_name.strip() or not bm_url.strip():
+            if not name.strip() or not url.strip():
                 st.warning("กรุณากรอกทั้งชื่อเว็บและ URL")
             else:
-                clean_url = bm_url.strip()
+                clean_url = url.strip()
                 if not clean_url.startswith(("http://", "https://")):
                     clean_url = "https://" + clean_url
-                bookmarks.append({"name": bm_name.strip(), "url": clean_url})
-                save_bookmarks(bookmarks)
-                st.success(f"บันทึกลิงก์ “{bm_name.strip()}” เรียบร้อยแล้ว")
+                data.append({"name": name.strip(), "url": clean_url})
+                save_section_data(filename, data)
                 st.rerun()
 
-    if not bookmarks:
-        st.caption("ยังไม่มีลิงก์ที่คุณบันทึกเอง")
-        return
+    st.markdown("---")
+    if not data:
+        st.caption("ยังไม่มีลิงก์เว็บ")
+    for idx, item in enumerate(data):
+        col_a, col_b = st.columns([5, 1])
+        with col_a:
+            st.markdown(f"🔗 [{item['name']}]({item['url']})")
+        with col_b:
+            render_delete_button(filename, data, idx, key=f"del_web_{idx}")
+    return data
 
-    for idx, bm in enumerate(bookmarks):
-        col_link, col_del = st.columns([5, 1])
-        with col_link:
-            st.markdown(f"🔗 [{bm['name']}]({bm['url']})")
-        with col_del:
-            if st.button("🗑️", key=f"del_bookmark_{idx}", help="ลบลิงก์นี้"):
-                bookmarks.pop(idx)
-                save_bookmarks(bookmarks)
+
+def render_ofc_section(filename, seed):
+    """หัวข้อ 📏 ระยะสาย Optic: เพิ่ม/ลบ/ค้นหาเส้นทางได้"""
+    data = load_section_data(filename, seed)
+
+    with st.form("add_ofc_form", clear_on_submit=True):
+        route = st.text_input("เส้นทาง (เช่น จุด A - จุด B)", key="ofc_route_input")
+        distance = st.text_input("ระยะทาง (เช่น 12.3 km)", key="ofc_distance_input")
+        note = st.text_input("หมายเหตุ (ถ้ามี)", key="ofc_note_input")
+        submitted = st.form_submit_button("➕ เพิ่มเส้นทาง", use_container_width=True)
+        if submitted:
+            if not route.strip() or not distance.strip():
+                st.warning("กรุณากรอกเส้นทางและระยะทาง")
+            else:
+                data.append({
+                    "route": route.strip(),
+                    "distance": distance.strip(),
+                    "note": note.strip() or "-",
+                })
+                save_section_data(filename, data)
                 st.rerun()
+
+    st.markdown("---")
+    st.markdown("#### 🛠️ ข้อมูลระยะสาย OFC หน้างาน")
+    search_ofc = st.text_input("🔍 ค้นหาเส้นทางสาย OFC:", "", key="search_ofc_sidebar").strip().lower()
+
+    filtered = [
+        (idx, item) for idx, item in enumerate(data)
+        if search_ofc in item["route"].lower()
+        or search_ofc in item["distance"].lower()
+        or search_ofc in item.get("note", "").lower()
+    ]
+
+    if not filtered:
+        st.write("ไม่พบข้อมูลเส้นทางที่ค้นหา")
+
+    for idx, item in filtered:
+        col_a, col_b = st.columns([5, 1])
+        with col_a:
+            if item.get("note", "-") != "-":
+                st.markdown(f"• **{item['route']}** : `{item['distance']}`\n  *(หมายเหตุ: {item['note']})*")
+            else:
+                st.markdown(f"• **{item['route']}** : `{item['distance']}`")
+        with col_b:
+            render_delete_button(filename, data, idx, key=f"del_ofc_{idx}")
+    return data
+
+
+def render_circuit_section(filename, seed):
+    """หัวข้อ 🆔 เลขวงจรลูกค้า: เพิ่ม/ลบได้"""
+    data = load_section_data(filename, seed)
+
+    with st.form("add_circuit_form", clear_on_submit=True):
+        code = st.text_input("เลขวงจร", key="circuit_code_input")
+        owner = st.text_input("ชื่อเจ้าของ/หมายเหตุ", key="circuit_owner_input")
+        submitted = st.form_submit_button("➕ เพิ่มวงจร", use_container_width=True)
+        if submitted:
+            if not code.strip():
+                st.warning("กรุณากรอกเลขวงจร")
+            else:
+                data.append({"code": code.strip(), "owner": owner.strip()})
+                save_section_data(filename, data)
+                st.rerun()
+
+    st.markdown("---")
+    if not data:
+        st.caption("ยังไม่มีข้อมูล")
+    for idx, item in enumerate(data):
+        col_a, col_b = st.columns([5, 1])
+        with col_a:
+            st.markdown(f"• `{item['code']}` : {item['owner']}")
+        with col_b:
+            render_delete_button(filename, data, idx, key=f"del_circuit_{idx}")
+    return data
+
+
+def render_address_section(filename, seed):
+    """หัวข้อ 📍 ที่อยู่ NT: เพิ่ม/ลบได้"""
+    data = load_section_data(filename, seed)
+
+    with st.form("add_address_form", clear_on_submit=True):
+        title = st.text_input("ชื่อสถานที่", key="addr_title_input")
+        detail = st.text_area("รายละเอียดที่อยู่", key="addr_detail_input", height=80)
+        submitted = st.form_submit_button("➕ เพิ่มที่อยู่", use_container_width=True)
+        if submitted:
+            if not title.strip() or not detail.strip():
+                st.warning("กรุณากรอกชื่อสถานที่และรายละเอียด")
+            else:
+                data.append({"title": title.strip(), "detail": detail.strip()})
+                save_section_data(filename, data)
+                st.rerun()
+
+    st.markdown("---")
+    if not data:
+        st.caption("ยังไม่มีข้อมูล")
+    for idx, item in enumerate(data):
+        col_a, col_b = st.columns([5, 1])
+        with col_a:
+            st.markdown(f"**{item['title']}:**\n{item['detail']}")
+        with col_b:
+            render_delete_button(filename, data, idx, key=f"del_addr_{idx}")
+        st.markdown("---")
+    return data
+
+
+def render_simple_value_section(filename, seed, value_label, form_prefix):
+    """หัวข้อแบบค่า + หมายเหตุ (ใช้กับ IP Phone และ SecureCRT): เพิ่ม/ลบได้"""
+    data = load_section_data(filename, seed)
+
+    with st.form(f"add_{form_prefix}_form", clear_on_submit=True):
+        value = st.text_input(value_label, key=f"{form_prefix}_value_input")
+        note = st.text_input("หมายเหตุ (ถ้ามี)", key=f"{form_prefix}_note_input")
+        submitted = st.form_submit_button("➕ เพิ่ม", use_container_width=True)
+        if submitted:
+            if not value.strip():
+                st.warning("กรุณากรอกข้อมูล")
+            else:
+                data.append({"value": value.strip(), "note": note.strip()})
+                save_section_data(filename, data)
+                st.rerun()
+
+    st.markdown("---")
+    if not data:
+        st.caption("ยังไม่มีข้อมูล")
+    for idx, item in enumerate(data):
+        col_a, col_b = st.columns([5, 1])
+        with col_a:
+            note_txt = f" ({item['note']})" if item.get("note") else ""
+            st.markdown(f"• `{item['value']}`{note_txt}")
+        with col_b:
+            render_delete_button(filename, data, idx, key=f"del_{form_prefix}_{idx}")
+    return data
 
 
 # =================================================================
@@ -1145,6 +1285,58 @@ circuit_list = [
     ("3451J4720", "บ้านเป้")
 ]
 
+# =================================================================
+# 🌱 ข้อมูลตั้งต้น (Seed) สำหรับหัวข้อที่แก้ไข/เพิ่ม/ลบได้จาก Dashboard
+#    ใช้ครั้งแรกเท่านั้น หลังจากนั้นข้อมูลจริงจะอ่าน/เขียนจากไฟล์ใน data/
+# =================================================================
+WEB_SEED = [
+    {"name": "Data Kan", "url": "https://sites.google.com/view/datakan"},
+    {"name": "182.52.113.237", "url": "http://182.52.113.237/"},
+    {"name": "TSP Login", "url": "https://tsp.totbb.net/index.php?r=tbl-users%2Flogin"},
+    {"name": "SCOMS NT", "url": "https://scoms.intra.ntplc.co.th/Default.aspx"},
+    {"name": "Umbo System", "url": "http://10.228.59.45/umbo/login.php?uri=%2Fumbo%2F"},
+    {"name": "NT 1888 Request", "url": "https://nt1888.ntplc.co.th/request"},
+    {"name": "TOP NT Central", "url": "https://top.ntcentral.net/login"},
+    {"name": "NEX Intra NT", "url": "https://nex.intra.ntplc.co.th/ip/nex/"},
+    {"name": "Ruijie Cloud", "url": "https://cloud-as.ruijienetworks.com/sso/login"},
+    {"name": "IP Server (10.0.105.85)", "url": "http://10.0.105.85/"},
+    {"name": "System Login (203.113.70.137)", "url": "http://203.113.70.137/login"},
+    {"name": "CPE", "url": "https://pete.intra.ntplc.co.th/#/login"},
+    {"name": "NT OS", "url": "http://203.113.70.137/employee/profile"},
+    {"name": "CCTV OBJ", "url": "https://script.google.com/macros/s/AKfycbwRHsxi7OasLOreOmTe0JboHWmEo4KY8OEOrLy7xn8xsPiOOSKBK-vCzMq4P4ngNrvu/exec"},
+]
+
+OFC_SEED = [
+    {"route": route, "distance": dist, "note": note}
+    for route, dist, note in ofc_distances
+]
+
+CIRCUIT_SEED = [
+    {"code": code, "owner": owner}
+    for code, owner in circuit_list
+]
+
+ADDRESS_SEED = [
+    {"title": "ตึกเก่า", "detail": "111/2 ถ.อู่ทอง ต.บ้านเหนือ อ.เมือง จ.กาญจนบุรี 71000"},
+    {"title": "ตึกเขาตอง", "detail": "1/11 ม.9 ต.ปากแพรก อ.เมือง จ.กาญจนบุรี 71000"},
+]
+
+IP_PHONE_SEED = [
+    {"value": "sipp11.totbb.net", "note": ""},
+    {"value": "sipp12.totbb.net", "note": ""},
+    {"value": "sipp13.totbb.net", "note": ""},
+    {"value": "172.31.83.4", "note": "อยุธยา"},
+    {"value": "172.31.92.4", "note": "เพชร"},
+    {"value": "172.30.202.4", "note": ""},
+]
+
+SECURECRT_SEED = [
+    {"value": "10.227.102.190", "note": "ใช้อยู่"},
+    {"value": "10.224.55.121", "note": ""},
+    {"value": "10.224.55.125", "note": ""},
+    {"value": "10.224.55.129", "note": ""},
+]
+
 all_categories = {
     "🍏 ZTE C300 Series": c300_commands,
     "⚡ ZTE C600 Series": c600_commands,
@@ -1160,87 +1352,71 @@ all_categories = {
     "🤖 Javis Line Bot": javis_bot_commands
 }
 
+# ใช้ all_categories เป็นข้อมูลตั้งต้น (seed) ของคลังคำสั่งฝั่ง ⚙️ Config
+# หลังจากนี้จะอ่าน/เขียนจากไฟล์ data/command_library.json แทน ทำให้เพิ่ม/ลบคำสั่งได้จาก Dashboard
+COMMAND_LIBRARY_SEED = copy.deepcopy(all_categories)
+
+
+def add_command_to_library(filename, library, category, sub_cat, desc, code):
+    """เพิ่มคำสั่งใหม่เข้าไปในหมวดหมู่ย่อยที่ระบุ (สร้างหมวดหมู่ย่อยใหม่ได้ถ้ายังไม่มี)"""
+    library.setdefault(category, {})
+    library[category].setdefault(sub_cat, [])
+    library[category][sub_cat].append([desc, code])
+    save_section_data(filename, library)
+
+
+def delete_command_from_library(filename, library, category, sub_cat, item_idx):
+    """ลบคำสั่งออกจากหมวดหมู่ย่อยที่ระบุ ตามตำแหน่ง"""
+    library[category][sub_cat].pop(item_idx)
+    if not library[category][sub_cat]:
+        del library[category][sub_cat]
+    save_section_data(filename, library)
+
 
 # =================================================================
 # 📊 คำนวณสรุปตัวเลขสำหรับแถบ Ticker บนหน้า Dashboard
 # =================================================================
-total_categories = len(all_categories)
+command_library_data = load_section_data("command_library.json", COMMAND_LIBRARY_SEED)
+total_categories = len(command_library_data)
 total_commands = sum(
-    len(items) for cat_dict in all_categories.values() for items in cat_dict.values()
+    len(items) for cat_dict in command_library_data.values() for items in cat_dict.values()
 )
 total_olt_ip = len(olt_ip_commands["📍 รายชื่อ IP OLT ในพื้นที่ & โครงข่าย"][0][1].strip().split("\n"))
-total_circuits = len(circuit_list)
-total_ofc_routes = len(ofc_distances)
+total_circuits = len(load_section_data("circuit_list.json", CIRCUIT_SEED))
+total_ofc_routes = len(load_section_data("ofc_distances.json", OFC_SEED))
 
 
 # --- 2. SIDEBAR NAVIGATION ---
 st.sidebar.markdown("## 📌 เมนูหลัก")
 
 with st.sidebar.expander("🌐 Web", expanded=True):
-    st.markdown("🔗 [Data Kan](https://sites.google.com/view/datakan)")
-    st.markdown("🔗 [182.52.113.237](http://182.52.113.237/)")
-    st.markdown("🔗 [TSP Login](https://tsp.totbb.net/index.php?r=tbl-users%2Flogin)")
-    st.markdown("🔗 [SCOMS NT](https://scoms.intra.ntplc.co.th/Default.aspx)")
-    st.markdown("🔗 [Umbo System](http://10.228.59.45/umbo/login.php?uri=%2Fumbo%2F)")
-    st.markdown("🔗 [NT 1888 Request](https://nt1888.ntplc.co.th/request)")
-    st.markdown("🔗 [TOP NT Central](https://top.ntcentral.net/login)")
-    st.markdown("🔗 [NEX Intra NT](https://nex.intra.ntplc.co.th/ip/nex/)")
-    st.markdown("🔗 [Ruijie Cloud](https://cloud-as.ruijienetworks.com/sso/login)")
-    st.markdown("🔗 [IP Server (10.0.105.85)](http://10.0.105.85/)")
-    st.markdown("🔗 [System Login (203.113.70.137)](http://203.113.70.137/login)")
-    st.markdown("🔗 [CPE (https://pete.intra.ntplc.co.th/#/login])")
-    st.markdown("🔗 [NT OS (http://203.113.70.137/employee/profile)")
-    st.markdown("🔗 [CCTV OBJ (https://script.google.com/macros/s/AKfycbwRHsxi7OasLOreOmTe0JboHWmEo4KY8OEOrLy7xn8xsPiOOSKBK-vCzMq4P4ngNrvu/exec)")
-
-    show_bookmark_manager()
+    current_web_data = render_web_section("web_links.json", WEB_SEED)
 
 with st.sidebar.expander("📏 ระยะสาย Optic", expanded=False):
-    st.markdown("#### 🛠️ ข้อมูลระยะสาย OFC หน้างาน")
-    search_ofc = st.text_input("🔍 ค้นหาเส้นทางสาย OFC:", "", key="search_ofc_sidebar").strip().lower()
-    
-    filtered_ofc = [
-        row for row in ofc_distances 
-        if search_ofc in row[0].lower() or search_ofc in row[1].lower() or search_ofc in row[2].lower()
-    ]
-    
-    if filtered_ofc:
-        for route, dist, note in filtered_ofc:
-            if note != "-":
-                st.markdown(f"• **{route}** : `{dist}`\n  *(หมายเหตุ: {note})*")
-            else:
-                st.markdown(f"• **{route}** : `{dist}`")
-    else:
-        st.write("ไม่พบข้อมูลเส้นทางที่ค้นหา")
+    current_ofc_data = render_ofc_section("ofc_distances.json", OFC_SEED)
 
 with st.sidebar.expander("🆔 เลขวงจรลูกค้า", expanded=False):
-    for code, owner in circuit_list:
-        st.markdown(f"• `{code}` : {owner}")
+    current_circuit_data = render_circuit_section("circuit_list.json", CIRCUIT_SEED)
 
 with st.sidebar.expander("📍 ที่อยู่ NT", expanded=False):
-    st.markdown("**ตึกเก่า:**\n111/2 ถ.อู่ทอง ต.บ้านเหนือ อ.เมือง จ.กาญจนบุรี 71000")
-    st.markdown("---")
-    st.markdown("**ตึกเขาตอง:**\n1/11 ม.9 ต.ปากแพรก อ.เมือง จ.กาญจนบุรี 71000")
+    current_address_data = render_address_section("addresses.json", ADDRESS_SEED)
 
 with st.sidebar.expander("📞 IP Phone", expanded=False):
-    st.markdown("• `sipp11.totbb.net`")
-    st.markdown("• `sipp12.totbb.net`")
-    st.markdown("• `sipp13.totbb.net`")
-    st.markdown("• `172.31.83.4` (อยุธยา)")
-    st.markdown("• `172.31.92.4` (เพชร)")
-    st.markdown("• `172.30.202.4`")
+    current_ip_phone_data = render_simple_value_section(
+        "ip_phone.json", IP_PHONE_SEED, "หมายเลข / โฮสต์", "ipphone"
+    )
 
 with st.sidebar.expander("🔐 SecureCRT", expanded=False):
-    st.markdown("• `10.227.102.190` *(ใช้อยู่)*")
-    st.markdown("• `10.224.55.121`")
-    st.markdown("• `10.224.55.125`")
-    st.markdown("• `10.224.55.129`")
+    current_securecrt_data = render_simple_value_section(
+        "securecrt.json", SECURECRT_SEED, "IP / โฮสต์", "securecrt"
+    )
 
 selected_menu = None
 with st.sidebar.expander("⚙️ Config", expanded=False):
-    selected_menu = st.radio("เลือกหมวดหมู่การใช้งาน:", list(all_categories.keys()), label_visibility="collapsed")
+    selected_menu = st.radio("เลือกหมวดหมู่การใช้งาน:", list(command_library_data.keys()), label_visibility="collapsed")
 
 if selected_menu is None:
-    selected_menu = list(all_categories.keys())[0]
+    selected_menu = list(command_library_data.keys())[0]
 
 
 # --- 3. MAIN CONTENT DISPLAY & DASHBOARD SEARCH ---
@@ -1307,40 +1483,60 @@ if dash_search:
     st.markdown(f"### 🎯 ผลการค้นหาสำหรับ: `<mark class='highlight'>{dash_search}</mark>`", unsafe_allow_html=True)
     found_global = False
 
-    matched_ofc = [row for row in ofc_distances if dash_search.lower() in row[0].lower() or dash_search.lower() in row[1].lower() or dash_search.lower() in row[2].lower()]
+    matched_ofc = [
+        item for item in current_ofc_data
+        if dash_search.lower() in item["route"].lower()
+        or dash_search.lower() in item["distance"].lower()
+        or dash_search.lower() in item.get("note", "").lower()
+    ]
     if matched_ofc:
         found_global = True
         st.markdown("#### 📏 พบใน: ระยะสาย Optic (OFC)")
-        for route, dist, note in matched_ofc:
-            h_route = highlight_text(route, dash_search)
-            h_note = highlight_text(note, dash_search)
-            st.markdown(f"• **{h_route}** : `{dist}` (หมายเหตุ: {h_note})", unsafe_allow_html=True)
+        for item in matched_ofc:
+            h_route = highlight_text(item["route"], dash_search)
+            h_note = highlight_text(item.get("note", "-"), dash_search)
+            st.markdown(f"• **{h_route}** : `{item['distance']}` (หมายเหตุ: {h_note})", unsafe_allow_html=True)
         st.markdown("---")
 
-    matched_circuits = [c for c in circuit_list if dash_search.lower() in c[0].lower() or dash_search.lower() in c[1].lower()]
+    matched_circuits = [
+        item for item in current_circuit_data
+        if dash_search.lower() in item["code"].lower() or dash_search.lower() in item["owner"].lower()
+    ]
     if matched_circuits:
         found_global = True
         st.markdown("#### 🆔 พบใน: เลขวงจรลูกค้า")
-        for code, owner in matched_circuits:
-            h_code = highlight_text(code, dash_search)
-            h_owner = highlight_text(owner, dash_search)
+        for item in matched_circuits:
+            h_code = highlight_text(item["code"], dash_search)
+            h_owner = highlight_text(item["owner"], dash_search)
             st.markdown(f"• **{h_code}** : {h_owner}", unsafe_allow_html=True)
         st.markdown("---")
 
-    saved_bookmarks = load_bookmarks()
-    matched_bookmarks = [
-        bm for bm in saved_bookmarks
-        if dash_search.lower() in bm.get("name", "").lower() or dash_search.lower() in bm.get("url", "").lower()
+    matched_web = [
+        item for item in current_web_data
+        if dash_search.lower() in item["name"].lower() or dash_search.lower() in item["url"].lower()
     ]
-    if matched_bookmarks:
+    if matched_web:
         found_global = True
-        st.markdown("#### 🔖 พบใน: ลิงก์ที่บันทึกเอง")
-        for bm in matched_bookmarks:
-            h_name = highlight_text(bm["name"], dash_search)
-            st.markdown(f"• 🔗 [{h_name}]({bm['url']})", unsafe_allow_html=True)
+        st.markdown("#### 🌐 พบใน: ลิงก์เว็บ")
+        for item in matched_web:
+            h_name = highlight_text(item["name"], dash_search)
+            st.markdown(f"• 🔗 [{h_name}]({item['url']})", unsafe_allow_html=True)
         st.markdown("---")
 
-    for cat_name, cat_dict in all_categories.items():
+    matched_address = [
+        item for item in current_address_data
+        if dash_search.lower() in item["title"].lower() or dash_search.lower() in item["detail"].lower()
+    ]
+    if matched_address:
+        found_global = True
+        st.markdown("#### 📍 พบใน: ที่อยู่ NT")
+        for item in matched_address:
+            h_title = highlight_text(item["title"], dash_search)
+            h_detail = highlight_text(item["detail"], dash_search)
+            st.markdown(f"• **{h_title}** : {h_detail}", unsafe_allow_html=True)
+        st.markdown("---")
+
+    for cat_name, cat_dict in command_library_data.items():
         cat_matches = []
         for sub_cat, items in cat_dict.items():
             for desc, code in items:
@@ -1377,13 +1573,51 @@ if dash_search:
 
 else:
     # แสดงผลตามเมนู Sidebar ปกติกรณีไม่ได้กดค้นหา
-    current_dict = all_categories[selected_menu]
+    current_dict = command_library_data[selected_menu]
     st.markdown(f"## {selected_menu}")
     st.markdown("---")
 
+    with st.expander("➕ เพิ่มคำสั่งใหม่ในหมวดนี้", expanded=False):
+        existing_subs = list(current_dict.keys())
+        sub_choice = st.selectbox(
+            "หมวดหมู่ย่อย (เลือกที่มีอยู่ หรือสร้างใหม่)",
+            existing_subs + ["+ สร้างหมวดหมู่ย่อยใหม่"],
+            key=f"sub_choice_{selected_menu}"
+        )
+        new_sub_name = ""
+        if sub_choice == "+ สร้างหมวดหมู่ย่อยใหม่":
+            new_sub_name = st.text_input("ชื่อหมวดหมู่ย่อยใหม่", key=f"new_sub_{selected_menu}")
+
+        with st.form(f"add_cmd_form_{selected_menu}", clear_on_submit=True):
+            cmd_desc = st.text_input("คำอธิบายคำสั่ง", key=f"cmd_desc_{selected_menu}")
+            cmd_code = st.text_area("คำสั่ง / โค้ด", key=f"cmd_code_{selected_menu}", height=100)
+            submitted = st.form_submit_button("➕ เพิ่มคำสั่ง", use_container_width=True)
+            if submitted:
+                target_sub = new_sub_name.strip() if sub_choice == "+ สร้างหมวดหมู่ย่อยใหม่" else sub_choice
+                if not target_sub:
+                    st.warning("กรุณาระบุหมวดหมู่ย่อย")
+                elif not cmd_desc.strip() or not cmd_code.strip():
+                    st.warning("กรุณากรอกคำอธิบายและคำสั่ง")
+                else:
+                    add_command_to_library(
+                        "command_library.json", command_library_data,
+                        selected_menu, target_sub, cmd_desc.strip(), cmd_code
+                    )
+                    st.success("เพิ่มคำสั่งเรียบร้อยแล้ว")
+                    st.rerun()
+
     for sub_cat, items in current_dict.items():
         st.markdown(f"### {sub_cat}")
-        for desc, code in items:
-            st.markdown(f"<div class='cmd-label'>📌 {desc}</div>", unsafe_allow_html=True)
+        for item_idx, (desc, code) in enumerate(items):
+            col_label, col_del = st.columns([6, 1])
+            with col_label:
+                st.markdown(f"<div class='cmd-label'>📌 {desc}</div>", unsafe_allow_html=True)
+            with col_del:
+                if st.button("🗑️", key=f"del_cmd_{selected_menu}_{sub_cat}_{item_idx}", help="ลบคำสั่งนี้"):
+                    delete_command_from_library(
+                        "command_library.json", command_library_data,
+                        selected_menu, sub_cat, item_idx
+                    )
+                    st.rerun()
             st.code(code, language="text")
         st.markdown("")

@@ -335,12 +335,13 @@ st.markdown("""
         border-color: var(--up); color: var(--up);
     }
 
-    /* ===== ปุ่มลบ (🗑️) ทุกหัวข้อ — พื้นดำเดียวกับ Dashboard ขอบ/ไอคอนสีแดงเพื่อสื่อว่าเป็นการลบ ===== */
+    /* ===== ปุ่มลบ (D) ทุกหัวข้อ — พื้นดำเดียวกับ Dashboard ขอบ/ไอคอนสีแดงเพื่อสื่อว่าเป็นการลบ ===== */
     [class*="st-key-del_"] button {
         background-color: var(--bg-0) !important;
         border: 1px solid #ff5c5c !important;
         color: #ff5c5c !important;
         border-radius: 6px !important;
+        font-weight: 700 !important;
     }
     [class*="st-key-del_"] button:hover {
         background-color: rgba(255, 92, 92, 0.12) !important;
@@ -492,11 +493,13 @@ def save_section_data(filename, data):
 
 
 def render_delete_button(filename, data, idx, key):
-    """ปุ่มลบรายการที่ idx แล้วบันทึกและรีเฟรชหน้า"""
-    if st.button("🗑️", key=key, help="ลบรายการนี้"):
-        data.pop(idx)
-        save_section_data(filename, data)
-        st.rerun()
+    """ปุ่มลบ (ตัว D สีแดง) รายการที่ idx — ต้องกดยืนยันอีกครั้งก่อนลบจริง เพื่อป้องกันกดผิด"""
+    with st.popover("D", key=key, help="ลบรายการนี้"):
+        st.write("⚠️ ยืนยันการลบรายการนี้หรือไม่?")
+        if st.button("✅ ยืนยันลบ", key=f"{key}_confirm", type="primary", use_container_width=True):
+            data.pop(idx)
+            save_section_data(filename, data)
+            st.rerun()
 
 
 def render_web_section(filename, seed):
@@ -724,11 +727,11 @@ def show_pdf_library():
             key=f"confirm_delete_{selected_pdf.name}"
         )
         if st.button(
-            "🗑️ ลบไฟล์ PDF ที่เลือก",
+            "D ลบไฟล์ PDF ที่เลือก",
             type="secondary",
             use_container_width=True,
             disabled=not confirm_delete,
-            key=f"delete_pdf_{selected_pdf.name}"
+            key=f"del_pdf_{selected_pdf.name}"
         ):
             selected_pdf.unlink()
             st.success(f"ลบไฟล์ “{selected_pdf.name}” เรียบร้อยแล้ว")
@@ -1659,11 +1662,14 @@ else:
             with col_label:
                 st.markdown(f"<div class='cmd-label'>📌 {desc}</div>", unsafe_allow_html=True)
             with col_del:
-                if st.button("🗑️", key=f"del_cmd_{selected_menu}_{sub_cat}_{item_idx}", help="ลบคำสั่งนี้"):
-                    delete_command_from_library(
-                        "command_library.json", command_library_data,
-                        selected_menu, sub_cat, item_idx
-                    )
-                    st.rerun()
+                del_key = f"del_cmd_{selected_menu}_{sub_cat}_{item_idx}"
+                with st.popover("D", key=del_key, help="ลบคำสั่งนี้"):
+                    st.write("⚠️ ยืนยันการลบคำสั่งนี้หรือไม่?")
+                    if st.button("✅ ยืนยันลบ", key=f"{del_key}_confirm", type="primary", use_container_width=True):
+                        delete_command_from_library(
+                            "command_library.json", command_library_data,
+                            selected_menu, sub_cat, item_idx
+                        )
+                        st.rerun()
             st.code(code, language="text")
         st.markdown("")

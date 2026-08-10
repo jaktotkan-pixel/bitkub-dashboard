@@ -1,5 +1,6 @@
 import streamlit as st
 import re
+import json
 from pathlib import Path
 import base64
 import streamlit.components.v1 as components
@@ -413,6 +414,67 @@ def highlight_text(text, keyword):
         return text
     pattern = re.compile(re.escape(keyword), re.IGNORECASE)
     return pattern.sub(lambda m: f'<mark class="highlight">{m.group(0)}</mark>', str(text))
+
+
+# =================================================================
+# 🔖 บันทึกลิงก์เว็บ (Bookmark) — เพิ่ม/ลบได้จากหน้า Dashboard เลย
+# =================================================================
+BOOKMARKS_FILE = Path("bookmarks.json")
+
+
+def load_bookmarks():
+    """โหลดรายการลิงก์ที่บันทึกไว้"""
+    if BOOKMARKS_FILE.exists():
+        try:
+            return json.loads(BOOKMARKS_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            return []
+    return []
+
+
+def save_bookmarks(bookmarks):
+    """บันทึกรายการลิงก์ลงไฟล์"""
+    BOOKMARKS_FILE.write_text(
+        json.dumps(bookmarks, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+
+def show_bookmark_manager():
+    """แสดงฟอร์มเพิ่มลิงก์ และรายการลิงก์ที่บันทึกไว้ พร้อมปุ่มลบ"""
+    st.markdown("---")
+    st.markdown("#### 🔖 ลิงก์ที่คุณบันทึกเอง")
+
+    bookmarks = load_bookmarks()
+
+    with st.form("add_bookmark_form", clear_on_submit=True):
+        bm_name = st.text_input("ชื่อเว็บ / คำอธิบาย", key="bm_name_input")
+        bm_url = st.text_input("URL", key="bm_url_input", placeholder="https://...")
+        submitted = st.form_submit_button("➕ บันทึกลิงก์", use_container_width=True)
+        if submitted:
+            if not bm_name.strip() or not bm_url.strip():
+                st.warning("กรุณากรอกทั้งชื่อเว็บและ URL")
+            else:
+                clean_url = bm_url.strip()
+                if not clean_url.startswith(("http://", "https://")):
+                    clean_url = "https://" + clean_url
+                bookmarks.append({"name": bm_name.strip(), "url": clean_url})
+                save_bookmarks(bookmarks)
+                st.success(f"บันทึกลิงก์ “{bm_name.strip()}” เรียบร้อยแล้ว")
+                st.rerun()
+
+    if not bookmarks:
+        st.caption("ยังไม่มีลิงก์ที่คุณบันทึกเอง")
+        return
+
+    for idx, bm in enumerate(bookmarks):
+        col_link, col_del = st.columns([5, 1])
+        with col_link:
+            st.markdown(f"🔗 [{bm['name']}]({bm['url']})")
+        with col_del:
+            if st.button("🗑️", key=f"del_bookmark_{idx}", help="ลบลิงก์นี้"):
+                bookmarks.pop(idx)
+                save_bookmarks(bookmarks)
+                st.rerun()
 
 
 # =================================================================
@@ -1129,7 +1191,8 @@ with st.sidebar.expander("🌐 Web", expanded=True):
     st.markdown("🔗 [CPE (https://pete.intra.ntplc.co.th/#/login])")
     st.markdown("🔗 [NT OS (http://203.113.70.137/employee/profile)")
     st.markdown("🔗 [CCTV OBJ (https://script.google.com/macros/s/AKfycbwRHsxi7OasLOreOmTe0JboHWmEo4KY8OEOrLy7xn8xsPiOOSKBK-vCzMq4P4ngNrvu/exec)")
-    st.markdown("🔗 (NOC CRC ERROR (https://script.google.com/macros/s/AKfycbwaoahEN4lTUpnKlRQs7dA6zOKsZ3ZOsoAL5DtRBcyhoDbtLi-Pq-m_SGnR_yoquDi0sA/exec)")
+
+    show_bookmark_manager()
 
 with st.sidebar.expander("📏 ระยะสาย Optic", expanded=False):
     st.markdown("#### 🛠️ ข้อมูลระยะสาย OFC หน้างาน")
@@ -1262,6 +1325,19 @@ if dash_search:
             h_code = highlight_text(code, dash_search)
             h_owner = highlight_text(owner, dash_search)
             st.markdown(f"• **{h_code}** : {h_owner}", unsafe_allow_html=True)
+        st.markdown("---")
+
+    saved_bookmarks = load_bookmarks()
+    matched_bookmarks = [
+        bm for bm in saved_bookmarks
+        if dash_search.lower() in bm.get("name", "").lower() or dash_search.lower() in bm.get("url", "").lower()
+    ]
+    if matched_bookmarks:
+        found_global = True
+        st.markdown("#### 🔖 พบใน: ลิงก์ที่บันทึกเอง")
+        for bm in matched_bookmarks:
+            h_name = highlight_text(bm["name"], dash_search)
+            st.markdown(f"• 🔗 [{h_name}]({bm['url']})", unsafe_allow_html=True)
         st.markdown("---")
 
     for cat_name, cat_dict in all_categories.items():

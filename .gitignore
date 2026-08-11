@@ -1,1 +1,3 @@
-
+data/
+pdf_library/
+.streamlit/secrets.toml

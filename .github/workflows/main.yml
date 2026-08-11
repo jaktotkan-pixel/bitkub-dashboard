@@ -2,8 +2,8 @@ name: Update Dashboard Data
 
 on:
   schedule:
-    - cron: '0 * * * *'  # รันอัตโนมัติทุกๆ 1 ชั่วโมง
-  workflow_dispatch:      # เปิดให้กดปุ่ม Run manual ได้
+    - cron: '0 * * * *' # รันอัตโนมัติทุกๆ 1 ชั่วโมง
+  workflow_dispatch:   # เปิดให้กดปุ่ม Run manual ได้
 
 jobs:
   update-data:
@@ -23,8 +23,8 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-    - name: Run Python Script
-      env:
-        GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-      run: |
-        python app.py
+      - name: Run Python Script
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+        run: |
+          python app.py

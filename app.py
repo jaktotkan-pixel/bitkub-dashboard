@@ -4,43 +4,84 @@ import json
 import copy
 from pathlib import Path
 import base64
+import os
+import urllib.request
+import urllib.error
 import streamlit.components.v1 as components
+
+# =================================================================
+# 🐙 GITHUB AUTO-SYNC HELPER FUNCTIONS
+# =================================================================
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", st.secrets.get("GITHUB_TOKEN", ""))
+GITHUB_REPO = os.environ.get("GITHUB_REPO", st.secrets.get("GITHUB_REPO", ""))
+GITHUB_BRANCH = os.environ.get("GITHUB_BRANCH", st.secrets.get("GITHUB_BRANCH", "main"))
+
+def commit_to_github(file_path: Path, commit_message: str):
+    """ส่งไฟล์ที่อัปเดตไปยัง GitHub Repository อัตโนมัติ"""
+    if not GITHUB_TOKEN or not GITHUB_REPO:
+        return
+
+    rel_path = str(file_path).replace("\\", "/")
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{rel_path}"
+    headers = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json",
+        "User-Agent": "Streamlit-Auto-Sync"
+    }
+
+    # 1. ดึงข้อมูล SHA เดิมของไฟล์ถ้ามีอยู่แล้ว
+    sha = None
+    try:
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req) as response:
+            if response.status == 200:
+                data = json.loads(response.read().decode('utf-8'))
+                sha = data.get("sha")
+    except urllib.error.HTTPError as e:
+        if e.code != 404:
+            pass
+    except Exception:
+        pass
+
+    # 2. เข้ารหัสไฟล์เป็น Base64
+    content_bytes = file_path.read_bytes()
+    encoded_content = base64.b64encode(content_bytes).decode('utf-8')
+
+    # 3. เตรียม Payload สำหรับ Commit
+    payload = {
+        "message": commit_message,
+        "content": encoded_content,
+        "branch": GITHUB_BRANCH
+    }
+    if sha:
+        payload["sha"] = sha
+
+    # 4. ส่ง PUT request ไปยัง GitHub API
+    try:
+        data_json = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(url, data=data_json, headers=headers, method="PUT")
+        with urllib.request.urlopen(req) as response:
+            pass
+    except Exception as e:
+        st.toast(f"⚠️ GitHub Sync Alert: {e}", icon="⚠️")
+
 
 # --- 1. SETUP PAGE ---
 st.set_page_config(page_title="ZTE OLT & PC Command Center", layout="wide")
+
 # --- ฟังก์ชันตรวจสอบรหัสผ่าน ---
-
 def check_password():
-
     """Returns `True` if the user had the correct password."""
-
-
-
     def password_entered():
-
         """Checks whether a password entered by the user is correct."""
-
         if st.session_state["password"] == "jakntkan":  # <-- เปลี่ยนรหัสผ่านตรงนี้
-
             st.session_state["password_correct"] = True
-
             del st.session_state["password"]  # ไม่เก็บบันทึกรหัสผ่านไว้ใน memory
-
         else:
-
             st.session_state["password_correct"] = False
 
-
-
-    # หากผ่านการตรวจสอบแล้ว ให้คืนค่า True เพื่อให้แสดงผลหน้าเว็บปกติ
-
     if st.session_state.get("password_correct", False):
-
         return True
-
-
-
-    # หากยังไม่กรอกรหัส หรือกรอกผิด ให้แสดงหน้าต่างให้กรอกรหัสผ่าน
 
     st.markdown("""
     <style>
@@ -69,19 +110,13 @@ def check_password():
         st.text_input(
             "รหัสผ่าน", type="password", on_change=password_entered, key="password"
         )
-
-        if "password_correct" in st.session_state:
+        if "password_correct" in st.session_state and not st.session_state["password_correct"]:
             st.error("😕 รหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้งครับ")
 
     return False
 
-
-
-# ครอบโค้ดหลักทั้งหมดด้วยฟังก์ชันเช็ครหัสผ่าน
-
 if not check_password():
-
-    st.stop()  # หยุดการทำงานของหน้าเว็บไว้ตรงนี้หากยังไม่ใส่รหัสผ่านที่ถูกต้อง 
+    st.stop()
 
 
 # =================================================================
@@ -111,7 +146,6 @@ st.markdown("""
 
     html, body, [class*="css"] { font-family: 'IBM Plex Sans Thai', 'JetBrains Mono', monospace; }
 
-    /* พื้นหลังดำสนิทแบบจอเทอร์มินัล + สแกนไลน์บางๆ ให้ฟีล CRT */
     .stApp {
         background-color: var(--bg-0);
         color: var(--text-body);
@@ -121,13 +155,11 @@ st.markdown("""
     }
     .block-container { padding-top: 1.6rem; max-width: 1200px; }
 
-    /* ตัวหนังสือทั่วไปโทนเขียวฟอสฟอร์ ระดับกลาง อ่านสบายตา ไม่จ้าเกินไป */
     p, span, label, li, div { color: var(--text-body); }
     h1, h2, h3, h4, strong, b { color: var(--text-hi) !important; }
     .stCaption, [data-testid="stCaptionContainer"] { color: var(--text-lo) !important; }
     [data-testid="stMarkdownContainer"] p { color: var(--text-body); }
 
-    /* Inline code (ตัวอักษรที่ครอบด้วย backtick ในข้อความ markdown เช่นค่าระยะทาง, IP ฯลฯ) */
     [data-testid="stMarkdownContainer"] code {
         background-color: #050a06 !important;
         color: var(--up) !important;
@@ -165,7 +197,6 @@ st.markdown("""
     }
     h3::before { content: "> "; color: var(--up); }
 
-    /* กล่องข้อความ Code Block แบบคอนโซลดำสนิท ตัวหนังสือเขียวสว่าง */
     .stCodeBlock,
     div[data-testid="stCodeBlock"],
     div[data-testid="stCode"],
@@ -193,7 +224,6 @@ st.markdown("""
         font-family: 'JetBrains Mono', monospace !important;
         font-size: 13.5px !important;
     }
-    /* ปุ่ม Copy มุมขวาบนของ Code Block ให้กลืนกับพื้นหลังดำ */
     .stCodeBlock button,
     div[data-testid="stCodeBlock"] button,
     div[data-testid="stCode"] button {
@@ -201,7 +231,6 @@ st.markdown("""
         color: var(--up) !important;
     }
 
-    /* Highlight คำค้นหา แบบสีอำพันเรืองแสงบนพื้นดำ */
     mark.highlight {
         background-color: var(--amber);
         color: #1a1300;
@@ -210,7 +239,6 @@ st.markdown("""
         font-weight: 700;
     }
 
-    /* ===== SIDEBAR: กระดานฝั่งซ้ายดำสนิทกว่าเนื้อหา ===== */
     [data-testid="stSidebar"] {
         background-color: var(--bg-1);
         border-right: 1px solid var(--line);
@@ -225,7 +253,6 @@ st.markdown("""
     [data-testid="stSidebar"] a { color: var(--blue) !important; text-decoration: none; }
     [data-testid="stSidebar"] a:hover { text-decoration: underline; }
 
-    /* Expander ใน Sidebar ให้ดูเป็นการ์ดโมดูลคอนโซล */
     [data-testid="stSidebar"] details {
         background-color: var(--bg-2);
         border: 1px solid var(--line-soft);
@@ -239,7 +266,6 @@ st.markdown("""
         padding: 2px 0;
     }
 
-    /* ปุ่มตัวเลือกหมวดหมู่ (radio) ให้ดูเหมือนเมนูคำสั่งคอนโซล */
     [data-testid="stSidebar"] .stRadio > div { gap: 2px; }
     [data-testid="stSidebar"] .stRadio label {
         border: 1px solid transparent;
@@ -260,7 +286,6 @@ st.markdown("""
         text-shadow: 0 0 6px rgba(51,255,119,0.4);
     }
 
-    /* Text input ทั่วทั้งแอป */
     .stTextInput input, [data-testid="stSidebar"] .stTextInput input {
         background-color: #050a06 !important;
         color: var(--up) !important;
@@ -272,7 +297,6 @@ st.markdown("""
     .stTextInput input:focus { border-color: var(--up) !important; box-shadow: 0 0 0 1px var(--up) !important; }
     .stTextInput input::placeholder { color: var(--text-lo) !important; }
 
-    /* ===== Selectbox (เลือกไฟล์ PDF ฯลฯ) ===== */
     div[data-baseweb="select"] > div {
         background-color: #050a06 !important;
         border: 1px solid var(--line) !important;
@@ -290,7 +314,6 @@ st.markdown("""
         background-color: var(--up-dim) !important; color: var(--up) !important;
     }
 
-    /* ===== File uploader (เพิ่ม PDF เข้าคลัง) ===== */
     [data-testid="stFileUploaderDropzone"], [data-testid="stFileUploader"] section {
         background-color: var(--bg-2) !important;
         border: 1px dashed var(--line) !important;
@@ -305,12 +328,10 @@ st.markdown("""
         border: 1px solid var(--line) !important;
     }
 
-    /* ===== Checkbox label ===== */
     [data-testid="stCheckbox"] label p, [data-testid="stCheckbox"] span {
         color: var(--text-body) !important;
     }
 
-    /* ปุ่มหลัก */
     .stButton > button,
     .stDownloadButton > button,
     [data-testid="stButton"] button,
@@ -335,7 +356,6 @@ st.markdown("""
         border-color: var(--up); color: var(--up);
     }
 
-    /* ===== ปุ่มลบ (D) ทุกหัวข้อ — พื้นดำเดียวกับ Dashboard ขอบ/ไอคอนสีแดงเพื่อสื่อว่าเป็นการลบ ===== */
     [class*="st-key-del_"] button {
         background-color: var(--bg-0) !important;
         border: 1px solid #ff5c5c !important;
@@ -352,20 +372,16 @@ st.markdown("""
         color: inherit !important;
     }
 
-    /* Alert boxes (success / warning / error / info) โทนดำ */
     div[data-testid="stAlert"] { border-radius: 6px; border: 1px solid var(--line); }
 
-    /* เส้นแบ่ง */
     hr { border-color: var(--line) !important; }
 
-    /* Expander บนหน้าหลัก (คลังเอกสาร PDF) */
     div[data-testid="stExpander"] {
         background-color: var(--bg-1);
         border: 1px solid var(--line);
         border-radius: 8px;
     }
 
-    /* ===== Ticker แถบสรุปสถานะด้านบน สไตล์ terminal readout ===== */
     .ticker-wrap {
         display: flex; flex-wrap: wrap; gap: 0;
         background-color: var(--bg-1);
@@ -406,7 +422,6 @@ st.markdown("""
         100% { box-shadow: 0 0 0 0 rgba(51,255,119, 0); }
     }
 
-    /* เคอร์เซอร์กระพริบท้ายหัวข้อหลัก — จุดเด่นของธีมนี้ */
     .blink-cursor {
         display: inline-block; width: 10px; height: 1.05em;
         background-color: var(--up); margin-left: 4px; vertical-align: text-bottom;
@@ -415,7 +430,6 @@ st.markdown("""
     }
     @keyframes blink { 50% { opacity: 0; } }
 
-    /* ป้ายชื่อคำสั่ง */
     .cmd-label {
         font-size: 13.5px; font-weight: 600; color: var(--text-hi);
         font-family: 'JetBrains Mono', monospace;
@@ -424,12 +438,10 @@ st.markdown("""
     }
     .cmd-label::before { content: "λ "; color: var(--up); }
 
-    /* ซ่อนปุ่มที่ไม่จำเป็น */
     .stDeployButton { display:none; }
     #MainMenu { visibility: hidden; }
     footer { visibility: hidden; }
 
-    /* ===== แถบ Header ด้านบนสุดของ Streamlit (Share / ดาว / ดินสอ / GitHub) ===== */
     [data-testid="stHeader"] {
         background-color: var(--bg-0) !important;
         border-bottom: 1px solid var(--line);
@@ -456,7 +468,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# ฟังก์ชันทำ Highlight แถบสีเหลือง
 def highlight_text(text, keyword):
     if not keyword:
         return text
@@ -465,8 +476,7 @@ def highlight_text(text, keyword):
 
 
 # =================================================================
-# 🗃️ ระบบจัดการข้อมูลแบบแก้ไขได้ (เพิ่ม/ลบ) สำหรับหัวข้อต่างๆ ใน Sidebar
-#    เช่น Web, ระยะสาย Optic, เลขวงจร, ที่อยู่, IP Phone, SecureCRT
+# 🗃️ ระบบจัดการข้อมูลแบบแก้ไขได้ (เพิ่ม/ลบ + Auto GitHub Sync)
 # =================================================================
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
@@ -481,24 +491,28 @@ def load_section_data(filename, seed):
         except Exception:
             pass
     seed_copy = copy.deepcopy(seed)
-    save_section_data(filename, seed_copy)
+    save_section_data(filename, seed_copy, commit_msg=f"Initialize default seed data for {filename}")
     return seed_copy
 
 
-def save_section_data(filename, data):
-    """บันทึกข้อมูลของหัวข้อลงไฟล์ JSON"""
-    (DATA_DIR / filename).write_text(
+def save_section_data(filename, data, commit_msg=None):
+    """บันทึกข้อมูลของหัวข้อลงไฟล์ JSON และ Auto Commit/Push ไปยัง GitHub"""
+    file_path = DATA_DIR / filename
+    file_path.write_text(
         json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
     )
+    if commit_msg is None:
+        commit_msg = f"Update data: {filename}"
+    commit_to_github(file_path, commit_msg)
 
 
 def render_delete_button(filename, data, idx, key):
-    """ปุ่มลบ (ตัว D สีแดง) รายการที่ idx — ต้องกดยืนยันอีกครั้งก่อนลบจริง เพื่อป้องกันกดผิด"""
+    """ปุ่มลบ (ตัว D สีแดง) รายการที่ idx — พร้อมส่ง Auto Sync เข้า GitHub"""
     with st.popover("D", key=key, help="ลบรายการนี้"):
         st.write("⚠️ ยืนยันการลบรายการนี้หรือไม่?")
         if st.button("✅ ยืนยันลบ", key=f"{key}_confirm", type="primary", use_container_width=True):
-            data.pop(idx)
-            save_section_data(filename, data)
+            removed_item = data.pop(idx)
+            save_section_data(filename, data, commit_msg=f"Delete item from {filename}: {removed_item}")
             st.rerun()
 
 
@@ -518,7 +532,7 @@ def render_web_section(filename, seed):
                 if not clean_url.startswith(("http://", "https://")):
                     clean_url = "https://" + clean_url
                 data.append({"name": name.strip(), "url": clean_url})
-                save_section_data(filename, data)
+                save_section_data(filename, data, commit_msg=f"Add web link: {name.strip()}")
                 st.rerun()
 
     st.markdown("---")
@@ -551,7 +565,7 @@ def render_ofc_section(filename, seed):
                     "distance": distance.strip(),
                     "note": note.strip() or "-",
                 })
-                save_section_data(filename, data)
+                save_section_data(filename, data, commit_msg=f"Add OFC route: {route.strip()}")
                 st.rerun()
 
     st.markdown("---")
@@ -593,7 +607,7 @@ def render_circuit_section(filename, seed):
                 st.warning("กรุณากรอกเลขวงจร")
             else:
                 data.append({"code": code.strip(), "owner": owner.strip()})
-                save_section_data(filename, data)
+                save_section_data(filename, data, commit_msg=f"Add Circuit: {code.strip()}")
                 st.rerun()
 
     st.markdown("---")
@@ -621,7 +635,7 @@ def render_address_section(filename, seed):
                 st.warning("กรุณากรอกชื่อสถานที่และรายละเอียด")
             else:
                 data.append({"title": title.strip(), "detail": detail.strip()})
-                save_section_data(filename, data)
+                save_section_data(filename, data, commit_msg=f"Add Address: {title.strip()}")
                 st.rerun()
 
     st.markdown("---")
@@ -650,7 +664,7 @@ def render_simple_value_section(filename, seed, value_label, form_prefix):
                 st.warning("กรุณากรอกข้อมูล")
             else:
                 data.append({"value": value.strip(), "note": note.strip()})
-                save_section_data(filename, data)
+                save_section_data(filename, data, commit_msg=f"Add {form_prefix}: {value.strip()}")
                 st.rerun()
 
     st.markdown("---")
@@ -698,7 +712,8 @@ def show_pdf_library():
 
             if st.button("💾 บันทึกไฟล์ PDF", type="primary", key="save_pdf_library"):
                 save_path.write_bytes(uploaded_pdf.getvalue())
-                st.success(f"บันทึกไฟล์ “{safe_name}” เรียบร้อยแล้ว")
+                commit_to_github(save_path, f"Upload PDF document: {safe_name}")
+                st.success(f"บันทึกไฟล์ “{safe_name}” และ Sync ขึ้น GitHub เรียบร้อยแล้ว")
                 st.rerun()
 
         pdf_files = get_pdf_files()
@@ -733,12 +748,12 @@ def show_pdf_library():
             disabled=not confirm_delete,
             key=f"del_pdf_{selected_pdf.name}"
         ):
+            file_to_del_name = selected_pdf.name
             selected_pdf.unlink()
-            st.success(f"ลบไฟล์ “{selected_pdf.name}” เรียบร้อยแล้ว")
+            st.success(f"ลบไฟล์ “{file_to_del_name}” เรียบร้อยแล้ว")
             st.rerun()
 
         if st.checkbox("👁️ เปิดดูเอกสารใน Dashboard", key="pdf_library_preview"):
-            # ฝัง PDF ใน component โดยตรง จึงไม่ต้องติดตั้ง streamlit[pdf]
             pdf_base64 = base64.b64encode(pdf_data).decode("utf-8")
             components.html(
                 f'''<object data="data:application/pdf;base64,{pdf_base64}"
@@ -1320,7 +1335,7 @@ ofc_distances = [
     ("กาญ - สุราทิพย์พระราช", "29.7 km", "-"),
     ("ชุมสายลาดหญ้า - ลาดหญ้าม.3", "13.7 km", "-"),
     ("กาญ - บิ๊กc", "5.5 km", "-")
-     ]
+]
 
 circuit_list = [
     ("3452J1796", "พี่ปุ๋ย"),
@@ -1335,8 +1350,7 @@ circuit_list = [
 ]
 
 # =================================================================
-# 🌱 ข้อมูลตั้งต้น (Seed) สำหรับหัวข้อที่แก้ไข/เพิ่ม/ลบได้จาก Dashboard
-#    ใช้ครั้งแรกเท่านั้น หลังจากนั้นข้อมูลจริงจะอ่าน/เขียนจากไฟล์ใน data/
+# 🌱 ข้อมูลตั้งต้น (Seed) สำหรับหัวข้อต่างๆ
 # =================================================================
 WEB_SEED = [
     {"name": "Data Kan", "url": "https://sites.google.com/view/datakan"},
@@ -1401,25 +1415,31 @@ all_categories = {
     "🤖 Javis Line Bot": javis_bot_commands
 }
 
-# ใช้ all_categories เป็นข้อมูลตั้งต้น (seed) ของคลังคำสั่งฝั่ง ⚙️ Config
-# หลังจากนี้จะอ่าน/เขียนจากไฟล์ data/command_library.json แทน ทำให้เพิ่ม/ลบคำสั่งได้จาก Dashboard
 COMMAND_LIBRARY_SEED = copy.deepcopy(all_categories)
 
 
 def add_command_to_library(filename, library, category, sub_cat, desc, code):
-    """เพิ่มคำสั่งใหม่เข้าไปในหมวดหมู่ย่อยที่ระบุ (สร้างหมวดหมู่ย่อยใหม่ได้ถ้ายังไม่มี)"""
+    """เพิ่มคำสั่งใหม่เข้าคลัง และ Auto Commit ไปที่ GitHub"""
     library.setdefault(category, {})
     library[category].setdefault(sub_cat, [])
     library[category][sub_cat].append([desc, code])
-    save_section_data(filename, library)
+    save_section_data(
+        filename, 
+        library, 
+        commit_msg=f"Add command in [{category} -> {sub_cat}]: {desc}"
+    )
 
 
 def delete_command_from_library(filename, library, category, sub_cat, item_idx):
-    """ลบคำสั่งออกจากหมวดหมู่ย่อยที่ระบุ ตามตำแหน่ง"""
-    library[category][sub_cat].pop(item_idx)
+    """ลบคำสั่งออกจากคลัง และ Auto Commit ไปที่ GitHub"""
+    removed = library[category][sub_cat].pop(item_idx)
     if not library[category][sub_cat]:
         del library[category][sub_cat]
-    save_section_data(filename, library)
+    save_section_data(
+        filename, 
+        library, 
+        commit_msg=f"Delete command from [{category} -> {sub_cat}]: {removed[0]}"
+    )
 
 
 # =================================================================
@@ -1601,7 +1621,6 @@ if dash_search:
                     unsafe_allow_html=True
                 )
                 
-                # ตรวจสอบเงื่อนไขหมวด IP OLT แยกบรรทัดทำไฮไลต์
                 if cat_name == "📍 IP OLT ในพื้นที่":
                     lines = code.strip().split("\n")
                     highlighted_lines = []
@@ -1621,7 +1640,6 @@ if dash_search:
         st.warning("❌ ไม่พบข้อมูลที่ตรงกับคำค้นหาของคุณในระบบ")
 
 else:
-    # แสดงผลตามเมนู Sidebar ปกติกรณีไม่ได้กดค้นหา
     current_dict = command_library_data[selected_menu]
     st.markdown(f"## {selected_menu}")
     st.markdown("---")

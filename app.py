@@ -12,9 +12,18 @@ import streamlit.components.v1 as components
 # =================================================================
 # 🐙 GITHUB AUTO-SYNC HELPER FUNCTIONS
 # =================================================================
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", st.secrets.get("GITHUB_TOKEN", ""))
-GITHUB_REPO = os.environ.get("GITHUB_REPO", st.secrets.get("GITHUB_REPO", ""))
-GITHUB_BRANCH = os.environ.get("GITHUB_BRANCH", st.secrets.get("GITHUB_BRANCH", "main"))
+def get_secret_or_env(key, default=""):
+    val = os.environ.get(key)
+    if val:
+        return val
+    try:
+        return st.secrets.get(key, default)
+    except Exception:
+        return default
+
+GITHUB_TOKEN = get_secret_or_env("GITHUB_TOKEN", "")
+GITHUB_REPO = get_secret_or_env("GITHUB_REPO", "jaktotkan-pixel/bitkub-dashboard")
+GITHUB_BRANCH = get_secret_or_env("GITHUB_BRANCH", "main")
 
 def commit_to_github(file_path: Path, commit_message: str):
     """ส่งไฟล์ที่อัปเดตไปยัง GitHub Repository อัตโนมัติ"""

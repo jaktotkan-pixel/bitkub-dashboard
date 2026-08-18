@@ -1,0 +1,510 @@
+{
+  "🍏 ZTE C300 Series": {
+    "🔦 เช็คระดับแสง (Optical Monitoring)": [
+      [
+        "เช็คระดับแสงทั้ง OLT และ ONU พร้อมค่า Attenuation",
+        "show pon power attenuation gpon-onu_{slot}"
+      ],
+      [
+        "เช็คแสงผ่านพอร์ตย่อยอินเตอร์เฟส PON",
+        "show gpon remote-onu interface pon gpon-onu_{slot}"
+      ]
+    ],
+    "📝 ตรวจสอบ Configuration & วงจร": [
+      [
+        "ดู Config รวมอินเตอร์เฟส (เข้าตำแหน่งเบอร์)",
+        "show running-config interface gpon-onu_{slot}"
+      ],
+      [
+        "ดูเนื้อหา Config หลัง ONU (Profile / VLAN Port)",
+        "show running-config | begin pon-onu-mng gpon-onu_{slot}"
+      ],
+      [
+        "ส่องดูเฉพาะฝั่ง PON Profile ของลูกค้า",
+        "show onu running-config gpon-onu_{slot}"
+      ],
+      [
+        "ค้นหาเลขวงจรลูกค้าที่ผูกอยู่ข้างในพอร์ต PON",
+        "show running-config | begin gpon-onu_{slot}"
+      ]
+    ],
+    "🌐 ตรวจสอบสถานะอุปกรณ์ (MAC / IP / LAN Ports)": [
+      [
+        "ส่องดูหมายเลข MAC Address ที่เรียนรู้ผ่านตัว ONU ล่าสุด",
+        "show mac gpon onu gpon-onu_{slot}"
+      ],
+      [
+        "ดู MAC Address ทั้งหมดในพอร์ต PON ย่อย (ตาม Slot/Port)",
+        "show mac gpon onu gpon-onu_{clean_slot}/"
+      ],
+      [
+        "ตรวจสอบหมายเลข IP Address ฝั่ง WAN/Host ของตัว ONU",
+        "show gpon remote-onu ip-host gpon-onu_{slot}"
+      ],
+      [
+        "ตรวจสอบสถานะพอร์ตแลน (Ethernet) แต่ละช่องที่ตัว ONU ในบ้าน",
+        "show gpon remote-onu interface eth gpon-onu_{slot}"
+      ]
+    ],
+    "📊 ตรวจสอบข้อมูลประวัติ & Log ย้อนหลัง": [
+      [
+        "เช็คประวัติอย่างละเอียดของการ Up/Down และสาเหตุสายหลุด",
+        "show gpon onu detail-info gpon-onu_{slot}"
+      ],
+      [
+        "เช็คสถานะภาพรวม ONU ออนไลน์/ออฟไลน์ ทั้งหมดในการ์ด PON",
+        "show gpon onu state gpon-olt_{clean_slot}"
+      ],
+      [
+        "เช็คประวัติ Log ย้อนหลังเพื่อดูพฤติกรรมสายลูกค้า",
+        "show pon onu information gpon-onu_{slot}"
+      ]
+    ]
+  },
+  "⚡ ZTE C600 Series": {
+    "🔦 เช็คระดับแสง (Optical Monitoring)": [
+      [
+        "เช็คระดับแสงขาเข้าที่ตัว ONU (C600)",
+        "show pon power onu-rx gpon_onu-{slot}"
+      ],
+      [
+        "เช็คระดับแสงขาเข้าที่การ์ดตู้ OLT (C600)",
+        "show pon power olt-rx gpon_onu-{slot}"
+      ]
+    ],
+    "📝 ตรวจสอบ Configuration & วงจร": [
+      [
+        "เช็ค Running Config บนพอร์ต ONU ล่าสุด (C600)",
+        "show running-config-interface gpon_onu-{slot}"
+      ],
+      [
+        "เช็คโครงสร้างพอร์ตแลนและพอร์ตแมป VLAN (vport C600)",
+        "show running-config-interface vport-1/{slot}"
+      ]
+    ],
+    "📊 ตรวจสอบข้อมูลประวัติ & Log ย้อนหลัง": [
+      [
+        "เช็คประวัติอย่างละเอียดและสาเหตุการ Up/Down ล่าสุด (C600)",
+        "show gpon onu detail-info gpon_onu-{slot}"
+      ]
+    ]
+  },
+  "🟢 SW ZTE ประชารัฐ": {
+    "🔑 รหัสผ่านเข้าใช้งาน (Account & Credentials)": [
+      [
+        "ข้อมูลการเข้าใช้งาน SW ZTE ประชารัฐ",
+        "User: nex\nPass: N3x@autoconfig \nLogin enable Pass: zxr10"
+      ]
+    ],
+    "🔍 คำสั่งตรวจสอบและเช็คแสง (Switch ZTE)": [
+      [
+        "แสดงสถานะ Port Up / Down",
+        "show interface description"
+      ],
+      [
+        "เช็คสถานะ Port โดยรวมทั้งหมด",
+        "show running-config"
+      ],
+      [
+        "เช็คแสงออกจาก SFP (TX Power)",
+        "show optical-inform details tx-power interface xgei_0/"
+      ],
+      [
+        "เช็คแสงกลับมาจาก SFP (RX Power)",
+        "show optical-inform details rx-power interface xgei_0/"
+      ],
+      [
+        "คำสั่งสำหรับ Sw 24k (เปิด/ปิด ระบบเช็คแสง)",
+        "# optical-inform monitor enable"
+      ]
+    ]
+  },
+  "🟣 Extreme Switch": {
+    "🔍 คำสั่งตรวจสอบสถานะ & MAC Address": [
+      [
+        "ดู Status (แสดงแบบ No-Refresh ไม่ใช่ Real-time)",
+        "show port no-refresh"
+      ],
+      [
+        "ดู MAC Address ภายใน VLAN ที่กำหนด",
+        "show fdb vlan v..."
+      ],
+      [
+        "ดูว่าพอร์ตที่ระบุ มี VLAN อะไรผ่านบ้าง",
+        "show fdb port ..."
+      ],
+      [
+        "ล้างข้อมูล FDB ในพอร์ตที่ระบุ",
+        "cler fdb ports ..."
+      ]
+    ],
+    "⚙️ คำสั่งจัดการ VLAN & Configuration": [
+      [
+        "เพิ่ม VLAN แบบ Tagged ใส่พอร์ต",
+        "config vlan v... add port ... tagged"
+      ],
+      [
+        "ลบ VLAN ออกจากพอร์ต",
+        "config vlan v... delete port ..."
+      ],
+      [
+        "ตรวจสอบว่า VLAN ถูกใส่ไปที่พอร์ตไหนบ้าง",
+        "show vlan v..."
+      ],
+      [
+        "สร้าง VLAN ใหม่พร้อมกำหนด Tag",
+        "create vlan v... tag ..."
+      ],
+      [
+        "แสดงการตั้งค่าเฉพาะพอร์ต",
+        "configure ports 17 display"
+      ]
+    ],
+    "🔦 คำสั่งตรวจสอบค่าแสง SFP (Transceiver)": [
+      [
+        "เช็คระดับแสงภาพรวมทุกพอร์ต",
+        "show ports transceiver information detail"
+      ],
+      [
+        "เช็คระดับแสงแยกเฉพาะพอร์ต (ตัวอย่างพอร์ต 11)",
+        "show ports 11 transceiver information detail"
+      ]
+    ]
+  },
+  "🔵 Cisco SG300": {
+    "⚙️ คำสั่งพื้นฐาน & จัดการ VLAN (Cisco SG300)": [
+      [
+        "เช็คการตั้งค่า Switch",
+        "show running-config"
+      ],
+      [
+        "เข้าสู่โหมด Configuration",
+        "config terminal"
+      ],
+      [
+        "สร้าง/เพิ่ม VLAN ใน Switch",
+        "vlan ..."
+      ],
+      [
+        "เข้าจัดการพอร์ตที่ต้องการ",
+        "interface gigabitethernet ..."
+      ],
+      [
+        "เพิ่ม VLAN แบบ Trunk ใส่พอร์ต",
+        "switchport trunk allowed vlan add ..."
+      ],
+      [
+        "ปิดระบบป้องกัน VLAN หลุด (Smartport)",
+        "no macro auto smartport"
+      ]
+    ],
+    "🌐 การตั้งค่า IP Address & Gateway": [
+      [
+        "ตั้งค่า Gateway ของ Switch",
+        "ip default-gateway ...,...,...,..."
+      ],
+      [
+        "ลบค่า Gateway",
+        "no ip default-gateway ...,...,...,..."
+      ],
+      [
+        "เข้าอินเตอร์เฟส VLAN เพื่อเปลี่ยน IP",
+        "interface vlan 166"
+      ],
+      [
+        "กำหนดหมายเลข IP Address & Subnet",
+        "ip address 10.223.128.33 255.255.255.0"
+      ]
+    ]
+  },
+  "🔴 Huawei Switch": {
+    "⚙️ คำสั่งตั้งค่า Switch (Huawei)": [
+      [
+        "เช็คการตั้งค่า Switch",
+        "show running-config"
+      ],
+      [
+        "เข้าสู่โหมด Configuration",
+        "config terminal"
+      ],
+      [
+        "สร้าง/เพิ่ม VLAN ใน Switch",
+        "vlan ..."
+      ],
+      [
+        "เข้าจัดการพอร์ตที่ต้องการ",
+        "interface gigabitethernet ..."
+      ],
+      [
+        "เพิ่ม VLAN แบบ Trunk ใส่พอร์ต",
+        "switchport trunk allowed vlan add ..."
+      ],
+      [
+        "ตั้งค่า Gateway ของ Switch",
+        "ip default-gateway ...,...,...,..."
+      ],
+      [
+        "ลบค่า Gateway",
+        "no ip default-gateway ...,...,...,..."
+      ],
+      [
+        "เข้าอินเตอร์เฟส VLAN เพื่อเปลี่ยน IP",
+        "interface vlan 166"
+      ],
+      [
+        "กำหนดหมายเลข IP Address & Subnet",
+        "ip address 10.223.128.33 255.255.255.0"
+      ],
+      [
+        "ปิดระบบป้องกัน VLAN หลุด (Smartport)",
+        "no macro auto smartport"
+      ]
+    ]
+  },
+  "📞 ชุมสาย Fixline": {
+    "🔍 คำสั่งตรวจสอบสถานะ & ตำแหน่ง": [
+      [
+        "ดูสถานะเลขหมาย",
+        "stsup:sub=xxxx ;"
+      ],
+      [
+        "ดูตำแหน่งวงจร/พอร์ต",
+        "exdrp:dev=li3-xxxx ;"
+      ],
+      [
+        "ดู Category (cat)",
+        "suscp:snb=xxxx ;"
+      ],
+      [
+        "ดูสถานะภาพรวมชุมสาย",
+        "ststp:emg=xxxx ; emts=all ;"
+      ]
+    ],
+    "🔒 คำสั่งบล็อค & ปลดบล็อค (Block/Unblock)": [
+      [
+        "สั่งบล็อคพอร์ตอุปกรณ์",
+        "blodi:dev=li3-xxxx;"
+      ],
+      [
+        "สั่งปลดบล็อคพอร์ตอุปกรณ์",
+        "blode:dev=li3-xxxx;"
+      ],
+      [
+        "สั่งบล็อคที่ระดับชุมสาย",
+        "remei:emg=xxxx,pcb=emrp-a-meu,mag=em-xx;"
+      ],
+      [
+        "สั่งปลดบล็อคที่ระดับ MAC",
+        "blece:emg=xxxx,em=xx;"
+      ],
+      [
+        "สั่งปลดบล็อคทั้งหมด",
+        "recei:emg=xxxx,emrp=o-a;"
+      ]
+    ]
+  },
+  "📟 DSLAM Forth": {
+    "📟 ข้อมูลการเชื่อมต่อ DSLAM Forth": [
+      [
+        "Forth โหนด 577 (10.227.11.253)",
+        "IP: 10.227.11.253\nUser: krimsan\nPass: 577kri"
+      ],
+      [
+        "Forth โหนด 222 (10.227.0.246)",
+        "IP: 10.227.0.246\nUser: kri01, kri02, kri03, kri04, kri05\nPass: admin1"
+      ]
+    ]
+  },
+  "📍 IP OLT ในพื้นที่": {
+    "📍 รายชื่อ IP OLT ในพื้นที่ & โครงข่าย": [
+      [
+        "รายการ IP OLT ทั้งหมดในระบบ (รวมชุดเดิมและชุดใหม่ล่าสุด)",
+        "• OLT-วังปลาหมู729 : 10.223.194.3\n• OLT-ท่าอ้อ : 10.223.194.4\n• OLT-บ้านดอนขลุบ737 : 10.223.194.8\n• OLT-หนองสองห้อง812 : 10.223.194.10\n• OLT-ทุ่งสมอ730 : 10.223.194.6\n• OLT-ด่านมะขามเตี้ย : 10.223.194.14\n• OLT-บ้านไทรทอง : 10.223.194.13\n• OLT-หนองไผ่ม.6 : 10.223.194.15\n• OLT-บ้านยางเกาะ : 10.223.194.16\n• OLT-กลอนโดม.2vlan 736 : 10.223.194.17\n• OLT-ตะเคียนงาม : 10.223.194.19\n• OLT-รางสาลี่739 : 10.223.194.23\n• OLT-หนองหญ้า : 10.223.194.29\n• OLT-วังเย็น ม.3 : 10.223.194.30\n• OLT-ดอนคราม743 : 10.223.194.27\n• OLT-สำรอง740 : 10.223.194.24\n• OLT-บ้านใหม่ : 10.223.194.25\n• OLT-ห้วยไร่ : 10.223.194.28\n• OLT-หนองเสือ742 : 10.223.194.26\n• OLT-ดอนเจดีย์ : 10.223.194.22\n• OLT-ดอนตาเพชร ม.6 : 10.223.194.55\n• OLT-เบญจพาส : 10.223.194.54\n• OLT_ห้วยสะพาน : 10.223.194.50\n• OLT-พังตรุใน : 10.223.194.47\n• OLT-หนองโรงม.4 750 : 10.223.194.49\n• OLT-หนองตาขำ752 : 10.223.194.51\n• OLT-เขากรวด : 10.223.194.52\n• OLT-พังตรุ : 10.223.194.48\n• OLT-หนองสาหร่าย : 10.223.194.57\n• OLT-หนองลาน ม.4 : 10.223.194.56\n• OLT_อุโลกสี่หมื่น ม.5 : 10.223.194.58\n• OLT-ดอนแสลบ ม.8 : 10.223.194.53\n• OLT_บ้านเก่า ม.1 : 10.223.194.66\n• OLT- ท่ากระดาน ม.1 : 10.223.194.78\n• OLT-สามยอด770 : 10.223.194.45\n• OLT- พุพรม : 10.223.194.70\n• OLT-บ่อพลอย : 10.223.194.71\n• OLT- วังไผ่ ม.7 : 10.223.194.73\n• OLT- หนองย่างช้าง : 10.223.194.44\n• OLT-ช่องด่าน : 10.223.194.74\n• OLT- บ้านยางสูง : 10.223.194.75\n• OLT- สมเด็จเจริญ ม.5 : 10.223.194.76\n• OLT- ห้วยกระเจา ม.3 : 10.223.194.69\n• OLT- ด่านแม่แฉลบ ม.4 : 10.223.194.77\n• OLT- ท่ากระดาน ม.4 : 10.223.194.79\n• OLT- หนองปลาไหล : 10.223.194.83\n• OLT- หนองกร่าง ม.2 : 10.223.194.81\n• OLT- หนองขอนเทพพนม : 10.223.194.85\n• OLT- หนองสาหร่าย : 10.223.194.84\n• OLT-หนองปลิง ม.8 : 10.223.194.94\n• OLT- โป่งช้าง : 10.223.194.82\n• OLT- หนองกร่าง ม.9 : 10.223.194.89\n• OLT- บ้านเขาวงพระจันทร์ ม.3 : 10.223.194.91\n• OLT- บ้านทุ่งกระบ่ำ ม.8 : 10.223.194.86\n• OLT- วัดหนองใหญ่เจริญพร : 10.223.194.88\n• OLT- หนองปลิง ม.1 : 10.223.194.93\n• OLT- หนองประดู่ : 10.223.194.95\n• OLT-พุบอน : 10.223.194.92\n• OLT-บ้านแก่งระเบิด : 10.223.194.103\n• OLT-ต้นมะม่วง : 10.223.194.104\n• OLT-วังกระแจะ : 10.223.194.102\n• OLT-ช่องสะเดา : 10.223.194.98\n• OLT-ลุ่มผึ้ง713 : 10.223.194.101\n• OLT-สามัคคีธรรม : 10.223.194.99\n• OLT-ท่าเสา : 10.223.194.115\n• OLT-สะพานลาว : 10.223.194.110\n• OLT-สิง ม.4 : 10.223.194.116\n• OLT-ปากนาสวน : 10.223.194.108\n• OLT-จะเลาะ : 10.223.194.109\n• OLT-ห้วยเขย่ง ม.4 : 10.223.194.111\n• OLT-หนองตากยาประชารัฐ : 10.223.194.114\n• OLT-บ้านบึง : 10.223.194.118\n• OLT-ทุ่งกระบ่ำ ม.6 : 10.223.194.122\n• OLT-แยกบ่อยาง : 10.223.194.124\n• OLT-หนองโสน : 10.223.194.125\n• OLT-บ้านห้วยยาง : 10.223.194.126\n• OLT-บ้านเขาหินตั้ง : 10.223.194.129\n• OLT-พนมทวน : 10.223.194.128\n• OLT-แก่งประลอม : 10.223.194.127\n• OLT-หนองมะสังข์ : 10.223.194.123\n• OLT-บ้านปากบาง : 10.223.194.119\n• OLT บ้านท่าโป่ง(Bigrock) : 10.223.194.121\n• OLT-บ้านภูเตย : 10.223.194.130\n• olt-บ้านบ้องตี้ : 10.223.194.120\n• OLT-บ้านโคกตะบอง : 10.223.194.117\n• OLT- ห้วยกระเจา ม.8 : 10.223.194.46\n• OLT-อีต่อง : 10.223.194.107\n• OLT-บ้านเก่า ม.9 : 10.223.194.67\n• OLT-หนองกุ่ม ม.7 : 10.223.194.59\n• OLT-คีรีวงศ์ : 10.223.194.60\n• OLT-หนองสามพราน : 10.223.194.61\n• OLT-หนองกุ่ม ม.5 : 10.223.194.62\n• OLT-อบต. แก่งเสี้ยน : 10.223.194.63\n• OLT- หนองหญ้าปล้อง : 10.223.194.64\n• OLT-จรเข้เผือก : 10.223.194.65\n• OLT-หนองบ้านเก่า : 10.223.194.68\n• OLT-วังใหญ่ : 10.223.194.72\n• OLT- บ้านลำอีซู : 10.223.194.80\n• OLT- วัดหนองขอน : 10.223.194.87\n• OLT- บ้านหนองไม้เอื้อย : 10.223.194.90\n• OLT-ศรีมงคล : 10.223.194.100\n• OLT-พุเตย : 10.223.194.106\n• บ่อพลอย(FTTx) : 10.233.17.249\n• หลุมรัง (FTTx) : 10.233.17.208\n• พนมทวน(FTTX) : 10.233.17.206\n• สำนักคร้อ(FTTx) : 10.233.17.183\n• ด่านมะขามเตี้ย(FTTx) : 10.233.17.212\n• ท่าขนุน ม.5(FTTX) : 10.233.17.207\n• หินดาด : 10.233.17.204\n• เลาขวัญ(FTTx) : 10.233.17.226\n• หนองตากยา(FTTX) : 10.233.17.252\n• ดอนขมิ้น (FTTx) : 10.233.17.211\n• ไทรโยค(FTTx) : 10.233.17.210\n• สขาภิบาลลาดหญ้า(FTTX) : 10.233.17.242\n• ศรีสวัสดิ์(FTTX) : 10.233.17.228\n• ท่ามะกาZTE(ศูนย์บริการฯ) : 10.233.17.203\n• สถานีโทรคมเขาป่าห้าม(FTTx) : 10.233.17.219\n• OLT บ้านดอนแสลบ : 10.233.17.41\n• หนองปรือ(FTTX) : 10.233.17.240\n• แยกพุถ่อง(FTTX) : 10.233.17.202\n• หนองฝ้าย (FTTx) : 10.233.17.209\n• ท่ากระดาน ม.1 Fttx : 10.233.17.220\n• ท่าม่วง (FTTx) : 10.233.17.243\n• ยางม่วง(FTTX) : 10.233.17.234\n• ท่ามะกา(FTTX) : 10.233.17.244\n• ห้วยปากคอก(FTTX) : 10.233.17.10\n• วังกระแจะ FTTx : 10.233.17.214\n• ชะแล(FTTX) : 10.233.17.215\n• พระแท่น (FTTx) : 10.233.17.225\n• เขาตอง(FTTx) : 10.233.17.251\n• ท่ามะขาม(FTTX) : 10.233.17.62\n• หนองหญ้า(FTTx) : 10.233.17.218\n• หนองสองตอน(FTTX) : 10.233.17.83\n• ดอนชะเอม(FTTX) : 10.233.17.49\n• ทุ่งทอง 2 (FTTx) : 10.233.17.43\n• ทองผาภูมิ (FTTx) : 10.233.17.245\n• หวายเหนียว(FTTx) : 10.233.17.122\n• สังขละบุรี (FTTx) : 10.233.17.246\n• พุน้ำร้อน(FTTx) : 10.233.17.248\n• ด่านเจดีย์สามองค์(FTTx) : 10.233.17.216\n• ท่าล้อ(FTTX) : 10.233.17.6\n• เขาสามสิบหาบFttx : 10.233.17.51\n• โคกตะบอง(FTTX) : 10.233.17.75\n• OLT จองอั่ว : 10.233.17.99\n• OLT หนองบัว ม.7 : 10.233.17.79\n• Huawei_ตลุงเหนือ : 10.233.17.17\n• Huawei_พาวิลเลี่ยน : 10.233.17.130\n• ZTE_NongRee : 10.233.17.196\n• OLT_ช่องกลิ้ง : 10.233.17.134\n• OLT_ZTE_แก่งเรียง : 10.233.17.31\n• Huawei_เขาน้อย : 10.233.17.131\n• OLT ทุ่งทอง หมู่ 1 : 10.233.17.86\n• โป่งนก : 10.233.17.29\n• บ้านน้ำมุด(Bigrock) : 10.223.194.131\n• huawei_หนองพังตรุ : 10.233.17.137\n• kri_c600_01 : 10.233.17.138\n• TMG-C600 : 10.233.17.241\n• SCT_C600 : 10.233.17.238\n• OLT ดอนตาเพชร ม.1 : 10.233.17.144\n• ลิ่นถิ่น2 : 10.233.17.236\n• Huawei_สระลงเรือ : 10.233.17.135\n• พฤษากาญจน์(FTTx) : 10.233.17.250\n• ม่วงชุม(FTTX) : 10.233.17.18\n• NT1_ท่ากระทุ่ม_10.158.5.158 : 10.158.5.158\n• หนองลู ม.6 (DE) : 10.223.194.113\n• ปรังเผล(FTTx) : 10.233.17.30\n• ไทรโยค ม.2 : 10.233.17.121\n• ZTE_แสนตอ : 10.233.17.221\n• OLT-เขาปูน : 10.233.17.20\n• วังศาลา(FTTX) : 10.233.17.227\n• ราชภัฎ (FTTx) : 10.233.17.229\n• ศูนย์ราชการ(FTTx) : 10.233.17.217\n• OLT-ท่าไม้-ม.3 : 10.233.17.154\n• หนองขาว_FiberHome_2 : 10.233.17.247\n• บึงชะโค(FTTx) : 10.233.17.213\n• OLT_หนองบัว : 10.233.17.28\n• บ้านห้วยเขย่ง_ม.5 : 10.233.17.184\n• NT1_หนองไผ่_10.158.90.7 : 10.158.90.7\n• NT1_ตลาดสำรอง_10.158.95.3 : 10.158.95.3\n• NT1_สมเด็จเจริญ_10.158.5.137 : 10.158.5.137\n• อู่ล่อง : 10.233.17.149\n• บ่อพลอย_c620 : 10.233.17.109\n• NT1_ท่าพุ_10.158.90.3 : 10.158.90.3\n• สระกลอย_FTTx : 10.233.17.132\n• วังกระแจะ FIBERHOME : 10.233.17.231\n• หม่องกะลา(Fttx) : 10.233.17.224\n• Zte_หนองอำเภอจีน : 10.233.17.133\n• OLT_หนองเข้ : 10.233.17.150"
+      ]
+    ]
+  },
+  "📡 Uplink & Initial Config": {
+    "🏗️ ชุดคำสั่งเริ่มต้นตู้ใหม่ (Initial Config)": [
+      [
+        "คำสั่งรวดเดียว สำหรับจัดบอร์ดตั้งชื่อระบบ แฟน เทส และสร้างโพรไฟล์บนตู้ OLT ตัวใหม่",
+        "configure terminal \nhostname kri-sigm4-24kolt02\nusername nex password N3x@autoconfig privilege 15\n\nvlan database\nvlan 16 name nex-wifi24k\nexit\n\ninterface vlan16\nip address 10.223.194.116 255.255.255.0\nbyname nex-wifi24k\nexit\nip route 0.0.0.0 0.0.0.0 10.223.194.1\n\ninterface xgei_1/3/2\nno shutdown\nhybrid-attribute fiber\ndescription link to kri_kph_lpe1,Ethernet0 \nswitchport mode trunk\nswitchport vlan 16 tag\nexit\n\nntp server 10.223.194.1 priority 1\nntp enable\nclock timezone Thailand 7 0\nsnmp-server community ntx_public view AllView rw\nsnmp-server host 1.179.233.29 version 2c ntx_public enable NOTIFICATIONS target-addr-name EMS_1.179.233.29 isnmsserver\nauto-write enable\nauto-write 02:00:00 everyday\n\nno fan env-card-device\nno fan env-uplink-device\nno fan env-serial-baudrate\nfan epm enable\n\npon\nonu-type ZTEG-F600 gpon description 4ETH\nonu-type-if ZTEG-F600 eth_0/1-4\nexit\n\ngpon\nprofile tcont MDES-10M-IN type 2 assured 13000\nexit\n\ntraffic-profile MDES-30M-OUT ip cir 39000 cbs 128 pir 39000 pbs 256\nexit\nwrite"
+      ]
+    ],
+    "📡 ตรวจสอบพอร์ตเชื่อมต่อหลัก (Uplink)": [
+      [
+        "เช็คสถานะทางกายภาพและระดับความเร็ว (Speed) พอร์ต Uplink",
+        "show interface port-status xgei_1/"
+      ],
+      [
+        "เช็คข้อมูลโมดูลแสงและระดับแสงของพอร์ต Uplink ล่าสุด (วิธีที่ 1)",
+        "show interface optical-module-info xgei_1/"
+      ],
+      [
+        "เช็คระดับความแรงแสงโมดูลพอร์ต Uplink (วิธีที่ 2)",
+        "show optical-module-info xgei-1/4"
+      ]
+    ],
+    "❌ คำสั่งลบค่า / เคลียร์ระบบ": [
+      [
+        "ล้างตารางเคลียร์ตารางค้าง MAC Address บน VLAN",
+        "mac delete vlan {circuit}"
+      ],
+      [
+        "เข้าโหมดคอนฟิกเพื่อสั่งลบ MAC vlan ขยะ (เคลียร์ Session ค้าง)",
+        "configure terminal\nmac delete vlan {circuit}"
+      ],
+      [
+        "สั่งเคลียร์ค่าตัวนับข้อผิดพลาดสายแลน (แก้ไขปัญหา CRC Error)",
+        "Clear counter ethernet"
+      ]
+    ],
+    "🔍 การค้นหาข้อมูลภาพรวมตู้": [
+      [
+        "ค้นหาจุดเริ่มต้น Config บนตู้ตามเลขวงจรลูกค้า",
+        "show run | begin {circuit}"
+      ],
+      [
+        "โชว์รายชื่อ ONU ป้ายแดงที่พึ่งเสียบสายเข้ามา (หาเลข S/N ลอย)",
+        "show gpon onu uncfg"
+      ]
+    ]
+  },
+  "💻 Windows CMD Shortcuts": {
+    "🚀 ทางลัดเปิดโปรแกรมระบบ & หน้าต่างด่วน (Shortcut)": [
+      [
+        "javis (คำสั่งด่วนเรียกเปิดระบบช่วยเหลือ หรือเปิดลิงก์ Javis ผ่านบราวเซอร์หลัก)",
+        "start https://javis.nt.co.th"
+      ],
+      [
+        "ncpa.cpl (คีย์ลัดเปิดหน้าต่าง Network Connections เพื่อไปจัดการการ์ดแลน / Fix IP)",
+        "ncpa.cpl"
+      ],
+      [
+        "notepad (เปิดโปรแกรมจดบันทึก Notepad ขึ้นมาทดสคริปต์ด่วน)",
+        "notepad"
+      ],
+      [
+        "compmgmt.msc (เปิดหน้า Computer Management จัดการระบบฮาร์ดแวร์/เช็คไดรเวอร์คอม)",
+        "compmgmt.msc"
+      ]
+    ],
+    "💻 คำสั่งวิเคราะห์เน็ตหน้างานผ่านคอมพิวเตอร์": [
+      [
+        "ipconfig (เช็คหมายเลข IP Address เบื้องต้นในการ์ดแลนคอมพิวเตอร์)",
+        "ipconfig"
+      ],
+      [
+        "ipconfig /all (เช็คไอพี, แมคแอดเดรส และข้อมูล DNS การ์ดแลนทั้งหมดในคอม)",
+        "ipconfig /all"
+      ],
+      [
+        "arp -a (ตรวจสอบหมายเลขไอพีและแมคของอุปกรณ์อื่นๆ ในวง LAN เดียวกัน)",
+        "arp -a"
+      ],
+      [
+        "nslookup (ใช้ตรวจสอบการทำงานและแปลชื่อโดเมน/DNS)",
+        "nslookup google.com"
+      ],
+      [
+        "tracert (ทดสอบวิ่งหาเส้นทาง Network ยิงเช็คว่าเน็ตไปติดคอขวดที่ฮอปไหน)",
+        "tracert 8.8.8.8"
+      ]
+    ]
+  },
+  "🤖 Javis Line Bot": {
+    "🔍 คำสั่งค้นหารายชื่อ Node และเช็คสถานะทางกายภาพ": [
+      [
+        "nodelist,hw. (ดูชื่อ node ต่างๆ ทั้งหมดในระบบ)",
+        "nodelist,hw."
+      ],
+      [
+        "showoptical,hw[ชื่อ node] (สั่งดูค่าแสงของโหนดนั้นๆ เช่น ตลุงเหนือ)",
+        "showoptical,hwตลุงเหนือ"
+      ]
+    ],
+    "⚡ คำสั่งตรวจสอบสถานะทั่วไป (Check Status)": [
+      [
+        "1. ดูซีรี ลอย (เช็ค Serial Number ที่ยังไม่ได้ลงทะเบียน)",
+        "sn,กาญ"
+      ],
+      [
+        "2. ดูจำนวน ONU ใน PON (เช็คปริมาณอุปกรณ์ในพอร์ตของการ์ดนั้นๆ)",
+        "state,กาญ"
+      ],
+      [
+        "3. ดู run config (ส่องโปรไฟล์การตั้งค่าปัจจุบันของ ONU)",
+        "run,3451j0000"
+      ],
+      [
+        "4. ดู Port Lan (เช็คสถานะการเชื่อมต่อพอร์ตแลนหลัง ONU)",
+        "lanstate,3451j0000"
+      ],
+      [
+        "13. ดู แสง / เช็คแสง (ตรวจสอบระดับสัญญาณ Optical ด่วน)",
+        "!!,3451j0000"
+      ],
+      [
+        "14. ดู mac (ตรวจสอบตาราง MAC Address ที่ผ่านตัวอุปกรณ์)",
+        "mac,3451j0000"
+      ]
+    ],
+    "🛠️ คำสั่งควบคุมระบบและแก้ไขพอร์ต (Control & Block)": [
+      [
+        "5. Block แสง (สั่งปิดสัญญาณแสงไปที่ ONU ชั่วคราว)",
+        "block,3451j0000"
+      ],
+      [
+        "6. DeBlock แสง (สั่งเปิดสัญญาณแสงกลับคืนให้ ONU)",
+        "deblock,3451j0000"
+      ],
+      [
+        "19. reboot onu (สั่งรีสตาร์ทตัว ONU ลูกค้าจากระยะไกล)",
+        "reboot,3451j5000"
+      ]
+    ],
+    "➕❌ คำสั่งเพิ่ม / ลบ / เปลี่ยนแปลงอุปกรณ์ (Provisioning)": [
+      [
+        "7. ลบ ONU (ลบข้อมูล ONU ออกจากระบบโหนด [โหนด,พิกัด,วงจร])",
+        "delonu,กาญ,1/2/2,100"
+      ],
+      [
+        "8. เปลี่ยน ONU (สลับเปลี่ยนเครื่องใหม่โดยใช้ค่า Config เดิม)",
+        "replace,3451j0000,ZTEGC9999999"
+      ]
+    ],
+    "⚙️ คำสั่งตั้งค่าโปรไฟล์สลับโหมด (Configuration & Mode)": [
+      [
+        "9. config route (สั่งตั้งค่าเป็นโหมด Route โหมดเริ่มต้น)",
+        "autoroute,กาญ,ZTEGC9999999,3003,3451j8888"
+      ],
+      [
+        "10. config bridge (สั่งตั้งค่าเป็นโหมด Bridge ต่อพ่วงเลเยอร์ 2)",
+        "bridge,กาญ,ZTEGC9999999,3003,3451j8888"
+      ],
+      [
+        "11. เปลี่ยน route to bridge (สลับโหมดจาก Route ไปเป็น Bridge)",
+        "rtob,3451j0000"
+      ],
+      [
+        "12. เปลี่ยน bridge to route (สลับโหมดจาก Bridge กลับมาเป็น Route)",
+        "btor,3451j0000"
+      ],
+      [
+        "15. config ด้าน interface (จัดการระบบเชื่อมต่อพอร์ตโครงสร้าง)",
+        "interface,3451j0000"
+      ],
+      [
+        "16. configด้าน pon (ตั้งค่าโปรไฟล์ฝั่งเครือข่าย PON)",
+        "ponconfig,3451j0000"
+      ],
+      [
+        "17. config autoroute (คำสั่งสร้างเส้นทางแบบระบุรายละเอียดโหนดคริ)",
+        "autoroute,kri,ZTEGC1E1E1EE,3001,3451j8888"
+      ],
+      [
+        "18. setdhcpfromnet (สั่งกำหนดดึง IP รับแจกผ่านระบบเครือข่าย)",
+        "dhcpfromnet,3459j5063"
+      ]
+    ]
+  }
+}

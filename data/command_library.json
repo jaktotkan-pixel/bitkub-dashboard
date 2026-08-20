@@ -220,6 +220,10 @@
       [
         "เปิด remote onu vlan 89",
         "pon-onu-mng gpon-onu_1/\nfirewall port-forward 1 lan-ip 192.168.1.1 lan-port 80 \n  firewall port-forward 1 state enable \n  firewall port-forward 1 wan-port 89 \n  security-mgmt 1 state enable mode forward"
+      ],
+      [
+        "ปิด remote onu",
+        "pon-onu-mng gpon-onu_1/\nno security-mgmt 1\nno firewall port-forward 1\nsecurity-mgmt 1 state enable mode discard protocol web telnet"
       ]
     ]
   },

@@ -59,6 +59,12 @@
         "เช็คประวัติ Log ย้อนหลังเพื่อดูพฤติกรรมสายลูกค้า",
         "show pon onu information gpon-onu_{slot}"
       ]
+    ],
+    "Remote onu": [
+      [
+        "เปิด remote onu",
+        "pon-onu-mng gpon-onu_1/\nfirewall port-forward 1 lan-ip 192.168.1.1 lan-port 80 \n  firewall port-forward 1 state enable \n  firewall port-forward 1 wan-port 89 \n  security-mgmt 1 state enable mode forward"
+      ]
     ]
   },
   "⚡ ZTE C600 Series": {

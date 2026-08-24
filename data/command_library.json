@@ -74,6 +74,10 @@
       [
         "ดู Port",
         "show isis neighbors"
+      ],
+      [
+        "ดูแสง",
+        "show interface transceiver module 0"
       ]
     ]
   },

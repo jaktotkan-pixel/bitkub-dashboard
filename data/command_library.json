@@ -78,6 +78,10 @@
       [
         "ดูแสง",
         "show interface transceiver module 0"
+      ],
+      [
+        "ดูแสง AGGPE",
+        "show controllers tenGigE .."
       ]
     ]
   },

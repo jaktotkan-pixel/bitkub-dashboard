@@ -82,6 +82,10 @@
       [
         "ดูแสง AGGPE",
         "show controllers tenGigE .."
+      ],
+      [
+        "ดู error",
+        "show interface counter error"
       ]
     ]
   },

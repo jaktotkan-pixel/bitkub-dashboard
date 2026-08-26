@@ -62,5 +62,9 @@
   {
     "name": "Financial Dashboard",
     "url": "https://script.google.com/macros/s/AKfycby7UujKmmiIFYAY4Poc7YzYCh59n8MTTfRkosKzsdvuUnV2T3p6rSMeIp6QzHwnWUo6/exec"
+  },
+  {
+    "name": "SET",
+    "url": "https://script.google.com/macros/s/AKfycbx2OVOVTdgWx1_zYJk1QV9OrBoMN7_5ZKMy8QBkfG6CYx-31jEadzppyM-3I-BILyWjjw/exec"
   }
 ]

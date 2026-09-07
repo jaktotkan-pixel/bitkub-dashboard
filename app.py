@@ -24,6 +24,7 @@ def get_secret_or_env(key, default=""):
 GITHUB_TOKEN = get_secret_or_env("GITHUB_TOKEN", "")
 GITHUB_REPO = get_secret_or_env("GITHUB_REPO", "jaktotkan-pixel/bitkub-dashboard")
 GITHUB_BRANCH = get_secret_or_env("GITHUB_BRANCH", "main")
+APP_PASSWORD = get_secret_or_env("APP_PASSWORD", "jakntkan")
 
 def commit_to_github(file_path: Path, commit_message: str):
     """ส่งไฟล์ที่อัปเดตไปยัง GitHub Repository อัตโนมัติ"""
@@ -83,7 +84,7 @@ def check_password():
     """Returns `True` if the user had the correct password."""
     def password_entered():
         """Checks whether a password entered by the user is correct."""
-        if st.session_state["password"] == "jakntkan":  # <-- เปลี่ยนรหัสผ่านตรงนี้
+        if st.session_state["password"] == APP_PASSWORD:
             st.session_state["password_correct"] = True
             del st.session_state["password"]  # ไม่เก็บบันทึกรหัสผ่านไว้ใน memory
         else:
@@ -1451,19 +1452,6 @@ def delete_command_from_library(filename, library, category, sub_cat, item_idx):
     )
 
 
-# =================================================================
-# 📊 คำนวณสรุปตัวเลขสำหรับแถบ Ticker บนหน้า Dashboard
-# =================================================================
-command_library_data = load_section_data("command_library.json", COMMAND_LIBRARY_SEED)
-total_categories = len(command_library_data)
-total_commands = sum(
-    len(items) for cat_dict in command_library_data.values() for items in cat_dict.values()
-)
-total_olt_ip = len(olt_ip_commands["📍 รายชื่อ IP OLT ในพื้นที่ & โครงข่าย"][0][1].strip().split("\n"))
-total_circuits = len(load_section_data("circuit_list.json", CIRCUIT_SEED))
-total_ofc_routes = len(load_section_data("ofc_distances.json", OFC_SEED))
-
-
 # --- 2. SIDEBAR NAVIGATION ---
 st.sidebar.markdown("## 📌 เมนูหลัก")
 
@@ -1489,12 +1477,26 @@ with st.sidebar.expander("🔐 SecureCRT", expanded=False):
         "securecrt.json", SECURECRT_SEED, "IP / โฮสต์", "securecrt"
     )
 
+command_library_data = load_section_data("command_library.json", COMMAND_LIBRARY_SEED)
+
 selected_menu = None
 with st.sidebar.expander("⚙️ Config", expanded=False):
     selected_menu = st.radio("เลือกหมวดหมู่การใช้งาน:", list(command_library_data.keys()), label_visibility="collapsed")
 
 if selected_menu is None:
     selected_menu = list(command_library_data.keys())[0]
+
+
+# =================================================================
+# 📊 คำนวณสรุปตัวเลขสำหรับแถบ Ticker บนหน้า Dashboard
+# =================================================================
+total_categories = len(command_library_data)
+total_commands = sum(
+    len(items) for cat_dict in command_library_data.values() for items in cat_dict.values()
+)
+total_olt_ip = len(olt_ip_commands["📍 รายชื่อ IP OLT ในพื้นที่ & โครงข่าย"][0][1].strip().split("\n"))
+total_circuits = len(current_circuit_data)
+total_ofc_routes = len(current_ofc_data)
 
 
 # --- 3. MAIN CONTENT DISPLAY & DASHBOARD SEARCH ---

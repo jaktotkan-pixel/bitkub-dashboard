@@ -132,6 +132,42 @@ if not check_password():
 # =================================================================
 # 🎨 ธีม "Trading Terminal" — พื้นหลังเข้ม ตัวหนังสือคมชัด อ่านง่าย
 # =================================================================
+import streamlit as st
+
+# --- 1. ส่วนตัวกรองด้านบน (Filters) ---
+st.markdown("### Project Dashboard")
+f_col1, f_col2, f_col3, f_col4 = st.columns(4)
+with f_col1:
+    st.selectbox("เดือน", ["ทั้งหมด", "มกราคม", "กุมภาพันธ์"])
+with f_col2:
+    st.selectbox("ปี", ["ทั้งหมด", "2026", "2025"])
+with f_col3:
+    st.selectbox("ประเภท", ["ทั้งหมด", "ประเภท A", "ประเภท B"])
+with f_col4:
+    st.selectbox("สถานะ", ["ทั้งหมด", "กำลังดำเนินการ", "เสร็จสิ้น"])
+
+st.markdown("---")
+
+# --- 2. ส่วนตัวเลขสรุปผล (Metrics Cards แถวที่ 1 และ 2) ---
+m1, m2, m3, m4 = st.columns(4)
+m1.metric(label="รายได้ทั้งหมด", value="230,000", delta="+12%")
+m2.metric(label="ค่าใช้จ่าย", value="220,000", delta="-3%")
+m3.metric(label="กำไร", value="10,000", delta="4%")
+m4.metric(label="% ความสำเร็จโครงการ", value="34%")
+
+# --- 3. ส่วนแสดงกราฟ (Charts ด้านล่าง) ---
+chart_col, pie_col = st.columns([2, 1])  # แบ่งสัดส่วน กว้าง 2 ส่วน : แคบ 1 ส่วน
+
+with chart_col:
+    st.markdown("#### % ความคืบหน้าโครงการ")
+    # ตัวอย่างจำลองกราฟแท่ง (สามารถใช้ st.bar_chart ได้)
+    sample_data = {"โครงการ A": 50, "โครงการ B": 5, "โครงการ C": 30, "โครงการ D": 70}
+    st.bar_chart(sample_data)
+
+with pie_col:
+    st.markdown("#### สัดส่วนงานรายโครงการ")
+    # ตรงนี้สามารถใช้ไลบรารีอย่าง Plotly หรือ st.altair_chart ทำ Donut Chart ได้ครับ
+    st.info("แสดงแผนภูมิวงกลม (Donut Chart)")
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');

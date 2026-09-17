@@ -34,8 +34,6 @@ def get_binance_symbols():
 
 all_symbols = get_binance_symbols()
 
-all_symbols = get_binance_symbols()
-
 # 2. แถบควบคุมด้านซ้ายมือ (Sidebar)
 st.sidebar.header("⚙️ ตั้งค่าข้อมูล")
 selected_symbol = st.sidebar.selectbox(

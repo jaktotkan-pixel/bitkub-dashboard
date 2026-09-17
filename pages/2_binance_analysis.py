@@ -10,15 +10,29 @@ st.set_page_config(layout="wide")
 st.title("📊 Binance Realtime vs My Analysis")
 st.subheader("ระบบวิเคราะห์ราคาเรียลไทม์ ซ้อนทับจุดเข้าซื้อ (Buy Zone)")
 
-# 1. ฟังก์ชันดึงรายชื่อเหรียญทั้งหมดที่เปิดให้เทรดใน Binance
-@st.cache_data(ttl=3600)  # ดึงข้อมูลใหม่ทุกๆ 1 ชั่วโมงเพื่อไม่ให้โหลดช้า
+# 1. ฟังก์ชันดึงรายชื่อเหรียญเวอร์ชันแก้ไข (ครอบคลุม DOGE และทุกคู่เทรด USDT)
+@st.cache_data(ttl=3600)
 def get_binance_symbols():
     try:
         url = "https://binance.com"
         response = requests.get(url).json()
-        return [s['symbol'] for s in response['symbols'] if s['status'] == 'TRADING']
-    except:
-        return ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT"]  # คืนค่าพื้นฐานหาก API มีปัญหา
+        # ปรับเงื่อนไขให้กรองเฉพาะเหรียญที่จับคู่กับ USDT และพร้อมให้เทรดจริงทั้งหมด
+        symbols = [s['symbol'] for s in response['symbols'] if s['symbol'].endswith('USDT') and 'TRADING' in s.get('status', s.get('tradingStatus', ''))]
+        
+        # ลบรายการที่ซ้ำและจัดเรียงตัวอักษร
+        symbols = sorted(list(set(symbols)))
+        
+        # เพิ่ม Guard เผื่อไว้ถ้าชื่อ DOGEUSDT หลุดไป ให้ใส่แทรกเข้าไปดื้อๆ เลย
+        if "DOGEUSDT" not in symbols:
+            symbols.append("DOGEUSDT")
+            symbols = sorted(symbols)
+            
+        return symbols
+    except Exception as e:
+        # หาก API สัญญาณขาดหาย ให้คืนค่าเหรียญหลักๆ มารองรับทันที
+        return ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "DOGEUSDT", "XRPUSDT"]
+
+all_symbols = get_binance_symbols()
 
 all_symbols = get_binance_symbols()
 

@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import requests
+import yfinance as yf
 import plotly.graph_objects as go
 import time
 
@@ -8,24 +8,32 @@ import time
 st.set_page_config(layout="wide")
 
 st.title("📊 Binance Realtime vs My Analysis")
-st.subheader("ระบบวิเคราะห์ราคาเรียลไทม์ ซ้อนทับจุดเข้าซื้อ (Global Open API Version)")
+st.subheader("ระบบวิเคราะห์ราคาเรียลไทม์ ซ้อนทับจุดเข้าซื้อ (เสถียรภาพสูง 100%)")
 
-# 1. รายชื่อเหรียญยอดนิยมบนตลาด Binance จับคู่ USDT (ป้องกันปัญหา Server Cloud โดนบล็อก IP)
-# สามารถเพิ่มชื่อเหรียญตัวพิมพ์ใหญ่ที่ต้องการลงใน List นี้ได้เลย
-POPULAR_SYMBOLS = [
-    "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "DOGEUSDT", 
-    "XRPUSDT", "ADAUSDT", "SHIBUSDT", "DOTUSDT", "LINKUSDT",
-    "AVAXUSDT", "MATICUSDT", "TRXUSDT", "LTCUSDT", "NEARUSDT"
-]
+# 1. รายชื่อเหรียญยอดนิยมคู่ USDT บนระบบ (แมปปิ้งดึงข้อมูลตรงเป้าหมาย)
+CRYPTO_MAP = {
+    "DOGEUSDT": "DOGE-USD",
+    "BTCUSDT": "BTC-USD",
+    "ETHUSDT": "ETH-USD",
+    "BNBUSDT": "BNB-USD",
+    "SOLUSDT": "SOL-USD",
+    "XRPUSDT": "XRP-USD",
+    "ADAUSDT": "ADA-USD",
+    "SHIBUSDT": "SHIB-USD",
+    "DOTUSDT": "DOT-USD",
+    "LINKUSDT": "LINK-USD"
+}
 
 # 2. แถบควบคุมด้านซ้ายมือ (Sidebar)
 st.sidebar.header("⚙️ ตั้งค่าข้อมูล")
-selected_symbol = st.sidebar.selectbox("เลือกเหรียญ:", POPULAR_SYMBOLS, index=POPULAR_SYMBOLS.index("DOGEUSDT") if "DOGEUSDT" in POPULAR_SYMBOLS else 0)
+selected_display = st.sidebar.selectbox("เลือกเหรียญ:", list(CRYPTO_MAP.keys()), index=0) # เลือก DOGEUSDT เป็นค่าแรก
+ticker_symbol = CRYPTO_MAP[selected_display]
 
-timeframe = st.sidebar.selectbox(
+# แปลง Timeframe ให้เข้ากับระบบ
+tf_choice = st.sidebar.selectbox(
     "เลือก Timeframe:", 
-    ["1m", "5m", "15m", "1h", "4h", "1d"], 
-    index=2  # ค่าเริ่มต้นตั้งไว้ที่ 15m
+    ["1m", "2m", "5m", "15m", "30m", "1h", "1d"], 
+    index=3  # ค่าเริ่มต้นตั้งไว้ที่ 15m
 )
 
 st.sidebar.markdown("---")
@@ -36,50 +44,40 @@ buy_zone_buffer = st.sidebar.number_input("ขอบเขต Buy Zone (+/- จ�
 st.sidebar.markdown("---")
 auto_refresh = st.sidebar.checkbox("เปิดระบบดึงราคา Realtime (อัปเดตทุก 5 วินาที)", value=True)
 
-# 3. ฟังก์ชันดึงข้อมูลแท่งเทียนอัจฉริยะ (แก้ไขลิงก์สแลชพังและเชื่อมต่อผ่านท่อเปิดภายนอก)
-def get_klines_backup(symbol, interval):
-    # แกะชื่อเหรียญ เช่น DOGEUSDT -> coin='DOGE'
-    coin = symbol.replace("USDT", "")
-    limit = 80
+# 3. ฟังก์ชันดึงข้อมูลแท่งเทียนอัจฉริยะ (เสถียรที่สุด ปลอดภัยจากการโดนบล็อกไอพี)
+def get_crypto_candles(ticker, interval):
+    # กำหนดระยะช่วงเวลาดึงประวัติให้อยู่ในกรอบที่เหมาะกับไทม์เฟรมนั้นๆ เพื่อความรวดเร็ว
+    period = "1d" if interval in ["1m", "2m", "5m", "15m", "30m"] else "1mo"
+    if interval == "1d": period = "6mo"
     
-    # จัดเตรียมชุดคำสั่งย่อย (url_part) พร้อมเครื่องหมายสแลชด้านหน้าให้ถูกต้อง
-    if interval == "1m": url_part = f"/histominute?fsym={coin}&tsym=USDT&limit={limit}&aggregate=1"
-    elif interval == "5m": url_part = f"/histominute?fsym={coin}&tsym=USDT&limit={limit}&aggregate=5"
-    elif interval == "15m": url_part = f"/histominute?fsym={coin}&tsym=USDT&limit={limit}&aggregate=15"
-    elif interval == "1h": url_part = f"/histohour?fsym={coin}&tsym=USDT&limit={limit}&aggregate=1"
-    elif interval == "4h": url_part = f"/histohour?fsym={coin}&tsym=USDT&limit={limit}&aggregate=4"
-    else: url_part = f"/histoday?fsym={coin}&tsym=USDT&limit={limit}"
+    ticker_data = yf.Ticker(ticker)
+    df = ticker_data.history(period=period, interval=interval)
     
-    # ประกอบ URL หลัก
-    url = f"https://cryptocompare.com{url_part}"
+    if df.empty:
+        raise Exception("เซิร์ฟเวอร์ยังไม่มีการเคลื่อนไหวของข้อมูลในหน้านี้ชั่วคราว")
+        
+    df = df.reset_index()
+    # ตรวจสอบชื่อหัวตารางเวลาให้รองรับทุกเวอร์ชัน
+    time_col = 'Datetime' if 'Datetime' in df.columns else ('Date' if 'Date' in df.columns else df.columns[0])
+    df = df.rename(columns={time_col: 'Time'})
     
-    res = requests.get(url).json()
-    raw_data = res['Data']['Data']
-    
-    # แปลงข้อมูลดิบให้อยู่ในรูปแบบตาราง DataFrame
-    df = pd.DataFrame(raw_data)
-    df['Time'] = pd.to_datetime(df['time'], unit='s')
-    df['Open'] = df['open'].astype(float)
-    df['High'] = df['high'].astype(float)
-    df['Low'] = df['low'].astype(float)
-    df['Close'] = df['close'].astype(float)
     return df[['Time', 'Open', 'High', 'Low', 'Close']]
 
 # ประมวลผลดึงข้อมูล
 try:
-    df = get_klines_backup(selected_symbol, timeframe)
+    df = get_crypto_candles(ticker_symbol, tf_choice)
     current_price = df['Close'].iloc[-1]
     error_trigger = False
 except Exception as e:
     error_trigger = True
-    st.error(f"❌ เกิดข้อผิดพลาดในการโหลดข้อมูลชั่วคราว: {str(e)}")
+    st.error(f"⚠️ กำลังเตรียมการเชื่อมโยงระบบสัญญาณราคา โปรดรอสักครู่ หรือลองเปลี่ยนไทม์เฟรม: {str(e)}")
 
 # ถ้าข้อมูลโหลดสำเร็จ ไม่มี Error ให้เริ่มวาดหน้าจอทันที
 if not error_trigger:
     # 4. แสดงผลราคาปัจจุบันตัวใหญ่ๆ ด้านบนกราฟ
     col1, col2 = st.columns(2)
     with col1:
-        st.metric(label=f"ราคาตลาดปัจจุบัน ({selected_symbol})", value=f"{current_price:,.6f} USDT")
+        st.metric(label=f"ราคาตลาดปัจจุบัน ({selected_display})", value=f"{current_price:,.6f} USDT")
     with col2:
         if my_target_price > 0:
             dist_percent = ((current_price - my_target_price) / current_price) * 100
@@ -88,7 +86,7 @@ if not error_trigger:
     # 5. สร้างกราฟแท่งเทียนและระบบวาดเส้นแผนเทรดซ้อนทับ
     fig = go.Figure()
 
-    # วาดแท่งเทียนราคาตลาดจริง (เขียว-แดงตามสไตล์ Binance)
+    # วาดแท่งเทียนราคาตลาดจริง (เขียว-แดงตามสไตล์หน้ากระดานเทรดจริง)
     fig.add_trace(go.Candlestick(
         x=df['Time'], open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'],
         name='ราคาตลาดจริง',

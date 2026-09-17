@@ -9,7 +9,7 @@ import time
 st.set_page_config(layout="wide")
 
 st.title("📊 Binance Realtime vs AI Analysis Model")
-st.subheader("ระบบ AI ตรวจจับจุดซื้อ 4h + ไม้บรรทัดลากเส้นประวิเคราะห์ด้วยตัวเองพร้อมป้ายราคา")
+st.subheader("ระบบ AI ตรวจจับจุดซื้อ + ไม้บรรทัดลากเส้นประพร้อมป้ายราคา (เวอร์ชันแก้ไขบั๊ก 4h สมบูรณ์)")
 
 # 1. รายชื่อเหรียญยอดนิยมคู่ USDT บนกระดานเทรด (เสถียรภาพสูง 100%)
 CRYPTO_MAP = {
@@ -33,23 +33,26 @@ ticker_symbol = CRYPTO_MAP[selected_display]
 tf_choice = st.sidebar.selectbox(
     "เลือก Timeframe:", 
     ["1m", "5m", "15m", "1h", "4h", "1d"], 
-    index=4  # ล็อกค่าเริ่มต้นไว้ที่ 4h ตามต้องการครับ
+    index=4  # ค่าเริ่มต้นล็อกไว้ที่ 4h ตามความต้องการ
 )
 
 st.sidebar.markdown("---")
 auto_refresh = st.sidebar.checkbox("เปิดระบบดึงราคา Realtime (อัปเดตทุก 5 วินาที)", value=True)
 
-# 3. ฟังก์ชันดึงข้อมูลแท่งเทียนอัจฉริยะ รองรับ 4h
+# 3. ฟังก์ชันดึงข้อมูลแท่งเทียน (พร้อมระบบประมวลผลโมเดลรวมแท่ง 1h -> 4h อัตโนมัติ)
 def get_crypto_candles(ticker, interval):
+    # กรณีเลือก 4h ให้เปลี่ยนไปดึงข้อมูล 1h แทนเพื่อนำมาประกอบร่าง
+    fetch_interval = "1h" if interval == "4h" else interval
+    
     if interval in ["1m", "5m", "15m"]:
         period = "1d"
     elif interval in ["1h", "4h"]:
-        period = "1mo"  # ดึงย้อนหลัง 1 เดือนเพื่อให้มีข้อมูลคำนวณรอบ 4h ได้แม่นยำ
+        period = "1mo" # ดึงย้อนหลัง 1 เดือนเพื่อให้ข้อมูล 4h เพียงพอในการคำนวณอินดิเคเตอร์
     else:
         period = "1y"
         
     ticker_data = yf.Ticker(ticker)
-    df = ticker_data.history(period=period, interval=interval)
+    df = ticker_data.history(period=period, interval=fetch_interval)
     
     if df.empty:
         raise Exception("สัญญาณดิบจากเซิร์ฟเวอร์หลักขัดข้องชั่วคราว")
@@ -57,9 +60,24 @@ def get_crypto_candles(ticker, interval):
     df = df.reset_index()
     time_col = 'Datetime' if 'Datetime' in df.columns else ('Date' if 'Date' in df.columns else df.columns)
     df = df.rename(columns={time_col: 'Time'})
+    
+    # 🔥 กระบวนการแปลงร่างประกอบแท่งเทียน 1h ให้กลายเป็น 4h (แก้บั๊ก Yahoo ไม่รองรับ 4h)
+    if interval == "4h":
+        df.set_index('Time', inplace=True)
+        # รวมกลุ่มทุกๆ 4 ชั่วโมง โดยอิงราคาเปิดแท่งแรก ราคาสูงสุด-ต่ำสุดของรอบ และราคาปิดแท่งสุดท้าย
+        df_4h = df.resample('4h').agg({
+            'Open': 'first',
+            'High': 'max',
+            'Low': 'min',
+            'Close': 'last',
+            'Volume': 'sum'
+        })
+        df_4h.dropna(subset=['Open'], inplace=True) # ตัดช่องว่างช่วงเวลาที่ไม่มีโวลลุ่มออก
+        df = df_4h.reset_index()
+        
     return df[['Time', 'Open', 'High', 'Low', 'Close']]
 
-# 4. ฟังก์ชัน AI ประมวลผลหาทิศทางและโซนราคาสำคัญ
+# 4. ฟังก์ชัน AI ประมวลผลหาโซนราคาและวิเคราะห์จิตวิทยา
 def calculate_ai_signals(df):
     ai_max_high = float(df['High'].rolling(window=20).max().iloc[-1])
     ai_support = float(df['Low'].rolling(window=20).min().iloc[-1])
@@ -87,23 +105,22 @@ try:
     df = get_crypto_candles(ticker_symbol, tf_choice)
     current_price = df['Close'].iloc[-1]
     
-    # คำนวณโมเดลแผนการเทรดอัตโนมัติของ AI
+    # คำนวณแผนของระบบ AI
     ai_support_line, ai_buy_zone_line, ai_max_high_line, main_trend_ema = calculate_ai_signals(df)
     error_trigger = False
 except Exception as e:
     error_trigger = True
-    st.error(f"⚠️ ระบบกำลังเชื่อมโยงอัลกอริทึมข้อมูลคริปโต: {str(e)}")
+    st.error(f"⚠️ ระบบกำลังเตรียมการเชื่อมโยงระบบสัญญาณราคา โปรดรอสักครู่ หรือทดลองเปลี่ยนเหรียญ/ไทม์เฟรม: {str(e)}")
 
-# ถ้าข้อมูลโหลดสำเร็จ ให้เริ่มคำนวณไม้บรรทัดแบบ Interactive
+# ถ้าข้อมูลโหลดสำเร็จ ให้เริ่มวาดหน้าจอแดชบอร์ดทันที
 if not error_trigger:
-    # 📌 ฟีเจอร์ไม้บรรทัดลากเส้นได้เอง: สร้างสไลเดอร์ควบคุมราคาสัญจรฝั่งซ้ายโดยสเกลตามกรอบราคาเหรียญนั้นๆ อัตโนมัติ
+    # 📌 คำนวณขอบเขตไม้บรรทัดลากเส้นสไลเดอร์ตามสเกลราคาเหรียญนั้นๆ
     st.sidebar.markdown("---")
     st.sidebar.subheader("📐 ไม้บรรทัดลากเส้นวิเคราะห์เอง")
     
     min_chart_price = float(df['Low'].min())
     max_chart_price = float(df['High'].max())
     
-    # ตัวเลื่อนราคาอิสระ (ลากขยับเส้นเหลืองนีออนบนกราฟ)
     user_custom_price = st.sidebar.slider(
         "เลื่อนเพื่อลากเส้นปรับระดับราคา:",
         min_value=min_chart_price,
@@ -125,17 +142,15 @@ if not error_trigger:
         user_dist = ((user_custom_price - current_price) / current_price) * 100
         st.metric(label="✏️ เส้นที่คุณลากเอง ห่างจากราคาปัจจุบัน", value=f"{user_custom_price:,.6f} USDT", delta=f"{user_dist:.2f}%")
 
-    # 5. สร้างกราฟแท่งเทียนและระบบวาดเส้นแผนเทรดซ้อนทับพร้อมป้ายราคาชัดเจน
+    # 5. สร้างกราฟแท่งเทียนพร้อมแสดงเส้นพิกัดและป้ายราคาชัดเจน
     fig = go.Figure()
 
-    # วาดกราฟแท่งเทียนตลาดจริง (เขียว-แดงสไตล์กระดาน Binance จริง)
     fig.add_trace(go.Candlestick(
         x=df['Time'], open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'],
         name='ราคาตลาดจริง',
         increasing_line_color='#0ecb81', decreasing_line_color='#f6465d'
     ))
 
-    # วาดเส้นวิเคราะห์อัตโนมัติซ้อนลงไปบนกราฟพร้อมระบุป้ายราคาวิ่งตามราคาปัจจุบัน
     # 1. เส้นราคาสูงสุดรอบปัจจุบัน (AI Max High - เส้นสีแดงส้ม)
     fig.add_hline(
         y=ai_max_high_line, line_dash="dash", line_color="#ff4500", line_width=2,
@@ -145,7 +160,7 @@ if not error_trigger:
         annotation_bgcolor="#ff4500"
     )
     
-    # 2. เส้นเป้าหมายจุดที่ควรเข้าซื้อช้อนราคาที่ดีที่สุด (AI Buy Zone - เส้นสีฟ้านีออน)
+    # 2. เส้นจุดที่ควรเข้าซื้อที่ดีที่สุด (AI Buy Zone - เส้นสีฟ้านีออน)
     fig.add_hline(
         y=ai_buy_zone_line, line_dash="solid", line_color="#00e6ff", line_width=2.5,
         annotation_text=f"🔵 AI BUY ZONE: {ai_buy_zone_line:,.6f} USDT", 
@@ -154,12 +169,12 @@ if not error_trigger:
         annotation_bgcolor="#00e6ff"
     )
 
-    # 3. 🔥 เส้นประไม้บรรทัดลากได้เองตามนิ้วผู้ใช้ (User Custom Line - เส้นสีเหลืองนีออนสะท้อนแสง)
+    # 3. เส้นประไม้บรรทัดลากได้เองอิสระตามความต้องการของผู้ใช้ (เส้นสีเหลืองสะท้อนแสง)
     fig.add_hline(
         y=user_custom_price, line_dash="dashdot", line_color="#ffff00", line_width=3,
         annotation_text=f"🟡 เส้นวิเคราะห์ของคุณ: {user_custom_price:,.6f} USDT", 
         annotation_position="top left",
-        annotation_font=dict(size=12, color="black", bold=True),
+        annotation_font=dict(size=12, color="black"),
         annotation_bgcolor="#ffff00"
     )
 
@@ -172,17 +187,15 @@ if not error_trigger:
 
     st.plotly_chart(fig, use_container_width=True)
 
-    # 6. กล่อง AI เจาะลึกทิศทางทิศทางการเทรดรอบวันและกลยุทธ์
+    # 6. กล่อง AI วิเคราะห์พฤติกรรมผู้เล่นและทิศทางรายวัน
     st.markdown("---")
     st.markdown("### 🧠 AI Trading Direction & Market Psychology Analysis")
     
-    # ส่วนวิเคราะห์ทิศทางต่อวัน (Daily Trend Direction)
     if current_price > main_trend_ema:
         st.info(f"📈 **แนวโน้มทิศทางกรอบเวลา {tf_choice} : เป็นขาขึ้นเชิงบวก (Bullish Bias)**\n\nโครงสร้างราคาผู้เล่นส่วนใหญ่ฝั่ง Buy กำลังได้เปรียบ แนะนำเน้นดักช้อนซื้อเมื่อราคาเกิดการย่อตัวลงมาหาป้ายราคาเส้นสีฟ้า")
     else:
-        st.warning(f"📉 **แนวโน้มทิศทางกรอบเวลา {tf_choice} : เป็นขาลงคุมตลาด (Bearish Bias)**\n\nระวังแรงเทขายตามโครงสร้างใหญ่ที่มีแรงกดดัน แนะนำเล่นด้วยความระมัดระวังและตั้งจุดรับไว้ที่ป้ายปลอดภัย")
+        st.warning(f"📉 **แนวโน้มทิศทางกรอบเวลา {tf_choice} : เป็นขาลงคุมตลาด (Bearish Bias)**\n\nระวังแรงเทขายสะสมตามโครงสร้างใหญ่ที่มีแรงกดดัน แนะนำเล่นด้วยความระมัดระวังและตั้งจุดรับไว้ที่ป้ายปลอดภัย")
 
-    # ส่วนวิเคราะห์จังหวะการเข้าซื้อวินาทีปัจจุบัน
     st.markdown("**📌 แผนการเข้าเทรดรายวัน:**")
     if current_price <= ai_buy_zone_line * 1.005 and current_price >= ai_support_line:
         st.success(f"✅ **จังหวะซื้อได้เปรียบสูง (Strong Buy Alert):** ปัจจุบันราคาไหลลงมาสถิตอยู่ในโซนปลอดภัย **{ai_buy_zone_line:,.6f} USDT** ซึ่งเป็นทุนเฉลี่ยของวาฬส่วนใหญ่ มีโอกาสเกิดการเด้งกลับสูง!")
@@ -191,7 +204,7 @@ if not error_trigger:
     else:
         st.markdown(f"⏳ **รอการย่อตัว (Wait for Pullback):** ราคายังลอยอยู่ห่างจากจุดซื้อที่ปลอดภัย แนะนำให้ใจเย็นๆ รอกราฟย่อตัวลงมาหาป้ายราคา **{ai_buy_zone_line:,.6f} USDT**")
 
-# 7. สั่งกระตุ้นระบบรีเฟรชอัปเดตราคาแบบ Realtime ทุกๆ 5 วินาที
+# 7. ระบบสั่งกระตุ้นการรีเฟรชราคาทุกๆ 5 วินาที
 if auto_refresh:
     time.sleep(5)
     st.rerun()

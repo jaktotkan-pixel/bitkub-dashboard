@@ -14,7 +14,7 @@ st.subheader("ระบบวิเคราะห์ราคาเรียล
 @st.cache_data(ttl=3600)
 def get_binance_symbols():
     try:
-        url = "https://binance.com"
+        url = "https://binance.us"
         response = requests.get(url).json()
         # ปรับเงื่อนไขให้กรองเฉพาะเหรียญที่จับคู่กับ USDT และพร้อมให้เทรดจริงทั้งหมด
         symbols = [s['symbol'] for s in response['symbols'] if s['symbol'].endswith('USDT') and 'TRADING' in s.get('status', s.get('tradingStatus', ''))]
@@ -59,7 +59,7 @@ auto_refresh = st.sidebar.checkbox("เปิดระบบดึงราค�
 
 # 3. ฟังก์ชันดึงข้อมูลแท่งเทียนย้อนหลัง
 def get_klines(symbol, interval):
-    url = f"https://binance.com{symbol}&interval={interval}&limit=80"
+    url = f"https://binance.us{symbol}&interval={interval}&limit=80"
     data = requests.get(url).json()
     df = pd.DataFrame(data, columns=['Time', 'Open', 'High', 'Low', 'Close', 'Volume', '_', '_', '_', '_', '_', '_'])
     df['Time'] = pd.to_datetime(df['Time'], unit='ms')

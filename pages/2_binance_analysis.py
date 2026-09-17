@@ -14,7 +14,7 @@ st.subheader("ระบบวิเคราะห์ราคาเรียล
 @st.cache_data(ttl=3600)
 def get_binance_symbols():
     try:
-url = "https://binance.us"
+        url = "https://binance.us"
         response = requests.get(url).json()
         # ปรับเงื่อนไขให้กรองเฉพาะเหรียญที่จับคู่กับ USDT และพร้อมให้เทรดจริงทั้งหมด
         symbols = [s['symbol'] for s in response['symbols'] if s['symbol'].endswith('USDT') and 'TRADING' in s.get('status', s.get('tradingStatus', ''))]

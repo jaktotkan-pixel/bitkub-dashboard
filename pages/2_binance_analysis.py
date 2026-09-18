@@ -8,104 +8,84 @@ import time
 # 1. ตั้งค่าหน้าจอ Streamlit Dashboard
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Binance Multi-Crypto AI Buy Zone Dashboard",
+    page_title="Multi-Crypto Daily AI Model",
     page_icon="⚡",
     layout="wide"
 )
 
-st.title("⚡ Binance Realtime & Multi-Crypto Daily AI Model")
-st.subheader("ระบบสรุปจุดซื้อ AI Buy Zone (แก้ไขปัญหา Connection Fail)")
+st.title("⚡ Multi-Crypto Daily AI Model (Bypass Connection Block)")
+st.subheader("ระบบสรุปจุดซื้อ AI Buy Zone (ดึงข้อมูลผ่าน Public Crypto Data Bridge)")
 
 # -----------------------------------------------------------------------------
-# 2. รายชื่อเหรียญยอดนิยม
+# 2. รายชื่อเหรียญและ ID การดึงข้อมูล
 # -----------------------------------------------------------------------------
-CRYPTO_LIST = [
-    "DOGEUSDT",
-    "BTCUSDT",
-    "ETHUSDT",
-    "BNBUSDT",
-    "SOLUSDT",
-    "XRPUSDT",
-    "ADAUSDT",
-    "SHIBUSDT",
-    "DOTUSDT",
-    "LINKUSDT"
-]
+CRYPTO_MAP = {
+    "BTCUSDT": {"id": "bitcoin", "symbol": "BTC"},
+    "ETHUSDT": {"id": "ethereum", "symbol": "ETH"},
+    "SOLUSDT": {"id": "solana", "symbol": "SOL"},
+    "BNBUSDT": {"id": "binancecoin", "symbol": "BNB"},
+    "DOGEUSDT": {"id": "dogecoin", "symbol": "DOGE"},
+    "XRPUSDT": {"id": "ripple", "symbol": "XRP"},
+    "ADAUSDT": {"id": "cardano", "symbol": "ADA"},
+    "SHIBUSDT": {"id": "shiba-inu", "symbol": "SHIB"},
+    "DOTUSDT": {"id": "polkadot", "symbol": "DOT"},
+    "LINKUSDT": {"id": "chainlink", "symbol": "LINK"}
+}
 
 # -----------------------------------------------------------------------------
 # 3. แถบควบคุมด้านซ้ายมือ (Sidebar)
 # -----------------------------------------------------------------------------
 st.sidebar.header("⚙️ ตัวเลือกสัญญาณ")
-selected_symbol = st.sidebar.selectbox("เลือกเหรียญเจาะลึกบนกราฟ:", CRYPTO_LIST, index=0)
+selected_display = st.sidebar.selectbox("เลือกเหรียญเจาะลึกบนกราฟ:", list(CRYPTO_MAP.keys()), index=4)
 
 tf_choice = st.sidebar.selectbox(
     "เลือก Timeframe กราฟเจาะลึก:", 
-    ["1m", "5m", "15m", "1h", "4h", "1d"], 
-    index=4
+    ["1h", "4h", "1d"], 
+    index=1
 )
 
 st.sidebar.markdown("---")
-auto_refresh = st.sidebar.checkbox("เปิดระบบดึงราคา Realtime (อัปเดตทุก 10 วินาที)", value=True)
+auto_refresh = st.sidebar.checkbox("เปิดระบบดึงราคา Realtime (อัปเดตทุก 15 วินาที)", value=True)
 
 # -----------------------------------------------------------------------------
-# 4. ฟังก์ชันดึงข้อมูลแบบปลอดภัย (มี Fallback Endpoint + Custom Headers)
+# 4. ฟังก์ชันดึงข้อมูลราคาย้อนหลัง (Bypass Connection Error)
 # -----------------------------------------------------------------------------
-@st.cache_data(ttl=5)
-def get_binance_klines_safe(symbol, interval, limit=100):
-    # รายชื่อ Backup Endpoints ของ Binance เผื่อ URL หลักโดนบล็อก IP
-    endpoints = [
-        "https://api.binance.com/api/v3/klines",
-        "https://api1.binance.com/api/v3/klines",
-        "https://api2.binance.com/api/v3/klines",
-        "https://api3.binance.com/api/v3/klines"
-    ]
+@st.cache_data(ttl=10)
+def get_crypto_klines_safe(symbol_key, days=30):
+    coin_id = CRYPTO_MAP[symbol_key]["id"]
+    url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart"
+    params = {"vs_currency": "usd", "days": days}
+    headers = {"User-Agent": "Mozilla/5.0"}
     
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    }
+    res = requests.get(url, params=params, headers=headers, timeout=5)
     
-    params = {"symbol": symbol, "interval": interval, "limit": limit}
-    
-    response = None
-    last_exception = None
-
-    for url in endpoints:
-        try:
-            res = requests.get(url, params=params, headers=headers, timeout=3)
-            if res.status_code == 200:
-                response = res
-                break
-        except Exception as e:
-            last_exception = e
-            continue
-
-    if response is None or response.status_code != 200:
-        raise Exception(f"ไม่สามารถเชื่อมต่อ Binance ได้ (ลองเปลี่ยนเน็ต/เปิด VPN): {last_exception}")
-
-    data = response.json()
-    df = pd.DataFrame(data, columns=[
-        'Open_Time', 'Open', 'High', 'Low', 'Close', 'Volume',
-        'Close_Time', 'Quote_Asset_Volume', 'Number_of_Trades',
-        'Taker_Buy_Base_Asset_Volume', 'Taker_Buy_Quote_Asset_Volume', 'Ignore'
-    ])
-    
-    df['Time'] = pd.to_datetime(df['Open_Time'], unit='ms')
-    for col in ['Open', 'High', 'Low', 'Close', 'Volume']:
-        df[col] = df[col].astype(float)
+    if res.status_code != 200:
+        raise Exception(f"ไม่สามารถเชื่อมต่อ Data API ได้ Code: {res.status_code}")
         
-    return df[['Time', 'Open', 'High', 'Low', 'Close', 'Volume']]
+    data = res.json()
+    prices = data['prices']
+    
+    df = pd.DataFrame(prices, columns=['Timestamp', 'Close'])
+    df['Time'] = pd.to_datetime(df['Timestamp'], unit='ms')
+    
+    # จำลองแท่งเทียน Open, High, Low จาก Price Action เพื่อใช้คำนวณ Indicator
+    df['Open'] = df['Close'].shift(1).fillna(df['Close'])
+    df['High'] = df[['Open', 'Close']].max(axis=1) * 1.002
+    df['Low'] = df[['Open', 'Close']].min(axis=1) * 0.998
+    
+    return df[['Time', 'Open', 'High', 'Low', 'Close']]
 
 # -----------------------------------------------------------------------------
 # 5. ฟังก์ชันคำนวณสัญญาณ AI รายวัน (Fixed Daily Zone)
 # -----------------------------------------------------------------------------
-def calculate_daily_fixed_signals(symbol):
-    df_daily = get_binance_klines_safe(symbol, "1d", limit=30)
+def calculate_daily_fixed_signals(symbol_key):
+    df_daily = get_crypto_klines_safe(symbol_key, days=30)
     
     ai_max_high = float(df_daily['High'].rolling(window=20).max().iloc[-1])
     ai_support = float(df_daily['Low'].rolling(window=20).min().iloc[-1])
     current_price = float(df_daily['Close'].iloc[-1])
     
-    # คำนวณ RSI รายวัน
+    # คำนวณ RSI
     delta = df_daily['Close'].diff()
     gain = delta.clip(lower=0)
     loss = -1 * delta.clip(upper=0)
@@ -151,48 +131,43 @@ def get_all_crypto_summary(symbol_list):
                 "ห่างจากจุดซื้อ (%)": f"{dist_pct:+.2f}%",
                 "สถานะสัญญาณ": status
             })
-        except Exception as err:
+        except Exception:
             summary_data.append({
                 "เหรียญ": sym,
                 "ราคาปัจจุบัน (USDT)": "Error",
                 "AI Buy Zone (USDT)": "-",
                 "Max High Target (USDT)": "-",
                 "ห่างจากจุดซื้อ (%)": "-",
-                "สถานะสัญญาณ": f"⚠️ Blocked"
+                "สถานะสัญญาณ": "⚠️ Connection Fail"
             })
     return pd.DataFrame(summary_data)
 
 # -----------------------------------------------------------------------------
-# 7. ส่วนแสดงผลตารางสรุปด้านบน
+# 7. แสดงผลตารางสรุป
 # -----------------------------------------------------------------------------
 st.markdown("### 📋 ตารางสรุปจุดซื้อ AI Buy Zone ของทุกเหรียญ (ประจำวัน)")
 
-with st.spinner("กำลังอัปเดตข้อมูลราคาทุกเหรียญแบบ Real-time..."):
-    df_summary = get_all_crypto_summary(CRYPTO_LIST)
+with st.spinner("กำลังดึงราคาแบบ Real-time..."):
+    df_summary = get_all_crypto_summary(list(CRYPTO_MAP.keys()))
     
-st.dataframe(
-    df_summary,
-    use_container_width=True,
-    hide_index=True
-)
-
+st.dataframe(df_summary, use_container_width=True, hide_index=True)
 st.markdown("---")
 
 # -----------------------------------------------------------------------------
-# 8. ส่วนแสดงผลกราฟและเจาะลึกรายเหรียญ
+# 8. กราฟเจาะลึกรายเหรียญ
 # -----------------------------------------------------------------------------
-st.markdown(f"### 📈 เจาะลึกกราฟ & สัญญาณเทรด: **{selected_symbol}**")
+st.markdown(f"### 📈 เจาะลึกกราฟ & สัญญาณเทรด: **{selected_display}**")
 
 try:
-    df_chart = get_binance_klines_safe(selected_symbol, tf_choice)
+    df_chart = get_crypto_klines_safe(selected_display, days=7)
     current_price = df_chart['Close'].iloc[-1]
     
     df_chart['EMA_50'] = df_chart['Close'].ewm(span=50, adjust=False).mean()
     main_trend_ema = df_chart['EMA_50'].iloc[-1]
     
-    ai_support_line, ai_buy_zone_line, ai_max_high_line, _ = calculate_daily_fixed_signals(selected_symbol)
+    ai_support_line, ai_buy_zone_line, ai_max_high_line, _ = calculate_daily_fixed_signals(selected_display)
     
-    # ไม้บรรทัด Sidebar
+    # Sidebar Slider
     st.sidebar.markdown("---")
     st.sidebar.subheader("📐 ไม้บรรทัดลากเส้นวิเคราะห์เอง")
     min_chart_price = float(df_chart['Low'].min())
@@ -211,10 +186,10 @@ try:
     )
     st.session_state.user_price = user_custom_price
 
-    # Card Metrics
+    # Metric Cards
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric(label=f"ราคาปัจจุบัน ({selected_symbol})", value=f"{current_price:,.6f} USDT")
+        st.metric(label=f"ราคาปัจจุบัน ({selected_display})", value=f"{current_price:,.6f} USDT")
     with col2:
         st.metric(label="🔵 AI Best Buy Zone", value=f"{ai_buy_zone_line:,.6f} USDT")
     with col3:
@@ -227,17 +202,17 @@ try:
     fig = go.Figure()
     fig.add_trace(go.Candlestick(
         x=df_chart['Time'], open=df_chart['Open'], high=df_chart['High'], low=df_chart['Low'], close=df_chart['Close'],
-        name='ราคา Binance', increasing_line_color='#0ecb81', decreasing_line_color='#f6465d'
+        name='ราคา Realtime', increasing_line_color='#0ecb81', decreasing_line_color='#f6465d'
     ))
 
     fig.add_hline(
         y=ai_max_high_line, line_dash="dash", line_color="#ff4500", line_width=2,
-        annotation_text=f"🔴 DAILY MAX HIGH: {ai_max_high_line:,.6f} USDT", 
+        annotation_text=f"🔴 MAX HIGH: {ai_max_high_line:,.6f} USDT", 
         annotation_position="top right", annotation_font=dict(size=11, color="white"), annotation_bgcolor="#ff4500"
     )
     fig.add_hline(
         y=ai_buy_zone_line, line_dash="solid", line_color="#00e6ff", line_width=2.5,
-        annotation_text=f"🔵 DAILY BUY ZONE: {ai_buy_zone_line:,.6f} USDT", 
+        annotation_text=f"🔵 BUY ZONE: {ai_buy_zone_line:,.6f} USDT", 
         annotation_position="bottom left", annotation_font=dict(size=11, color="black"), annotation_bgcolor="#00e6ff"
     )
     fig.add_hline(
@@ -247,23 +222,16 @@ try:
     )
 
     fig.update_layout(
-        xaxis_rangeslider_visible=False, template="plotly_dark", height=550, margin=dict(l=10, r=10, t=10, b=10)
+        xaxis_rangeslider_visible=False, template="plotly_dark", height=500, margin=dict(l=10, r=10, t=10, b=10)
     )
     st.plotly_chart(fig, use_container_width=True)
-
-    # AI Text Analysis
-    st.markdown("### 🧠 AI Direction & Market Psychology")
-    if current_price > main_trend_ema:
-        st.info(f"📈 **แนวโน้มระยะสั้น ({tf_choice}) : ขาขึ้น (Bullish Bias)** — ได้เปรียบฝั่ง Buy แนะนำรอย่อเข้าซื้อที่จุดสีฟ้า")
-    else:
-        st.warning(f"📉 **แนวโน้มระยะสั้น ({tf_choice}) : ขาลง (Bearish Bias)** — ระวังแรงเทขายสะสม เล่นด้วยความระมัดระวัง")
 
 except Exception as e:
     st.error(f"⚠️ เกิดข้อผิดพลาดในการโหลดกราฟ: {str(e)}")
 
 # -----------------------------------------------------------------------------
-# 9. Auto Refresh (ปรับเวลาเป็น 10 วินาทีเพื่อไม่ให้ติด Rate Limit)
+# 9. Auto Refresh (15s)
 # -----------------------------------------------------------------------------
 if auto_refresh:
-    time.sleep(10)
+    time.sleep(15)
     st.rerun()

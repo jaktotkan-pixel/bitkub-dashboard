@@ -56,7 +56,7 @@ st.sidebar.markdown("---")
 auto_refresh = st.sidebar.checkbox("เปิดระบบดึงราคา Realtime (อัปเดตทุก 30 วินาที)", value=True)
 
 # -----------------------------------------------------------------------------
-# 4. ฟังก์ชันดึงข้อมูลแบบ Batch (ยิงทีเดียว 10 เหรียญ กัน Rate Limit)
+# 4. ฟังก์ชันดึงข้อมูลแบบ Batch
 # -----------------------------------------------------------------------------
 @st.cache_data(ttl=25)
 def get_all_crypto_daily_data():
@@ -129,7 +129,6 @@ try:
                 sup, buy_zone, max_high, price = process_daily_ai_signals(df_sym)
                 dist_pct = ((price - buy_zone) / buy_zone) * 100
                 
-                # จำแนกสถานะสัญญาณ
                 if price <= buy_zone * 1.005 and price >= sup:
                     status = "✅ Strong Buy Zone"
                 elif price < sup:
@@ -159,7 +158,6 @@ try:
                 
         df_full_summary = pd.DataFrame(summary_list)
         
-        # กรองข้อมูลตามที่ผู้ใช้เลือกใน Sidebar
         if status_filter:
             df_filtered = df_full_summary[df_full_summary['สถานะสัญญาณ'].isin(status_filter)]
         else:
@@ -173,7 +171,7 @@ except Exception as e:
 st.markdown("---")
 
 # -----------------------------------------------------------------------------
-# 7. แสดงผลกราฟเจาะลึกรายเหรียญ
+# 7. แสดงผลกราฟเจาะลึกรายเหรียญ (ตัดส่วนไม้บรรทัดออกแล้ว)
 # -----------------------------------------------------------------------------
 st.markdown(f"### 📈 เจาะลึกกราฟ & สัญญาณเทรด: **{selected_display}**")
 
@@ -181,44 +179,19 @@ try:
     df_chart = get_single_crypto_detail(selected_display, tf_choice)
     current_price = df_chart['Close'].iloc[-1]
     
-    df_chart['EMA_50'] = df_chart['Close'].ewm(span=50, adjust=False).mean()
-    main_trend_ema = df_chart['EMA_50'].iloc[-1]
-    
     df_daily_single = all_data[CRYPTO_MAP[selected_display]].copy()
     ai_support_line, ai_buy_zone_line, ai_max_high_line, _ = process_daily_ai_signals(df_daily_single)
     
-    # Sidebar Slider
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("📐 ไม้บรรทัดลากเส้นวิเคราะห์เอง")
-    min_chart_price = float(df_chart['Low'].min())
-    max_chart_price = float(df_chart['High'].max())
-    
-    if "user_price" not in st.session_state:
-        st.session_state.user_price = float(current_price)
-
-    user_custom_price = st.sidebar.slider(
-        "เลื่อนเพื่อลากเส้นปรับระดับราคา:",
-        min_value=min_chart_price,
-        max_value=max_chart_price,
-        value=st.session_state.user_price,
-        step=(max_chart_price - min_chart_price) / 500,
-        format="%.6f"
-    )
-    st.session_state.user_price = user_custom_price
-
-    # Card Metrics
-    col1, col2, col3, col4 = st.columns(4)
+    # Card Metrics (เหลือ 3 การ์ดหลัก)
+    col1, col2, col3 = st.columns(3)
     with col1:
         st.metric(label=f"ราคาปัจจุบัน ({selected_display})", value=f"{current_price:,.6f} USDT")
     with col2:
         st.metric(label="🔵 AI Best Buy Zone", value=f"{ai_buy_zone_line:,.6f} USDT")
     with col3:
         st.metric(label="🔴 AI Max High Target", value=f"{ai_max_high_line:,.6f} USDT")
-    with col4:
-        user_dist = ((user_custom_price - current_price) / current_price) * 100
-        st.metric(label="✏️ เส้นวิเคราะห์ส่วนตัว", value=f"{user_custom_price:,.6f} USDT", delta=f"{user_dist:.2f}%")
 
-    # Chart
+    # Plotly Chart
     fig = go.Figure()
     fig.add_trace(go.Candlestick(
         x=df_chart['Time'], open=df_chart['Open'], high=df_chart['High'], low=df_chart['Low'], close=df_chart['Close'],
@@ -234,11 +207,6 @@ try:
         y=ai_buy_zone_line, line_dash="solid", line_color="#00e6ff", line_width=2.5,
         annotation_text=f"🔵 BUY ZONE: {ai_buy_zone_line:,.6f} USDT", 
         annotation_position="bottom left", annotation_font=dict(size=11, color="black"), annotation_bgcolor="#00e6ff"
-    )
-    fig.add_hline(
-        y=user_custom_price, line_dash="dashdot", line_color="#ffff00", line_width=3,
-        annotation_text=f"🟡 เส้นของคุณ: {user_custom_price:,.6f} USDT", 
-        annotation_position="top left", annotation_font=dict(size=12, color="black"), annotation_bgcolor="#ffff00"
     )
 
     fig.update_layout(

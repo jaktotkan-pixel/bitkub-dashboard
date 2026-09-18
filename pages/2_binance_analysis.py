@@ -13,8 +13,8 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("⚡ Multi-Crypto Daily AI Model (Rate Limit Fixed)")
-st.subheader("ระบบสรุปจุดซื้อ AI Buy Zone (แก้ไขปัญหา HTTP 429 Rate Limit)")
+st.title("⚡ Multi-Crypto Daily AI Model")
+st.subheader("ระบบสรุปจุดซื้อ AI Buy Zone พร้อมระบบกรองสถานะสัญญาณ")
 
 # -----------------------------------------------------------------------------
 # 2. รายชื่อเหรียญและ Ticker บน Yahoo Finance
@@ -36,6 +36,14 @@ CRYPTO_MAP = {
 # 3. แถบควบคุมด้านซ้ายมือ (Sidebar)
 # -----------------------------------------------------------------------------
 st.sidebar.header("⚙️ ตัวเลือกสัญญาณ")
+
+# ตัวกรองสถานะสัญญาณในตาราง
+status_filter = st.sidebar.multiselect(
+    "🎯 กรองสถานะสัญญาณในตาราง:",
+    options=["✅ Strong Buy Zone", "👀 Near Buy Zone", "⏳ Waiting", "🚨 Panic Breakout"],
+    default=["✅ Strong Buy Zone", "👀 Near Buy Zone", "⏳ Waiting", "🚨 Panic Breakout"]
+)
+
 selected_display = st.sidebar.selectbox("เลือกเหรียญเจาะลึกบนกราฟ:", list(CRYPTO_MAP.keys()), index=4)
 
 tf_choice = st.sidebar.selectbox(
@@ -48,12 +56,11 @@ st.sidebar.markdown("---")
 auto_refresh = st.sidebar.checkbox("เปิดระบบดึงราคา Realtime (อัปเดตทุก 30 วินาที)", value=True)
 
 # -----------------------------------------------------------------------------
-# 4. ฟังก์ชันดึงข้อมูลแบบ Batch (ดึง 10 เหรียญพร้อมกันใน Request เดียว ไม่ติด Rate Limit)
+# 4. ฟังก์ชันดึงข้อมูลแบบ Batch (ยิงทีเดียว 10 เหรียญ กัน Rate Limit)
 # -----------------------------------------------------------------------------
 @st.cache_data(ttl=25)
 def get_all_crypto_daily_data():
     tickers = list(CRYPTO_MAP.values())
-    # ดึงข้อมูลรวดเดียว 10 เหรียญ ป้องกันการโดนบล็อก
     data = yf.download(tickers=tickers, period="30d", interval="1d", group_by="ticker", progress=False)
     return data
 
@@ -80,7 +87,7 @@ def get_single_crypto_detail(symbol_key, tf):
     return df[['Time', 'Open', 'High', 'Low', 'Close']]
 
 # -----------------------------------------------------------------------------
-# 5. ฟังก์ชันคำนวณสัญญาณ AI รายวัน (Fixed Daily Zone)
+# 5. ฟังก์ชันคำนวณสัญญาณ AI รายวัน
 # -----------------------------------------------------------------------------
 def process_daily_ai_signals(df_symbol):
     df_symbol = df_symbol.dropna(subset=['Close'])
@@ -88,7 +95,6 @@ def process_daily_ai_signals(df_symbol):
     ai_support = float(df_symbol['Low'].rolling(window=20).min().iloc[-1])
     current_price = float(df_symbol['Close'].iloc[-1])
     
-    # คำนวณ RSI
     delta = df_symbol['Close'].diff()
     gain = delta.clip(lower=0)
     loss = -1 * delta.clip(upper=0)
@@ -108,7 +114,7 @@ def process_daily_ai_signals(df_symbol):
     return ai_support, ai_buy_zone, ai_max_high, current_price
 
 # -----------------------------------------------------------------------------
-# 6. แสดงผลตารางสรุป 10 เหรียญด้านบน
+# 6. แสดงผลตารางสรุป + ระบบกรองสถานะสัญญาณ
 # -----------------------------------------------------------------------------
 st.markdown("### 📋 ตารางสรุปจุดซื้อ AI Buy Zone ของทุกเหรียญ (ประจำวัน)")
 
@@ -123,6 +129,7 @@ try:
                 sup, buy_zone, max_high, price = process_daily_ai_signals(df_sym)
                 dist_pct = ((price - buy_zone) / buy_zone) * 100
                 
+                # จำแนกสถานะสัญญาณ
                 if price <= buy_zone * 1.005 and price >= sup:
                     status = "✅ Strong Buy Zone"
                 elif price < sup:
@@ -150,7 +157,16 @@ try:
                     "สถานะสัญญาณ": "⚠️ Data Error"
                 })
                 
-        st.dataframe(pd.DataFrame(summary_list), use_container_width=True, hide_index=True)
+        df_full_summary = pd.DataFrame(summary_list)
+        
+        # กรองข้อมูลตามที่ผู้ใช้เลือกใน Sidebar
+        if status_filter:
+            df_filtered = df_full_summary[df_full_summary['สถานะสัญญาณ'].isin(status_filter)]
+        else:
+            df_filtered = df_full_summary
+
+        st.dataframe(df_filtered, use_container_width=True, hide_index=True)
+
 except Exception as e:
     st.error(f"⚠️ เกิดข้อผิดพลาดในการโหลดตารางสรุป: {str(e)}")
 
@@ -168,7 +184,6 @@ try:
     df_chart['EMA_50'] = df_chart['Close'].ewm(span=50, adjust=False).mean()
     main_trend_ema = df_chart['EMA_50'].iloc[-1]
     
-    # สัญญาณรายวันสำหรับสร้างเส้นแนวนอน
     df_daily_single = all_data[CRYPTO_MAP[selected_display]].copy()
     ai_support_line, ai_buy_zone_line, ai_max_high_line, _ = process_daily_ai_signals(df_daily_single)
     
@@ -191,7 +206,7 @@ try:
     )
     st.session_state.user_price = user_custom_price
 
-    # Cards Summary
+    # Card Metrics
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric(label=f"ราคาปัจจุบัน ({selected_display})", value=f"{current_price:,.6f} USDT")
@@ -203,7 +218,7 @@ try:
         user_dist = ((user_custom_price - current_price) / current_price) * 100
         st.metric(label="✏️ เส้นวิเคราะห์ส่วนตัว", value=f"{user_custom_price:,.6f} USDT", delta=f"{user_dist:.2f}%")
 
-    # Plotly Chart
+    # Chart
     fig = go.Figure()
     fig.add_trace(go.Candlestick(
         x=df_chart['Time'], open=df_chart['Open'], high=df_chart['High'], low=df_chart['Low'], close=df_chart['Close'],
@@ -235,7 +250,7 @@ except Exception as e:
     st.error(f"⚠️ เกิดข้อผิดพลาดในการโหลดกราฟ: {str(e)}")
 
 # -----------------------------------------------------------------------------
-# 8. Auto Refresh (30s เพื่อประหยัด Bandwidth)
+# 8. Auto Refresh (30s)
 # -----------------------------------------------------------------------------
 if auto_refresh:
     time.sleep(30)

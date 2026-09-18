@@ -4,17 +4,21 @@ import requests
 import plotly.graph_objects as go
 import time
 
-# 1. ตั้งค่าหน้าจอแดชบอร์ด
+# -----------------------------------------------------------------------------
+# 1. ตั้งค่าหน้าจอ Streamlit Dashboard (Wide Mode)
+# -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Binance Realtime AI Dashboard",
+    page_title="Binance Realtime vs Daily AI Model",
     page_icon="⚡",
     layout="wide"
 )
 
-st.title("⚡ Binance Realtime Market & AI Analysis")
-st.subheader("ดึงข้อมูลตรงจาก Binance API แบบ Real-time (ไม่ผ่าน yfinance)")
+st.title("⚡ Binance Realtime & Fixed Daily AI Model")
+st.subheader("ระบบ AI ล็อกแนวรับ-จุดซื้อรายวัน (Daily Fixed Zone) + ไม้บรรทัดลากเส้นวิเคราะห์เอง")
 
-# 2. รายชื่อเหรียญยอดนิยมคู่ USDT บน Binance (ใช้ Symbol ตรงของ Binance)
+# -----------------------------------------------------------------------------
+# 2. รายชื่อเหรียญยอดนิยมคู่ USDT บน Binance
+# -----------------------------------------------------------------------------
 CRYPTO_LIST = [
     "DOGEUSDT",
     "BTCUSDT",
@@ -28,22 +32,25 @@ CRYPTO_LIST = [
     "LINKUSDT"
 ]
 
+# -----------------------------------------------------------------------------
 # 3. แถบควบคุมด้านซ้ายมือ (Sidebar)
+# -----------------------------------------------------------------------------
 st.sidebar.header("⚙️ ตัวเลือกสัญญาณ")
 selected_symbol = st.sidebar.selectbox("เลือกเหรียญ (Binance Pair):", CRYPTO_LIST, index=0)
 
-# Binance API รองรับ timeframe เหล่านี้โดยตรง: 1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M
 tf_choice = st.sidebar.selectbox(
-    "เลือก Timeframe:", 
+    "เลือก Timeframe แสดงกราฟ:", 
     ["1m", "5m", "15m", "1h", "4h", "1d"], 
-    index=4  # ล็อกไว้ที่ 4h เป็นค่าเริ่มต้น
+    index=4  # ค่าเริ่มต้น 4h
 )
 
 st.sidebar.markdown("---")
 auto_refresh = st.sidebar.checkbox("เปิดระบบดึงราคา Realtime (อัปเดตทุก 5 วินาที)", value=True)
 
-# 4. ฟังก์ชันดึงข้อมูลแท่งเทียนจาก Binance API โดยตรง (Public REST API)
-@st.cache_data(ttl=3) # Cache ข้อมูลไว้ 3 วินาที ป้องกันการยิง API ซ้ำซ้อน
+# -----------------------------------------------------------------------------
+# 4. ฟังก์ชันดึงข้อมูลแท่งเทียนจาก Binance API โดยตรง
+# -----------------------------------------------------------------------------
+@st.cache_data(ttl=3)  # Cache ข้อมูลไว้ 3 วินาที เพื่อป้องกันการยิง API ถี่เกินไป
 def get_binance_klines(symbol, interval, limit=100):
     url = "https://api.binance.com/api/v3/klines"
     params = {
@@ -59,31 +66,31 @@ def get_binance_klines(symbol, interval, limit=100):
         
     data = response.json()
     
-    # Binance klines Format:
-    # [ Open time, Open, High, Low, Close, Volume, Close time, ... ]
     df = pd.DataFrame(data, columns=[
         'Open_Time', 'Open', 'High', 'Low', 'Close', 'Volume',
         'Close_Time', 'Quote_Asset_Volume', 'Number_of_Trades',
         'Taker_Buy_Base_Asset_Volume', 'Taker_Buy_Quote_Asset_Volume', 'Ignore'
     ])
     
-    # แปลงชนิดข้อมูลตัวเลขและเวลา
     df['Time'] = pd.to_datetime(df['Open_Time'], unit='ms')
     for col in ['Open', 'High', 'Low', 'Close', 'Volume']:
         df[col] = df[col].astype(float)
         
     return df[['Time', 'Open', 'High', 'Low', 'Close', 'Volume']]
 
-# 5. ฟังก์ชันคำนวณ AI Indicator Signals
-def calculate_ai_signals(df):
-    ai_max_high = float(df['High'].rolling(window=20).max().iloc[-1])
-    ai_support = float(df['Low'].rolling(window=20).min().iloc[-1])
+# -----------------------------------------------------------------------------
+# 5. ฟังก์ชันคำนวณสัญญาณ AI แบบ "รายวัน" (Fixed Daily Zone)
+# -----------------------------------------------------------------------------
+def calculate_daily_fixed_signals(symbol):
+    # ดึงข้อมูลกราฟ 1 วัน (1d) ย้อนหลัง 30 วันมาคำนวณเส้นหลัก
+    df_daily = get_binance_klines(symbol, "1d", limit=30)
     
-    df['EMA_50'] = df['Close'].ewm(span=50, adjust=False).mean()
-    current_ema = df['EMA_50'].iloc[-1]
+    # แนวต้านสูงสุด และแนวรับต่ำสุดในรอบ 20 วัน
+    ai_max_high = float(df_daily['High'].rolling(window=20).max().iloc[-1])
+    ai_support = float(df_daily['Low'].rolling(window=20).min().iloc[-1])
     
-    # คำนวณ RSI แบบมาตรฐาน (Wilder's Exponential Moving Average)
-    delta = df['Close'].diff()
+    # คำนวณ RSI รายวัน (Standard Wilder's Smoothing)
+    delta = df_daily['Close'].diff()
     gain = delta.clip(lower=0)
     loss = -1 * delta.clip(upper=0)
     
@@ -92,35 +99,51 @@ def calculate_ai_signals(df):
     
     rs = avg_gain / (avg_loss + 1e-10)
     rsi = 100 - (100 / (1 + rs))
-    last_rsi = rsi.iloc[-1] if not rsi.empty else 50
+    last_daily_rsi = rsi.iloc[-1] if not rsi.empty else 50
     
-    avg_price = df['Close'].rolling(window=10).mean().iloc[-1]
-    if last_rsi < 40:
-        ai_buy_zone = avg_price * 0.995
+    # ราคาเฉลี่ย 10 วันย้อนหลัง
+    avg_daily_price = df_daily['Close'].rolling(window=10).mean().iloc[-1]
+    
+    # คำนวณจุดซื้อประจำวัน
+    if last_daily_rsi < 40:
+        ai_buy_zone = avg_daily_price * 0.995 
     else:
         ai_buy_zone = ai_support * 1.002
         
-    return ai_support, ai_buy_zone, ai_max_high, current_ema
+    return ai_support, ai_buy_zone, ai_max_high
 
-# ประมวลผลรันระบบ
+# -----------------------------------------------------------------------------
+# 6. บล็อกประมวลผลข้อมูล Real-time
+# -----------------------------------------------------------------------------
 try:
+    # 6.1 ดึงข้อมูลตาม Timeframe ย่อยที่ผู้ใช้เลือกมาโชว์บนกราฟ
     df = get_binance_klines(selected_symbol, tf_choice)
     current_price = df['Close'].iloc[-1]
-    ai_support_line, ai_buy_zone_line, ai_max_high_line, main_trend_ema = calculate_ai_signals(df)
+    
+    # 6.2 คำนวณเส้นเฉลี่ยระยะสั้น EMA50 สำหรับดูแนวโน้ม
+    df['EMA_50'] = df['Close'].ewm(span=50, adjust=False).mean()
+    main_trend_ema = df['EMA_50'].iloc[-1]
+    
+    # 6.3 ดึงค่าแนวรับ-แนวต้านรายวัน (Fixed Lines)
+    ai_support_line, ai_buy_zone_line, ai_max_high_line = calculate_daily_fixed_signals(selected_symbol)
+    
     error_trigger = False
 except Exception as e:
     error_trigger = True
-    st.error(f"⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อกับ Binance API: {str(e)}")
+    st.error(f"⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อข้อมูล: {str(e)}")
 
+# -----------------------------------------------------------------------------
+# 7. แสดงผลส่วนอินเทอร์เฟซ Dashboard
+# -----------------------------------------------------------------------------
 if not error_trigger:
-    # 📌 ไม้บรรทัดสไลเดอร์
+    # 📐 ไม้บรรทัดลากเส้นปรับระดับราคาเองด้านซ้าย
     st.sidebar.markdown("---")
     st.sidebar.subheader("📐 ไม้บรรทัดลากเส้นวิเคราะห์เอง")
     
     min_chart_price = float(df['Low'].min())
     max_chart_price = float(df['High'].max())
     
-    # ใช้ session_state เพื่อจำค่าตำแหน่งเส้นที่คุณลากไว้ ไม่ให้โดนรีเซ็ตเมื่อหน้ารีเฟรช
+    # ล็อกค่าสไลเดอร์ไว้ใน session_state ไม่ให้เด้งกลับเมื่อหน้ารีเฟรช
     if "user_price" not in st.session_state:
         st.session_state.user_price = float(current_price)
 
@@ -134,19 +157,19 @@ if not error_trigger:
     )
     st.session_state.user_price = user_custom_price
 
-    # 6. กล่องสรุปสถิติราคา Real-time ด้านบน
+    # 📊 การ์ดแสดงสถิติตัวเลขด้านบน
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric(label=f"ราคาปัจจุบัน ({selected_symbol})", value=f"{current_price:,.6f} USDT")
     with col2:
-        st.metric(label="🔵 AI Best Buy Zone", value=f"{ai_buy_zone_line:,.6f} USDT")
+        st.metric(label="🔵 AI Best Buy Zone (รายวัน)", value=f"{ai_buy_zone_line:,.6f} USDT")
     with col3:
-        st.metric(label="🔴 AI Max High Target", value=f"{ai_max_high_line:,.6f} USDT")
+        st.metric(label="🔴 AI Max High Target (รายวัน)", value=f"{ai_max_high_line:,.6f} USDT")
     with col4:
         user_dist = ((user_custom_price - current_price) / current_price) * 100
         st.metric(label="✏️ เส้นวิเคราะห์ส่วนตัว", value=f"{user_custom_price:,.6f} USDT", delta=f"{user_dist:.2f}%")
 
-    # 7. สร้างกราฟ Plotly แสดงแท่งเทียน Real-time
+    # 📈 สร้างกราฟแท่งเทียน Candlestick
     fig = go.Figure()
 
     fig.add_trace(go.Candlestick(
@@ -155,25 +178,25 @@ if not error_trigger:
         increasing_line_color='#0ecb81', decreasing_line_color='#f6465d'
     ))
 
-    # เส้น Max High Target
+    # 1. เส้น Max High รายวัน (สีแดงส้ม)
     fig.add_hline(
         y=ai_max_high_line, line_dash="dash", line_color="#ff4500", line_width=2,
-        annotation_text=f"🔴 MAX HIGH: {ai_max_high_line:,.6f} USDT", 
+        annotation_text=f"🔴 DAILY MAX HIGH: {ai_max_high_line:,.6f} USDT", 
         annotation_position="top right",
         annotation_font=dict(size=11, color="white"),
         annotation_bgcolor="#ff4500"
     )
     
-    # เส้น AI Buy Zone
+    # 2. เส้นจุดช้อนซื้อรายวัน (สีฟ้านีออน - ล็อกค่านิ่งตลอดวัน)
     fig.add_hline(
         y=ai_buy_zone_line, line_dash="solid", line_color="#00e6ff", line_width=2.5,
-        annotation_text=f"🔵 AI BUY ZONE: {ai_buy_zone_line:,.6f} USDT", 
+        annotation_text=f"🔵 DAILY BUY ZONE: {ai_buy_zone_line:,.6f} USDT", 
         annotation_position="bottom left",
         annotation_font=dict(size=11, color="black"),
         annotation_bgcolor="#00e6ff"
     )
 
-    # เส้นวิเคราะห์ลากเอง
+    # 3. เส้นวิเคราะห์ลากเอง (สีเหลืองสะท้อนแสง)
     fig.add_hline(
         y=user_custom_price, line_dash="dashdot", line_color="#ffff00", line_width=3,
         annotation_text=f"🟡 เส้นวิเคราะห์ของคุณ: {user_custom_price:,.6f} USDT", 
@@ -191,24 +214,26 @@ if not error_trigger:
 
     st.plotly_chart(fig, use_container_width=True)
 
-    # 8. บทวิเคราะห์ AI
+    # 🧠 บทวิเคราะห์ AI
     st.markdown("---")
     st.markdown("### 🧠 AI Trading Direction & Market Psychology Analysis")
     
     if current_price > main_trend_ema:
-        st.info(f"📈 **แนวโน้มทิศทางกรอบเวลา {tf_choice} : เป็นขาขึ้นเชิงบวก (Bullish Bias)**\n\nโครงสร้างราคาฝั่ง Buy กำลังได้เปรียบ แนะนำเน้นดักช้อนซื้อเมื่อราคาเกิดการย่อตัวลงมาหาป้ายราคาเส้นสีฟ้า")
+        st.info(f"📈 **แนวโน้มทิศทางในระยะสั้น ({tf_choice}) : ขาขึ้น (Bullish Bias)**\n\nโครงสร้างราคาระยะสั้นได้เปรียบฝั่ง Buy แนะนำรอย่อตัวเข้าซื้อบริเวณจุดซื้อปลอดภัยรายวันเส้นสีฟ้า")
     else:
-        st.warning(f"📉 **แนวโน้มทิศทางกรอบเวลา {tf_choice} : เป็นขาลงคุมตลาด (Bearish Bias)**\n\nระวังแรงเทขายสะสมตามโครงสร้างใหญ่ที่มีแรงกดดัน แนะนำเล่นด้วยความระมัดระวังและตั้งจุดรับไว้ที่ป้ายปลอดภัย")
+        st.warning(f"📉 **แนวโน้มทิศทางในระยะสั้น ({tf_choice}) : ขาลง (Bearish Bias)**\n\nระวังแรงเทขายสะสมตามโครงสร้างย่อย แนะนำเล่นด้วยความระมัดระวัง")
 
-    st.markdown("**📌 แผนการเข้าเทรดรายวัน:**")
+    st.markdown("**📌 แผนการเข้าเทรดประจำวัน:**")
     if current_price <= ai_buy_zone_line * 1.005 and current_price >= ai_support_line:
-        st.success(f"✅ **จังหวะซื้อได้เปรียบสูง (Strong Buy Alert):** ปัจจุบันราคาไหลลงมาสถิตอยู่ในโซนปลอดภัย **{ai_buy_zone_line:,.6f} USDT** มีโอกาสเกิดการเด้งกลับสูง!")
+        st.success(f"✅ **จังหวะซื้อได้เปรียบสูง (Strong Buy Alert):** ปัจจุบันราคาลงมาถึงโซนซื้อปลอดภัยประจำวัน **{ai_buy_zone_line:,.6f} USDT** มีโอกาสเกิดการตั้งฐานเด้งกลับ!")
     elif current_price < ai_support_line:
-        st.error(f"🚨 **จุดอันตราย (Panic Breakout):** ราคาหลุดทะลุป้ายแนวรับด้านล่างลงมาแล้ว ตลาดกำลังตื่นตระหนก แนะนำให้ชะลอการเข้าซื้อ")
+        st.error(f"🚨 **จุดอันตราย (Panic Breakout):** ราคาหลุดแนวรับรายวันลงมาแล้ว ชะลอการเข้าซื้อและรอประเมินสถานการณ์")
     else:
-        st.markdown(f"⏳ **รอการย่อตัว (Wait for Pullback):** ราคายังลอยอยู่ห่างจากจุดซื้อที่ปลอดภัย แนะนำให้ใจเย็นๆ รอกราฟย่อตัวลงมาหาป้ายราคา **{ai_buy_zone_line:,.6f} USDT**")
+        st.markdown(f"⏳ **รอการย่อตัว (Wait for Pullback):** ราคายังลอยอยู่สูง แนะนำให้ตั้งรับรอซื้อบริเวณ **{ai_buy_zone_line:,.6f} USDT**")
 
-# 9. ลูปอัปเดตอัตโนมัติ Realtime
+# -----------------------------------------------------------------------------
+# 8. ลูปสั่งอัปเดตราคาแบบ Auto-Refresh
+# -----------------------------------------------------------------------------
 if auto_refresh:
     time.sleep(5)
     st.rerun()

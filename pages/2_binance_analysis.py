@@ -33,7 +33,7 @@ CRYPTO_MAP = {
 }
 
 # -----------------------------------------------------------------------------
-# 3. แถบควบคุมด้านซ้ายมือ (Sidebar) - ตัดไม้บรรทัดออกเรียบร้อย
+# 3. แถบควบคุมด้านซ้ายมือ (Sidebar)
 # -----------------------------------------------------------------------------
 st.sidebar.header("⚙️ ตัวเลือกสัญญาณ")
 
@@ -56,7 +56,7 @@ st.sidebar.markdown("---")
 auto_refresh = st.sidebar.checkbox("เปิดระบบดึงราคา Realtime (อัปเดตทุก 30 วินาที)", value=True)
 
 # -----------------------------------------------------------------------------
-# 4. ฟังก์ชันดึงข้อมูลแบบ Batch
+# 4. ฟังก์ชันดึงข้อมูลแบบ Batch (รวบยิง 10 เหรียญในครั้งเดียว กัน Rate Limit)
 # -----------------------------------------------------------------------------
 @st.cache_data(ttl=25)
 def get_all_crypto_daily_data():
@@ -171,7 +171,7 @@ except Exception as e:
 st.markdown("---")
 
 # -----------------------------------------------------------------------------
-# 7. แสดงผลกราฟเจาะลึกรายเหรียญ
+# 7. แสดงผลกราฟเจาะลึกรายเหรียญ (พร้อมเส้นกากบาท Crosshair เช็กราคา)
 # -----------------------------------------------------------------------------
 st.markdown(f"### 📈 เจาะลึกกราฟ & สัญญาณเทรด: **{selected_display}**")
 
@@ -209,9 +209,19 @@ try:
         annotation_position="bottom left", annotation_font=dict(size=11, color="black"), annotation_bgcolor="#00e6ff"
     )
 
+    # ตั้งค่ากราฟ + เปิดเส้น Crosshairs และ Spikelines แบบ Binance
     fig.update_layout(
-        xaxis_rangeslider_visible=False, template="plotly_dark", height=500, margin=dict(l=10, r=10, t=10, b=10)
+        xaxis_rangeslider_visible=False,
+        template="plotly_dark",
+        height=500,
+        margin=dict(l=10, r=10, t=10, b=10),
+        hovermode="x unified"
     )
+    
+    # เพิ่มเส้นปะแนวตั้ง/แนวนอนวิ่งตามหัวเมาส์
+    fig.update_xaxes(showspikes=True, spikecolor="gray", spikethickness=1, spikedash="dot", spikemode="across")
+    fig.update_yaxes(showspikes=True, spikecolor="gray", spikethickness=1, spikedash="dot", spikemode="across")
+
     st.plotly_chart(fig, use_container_width=True)
 
 except Exception as e:

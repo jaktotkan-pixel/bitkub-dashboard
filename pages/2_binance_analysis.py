@@ -33,7 +33,7 @@ CRYPTO_MAP = {
 }
 
 # -----------------------------------------------------------------------------
-# 3. แถบควบคุมด้านซ้ายมือ (Sidebar)
+# 3. แถบควบคุมด้านซ้ายมือ (Sidebar) - ตัดไม้บรรทัดออกเรียบร้อย
 # -----------------------------------------------------------------------------
 st.sidebar.header("⚙️ ตัวเลือกสัญญาณ")
 
@@ -171,7 +171,7 @@ except Exception as e:
 st.markdown("---")
 
 # -----------------------------------------------------------------------------
-# 7. แสดงผลกราฟเจาะลึกรายเหรียญ (ตัดส่วนไม้บรรทัดออกแล้ว)
+# 7. แสดงผลกราฟเจาะลึกรายเหรียญ
 # -----------------------------------------------------------------------------
 st.markdown(f"### 📈 เจาะลึกกราฟ & สัญญาณเทรด: **{selected_display}**")
 
@@ -182,7 +182,7 @@ try:
     df_daily_single = all_data[CRYPTO_MAP[selected_display]].copy()
     ai_support_line, ai_buy_zone_line, ai_max_high_line, _ = process_daily_ai_signals(df_daily_single)
     
-    # Card Metrics (เหลือ 3 การ์ดหลัก)
+    # Card Metrics 3 การ์ดหลัก
     col1, col2, col3 = st.columns(3)
     with col1:
         st.metric(label=f"ราคาปัจจุบัน ({selected_display})", value=f"{current_price:,.6f} USDT")

@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import requests
+import yfinance as yf
 import plotly.graph_objects as go
 import time
 
@@ -13,23 +13,23 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("⚡ Multi-Crypto Daily AI Model (Bypass Connection Block)")
-st.subheader("ระบบสรุปจุดซื้อ AI Buy Zone (ดึงข้อมูลผ่าน Public Crypto Data Bridge)")
+st.title("⚡ Multi-Crypto Daily AI Model (Rate Limit Fixed)")
+st.subheader("ระบบสรุปจุดซื้อ AI Buy Zone (แก้ไขปัญหา HTTP 429 Rate Limit)")
 
 # -----------------------------------------------------------------------------
-# 2. รายชื่อเหรียญและ ID การดึงข้อมูล
+# 2. รายชื่อเหรียญและ Ticker บน Yahoo Finance
 # -----------------------------------------------------------------------------
 CRYPTO_MAP = {
-    "BTCUSDT": {"id": "bitcoin", "symbol": "BTC"},
-    "ETHUSDT": {"id": "ethereum", "symbol": "ETH"},
-    "SOLUSDT": {"id": "solana", "symbol": "SOL"},
-    "BNBUSDT": {"id": "binancecoin", "symbol": "BNB"},
-    "DOGEUSDT": {"id": "dogecoin", "symbol": "DOGE"},
-    "XRPUSDT": {"id": "ripple", "symbol": "XRP"},
-    "ADAUSDT": {"id": "cardano", "symbol": "ADA"},
-    "SHIBUSDT": {"id": "shiba-inu", "symbol": "SHIB"},
-    "DOTUSDT": {"id": "polkadot", "symbol": "DOT"},
-    "LINKUSDT": {"id": "chainlink", "symbol": "LINK"}
+    "BTCUSDT": "BTC-USD",
+    "ETHUSDT": "ETH-USD",
+    "SOLUSDT": "SOL-USD",
+    "BNBUSDT": "BNB-USD",
+    "DOGEUSDT": "DOGE-USD",
+    "XRPUSDT": "XRP-USD",
+    "ADAUSDT": "ADA-USD",
+    "SHIBUSDT": "SHIB-USD",
+    "DOTUSDT": "DOT-USD",
+    "LINKUSDT": "LINK-USD"
 }
 
 # -----------------------------------------------------------------------------
@@ -45,48 +45,51 @@ tf_choice = st.sidebar.selectbox(
 )
 
 st.sidebar.markdown("---")
-auto_refresh = st.sidebar.checkbox("เปิดระบบดึงราคา Realtime (อัปเดตทุก 15 วินาที)", value=True)
+auto_refresh = st.sidebar.checkbox("เปิดระบบดึงราคา Realtime (อัปเดตทุก 30 วินาที)", value=True)
 
 # -----------------------------------------------------------------------------
-# 4. ฟังก์ชันดึงข้อมูลราคาย้อนหลัง (Bypass Connection Error)
+# 4. ฟังก์ชันดึงข้อมูลแบบ Batch (ดึง 10 เหรียญพร้อมกันใน Request เดียว ไม่ติด Rate Limit)
 # -----------------------------------------------------------------------------
-@st.cache_data(ttl=10)
-def get_crypto_klines_safe(symbol_key, days=30):
-    coin_id = CRYPTO_MAP[symbol_key]["id"]
-    url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart"
-    params = {"vs_currency": "usd", "days": days}
-    headers = {"User-Agent": "Mozilla/5.0"}
+@st.cache_data(ttl=25)
+def get_all_crypto_daily_data():
+    tickers = list(CRYPTO_MAP.values())
+    # ดึงข้อมูลรวดเดียว 10 เหรียญ ป้องกันการโดนบล็อก
+    data = yf.download(tickers=tickers, period="30d", interval="1d", group_by="ticker", progress=False)
+    return data
+
+@st.cache_data(ttl=25)
+def get_single_crypto_detail(symbol_key, tf):
+    ticker = CRYPTO_MAP[symbol_key]
+    interval = "1h" if tf == "4h" else tf
+    period = "1mo" if tf in ["1h", "4h"] else "1y"
     
-    res = requests.get(url, params=params, headers=headers, timeout=5)
-    
-    if res.status_code != 200:
-        raise Exception(f"ไม่สามารถเชื่อมต่อ Data API ได้ Code: {res.status_code}")
+    df = yf.Ticker(ticker).history(period=period, interval=interval)
+    if df.empty:
+        raise Exception("ไม่สามารถดึงข้อมูลกราฟเจาะลึกได้")
         
-    data = res.json()
-    prices = data['prices']
+    df = df.reset_index()
+    time_col = 'Datetime' if 'Datetime' in df.columns else ('Date' if 'Date' in df.columns else df.columns[0])
+    df = df.rename(columns={time_col: 'Time'})
     
-    df = pd.DataFrame(prices, columns=['Timestamp', 'Close'])
-    df['Time'] = pd.to_datetime(df['Timestamp'], unit='ms')
-    
-    # จำลองแท่งเทียน Open, High, Low จาก Price Action เพื่อใช้คำนวณ Indicator
-    df['Open'] = df['Close'].shift(1).fillna(df['Close'])
-    df['High'] = df[['Open', 'Close']].max(axis=1) * 1.002
-    df['Low'] = df[['Open', 'Close']].min(axis=1) * 0.998
-    
+    if tf == "4h":
+        df.set_index('Time', inplace=True)
+        df = df.resample('4h').agg({
+            'Open': 'first', 'High': 'max', 'Low': 'min', 'Close': 'last', 'Volume': 'sum'
+        }).dropna().reset_index()
+        
     return df[['Time', 'Open', 'High', 'Low', 'Close']]
 
 # -----------------------------------------------------------------------------
 # 5. ฟังก์ชันคำนวณสัญญาณ AI รายวัน (Fixed Daily Zone)
 # -----------------------------------------------------------------------------
-def calculate_daily_fixed_signals(symbol_key):
-    df_daily = get_crypto_klines_safe(symbol_key, days=30)
-    
-    ai_max_high = float(df_daily['High'].rolling(window=20).max().iloc[-1])
-    ai_support = float(df_daily['Low'].rolling(window=20).min().iloc[-1])
-    current_price = float(df_daily['Close'].iloc[-1])
+def process_daily_ai_signals(df_symbol):
+    df_symbol = df_symbol.dropna(subset=['Close'])
+    ai_max_high = float(df_symbol['High'].rolling(window=20).max().iloc[-1])
+    ai_support = float(df_symbol['Low'].rolling(window=20).min().iloc[-1])
+    current_price = float(df_symbol['Close'].iloc[-1])
     
     # คำนวณ RSI
-    delta = df_daily['Close'].diff()
+    delta = df_symbol['Close'].diff()
     gain = delta.clip(lower=0)
     loss = -1 * delta.clip(upper=0)
     avg_gain = gain.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
@@ -95,7 +98,7 @@ def calculate_daily_fixed_signals(symbol_key):
     rsi = 100 - (100 / (1 + rs))
     last_daily_rsi = rsi.iloc[-1] if not rsi.empty else 50
     
-    avg_daily_price = df_daily['Close'].rolling(window=10).mean().iloc[-1]
+    avg_daily_price = df_symbol['Close'].rolling(window=10).mean().iloc[-1]
     
     if last_daily_rsi < 40:
         ai_buy_zone = avg_daily_price * 0.995 
@@ -105,67 +108,69 @@ def calculate_daily_fixed_signals(symbol_key):
     return ai_support, ai_buy_zone, ai_max_high, current_price
 
 # -----------------------------------------------------------------------------
-# 6. ฟังก์ชันสร้างตารางสรุป 10 เหรียญ
-# -----------------------------------------------------------------------------
-def get_all_crypto_summary(symbol_list):
-    summary_data = []
-    for sym in symbol_list:
-        try:
-            sup, buy_zone, max_high, price = calculate_daily_fixed_signals(sym)
-            dist_pct = ((price - buy_zone) / buy_zone) * 100
-            
-            if price <= buy_zone * 1.005 and price >= sup:
-                status = "✅ Strong Buy Zone"
-            elif price < sup:
-                status = "🚨 Panic Breakout"
-            elif dist_pct <= 3.0:
-                status = "👀 Near Buy Zone"
-            else:
-                status = "⏳ Waiting"
-                
-            summary_data.append({
-                "เหรียญ": sym,
-                "ราคาปัจจุบัน (USDT)": f"{price:,.6f}",
-                "AI Buy Zone (USDT)": f"{buy_zone:,.6f}",
-                "Max High Target (USDT)": f"{max_high:,.6f}",
-                "ห่างจากจุดซื้อ (%)": f"{dist_pct:+.2f}%",
-                "สถานะสัญญาณ": status
-            })
-        except Exception:
-            summary_data.append({
-                "เหรียญ": sym,
-                "ราคาปัจจุบัน (USDT)": "Error",
-                "AI Buy Zone (USDT)": "-",
-                "Max High Target (USDT)": "-",
-                "ห่างจากจุดซื้อ (%)": "-",
-                "สถานะสัญญาณ": "⚠️ Connection Fail"
-            })
-    return pd.DataFrame(summary_data)
-
-# -----------------------------------------------------------------------------
-# 7. แสดงผลตารางสรุป
+# 6. แสดงผลตารางสรุป 10 เหรียญด้านบน
 # -----------------------------------------------------------------------------
 st.markdown("### 📋 ตารางสรุปจุดซื้อ AI Buy Zone ของทุกเหรียญ (ประจำวัน)")
 
-with st.spinner("กำลังดึงราคาแบบ Real-time..."):
-    df_summary = get_all_crypto_summary(list(CRYPTO_MAP.keys()))
-    
-st.dataframe(df_summary, use_container_width=True, hide_index=True)
+try:
+    with st.spinner("กำลังอัปเดตราคาจากเซิร์ฟเวอร์หลัก..."):
+        all_data = get_all_crypto_daily_data()
+        summary_list = []
+        
+        for display_name, ticker in CRYPTO_MAP.items():
+            try:
+                df_sym = all_data[ticker].copy()
+                sup, buy_zone, max_high, price = process_daily_ai_signals(df_sym)
+                dist_pct = ((price - buy_zone) / buy_zone) * 100
+                
+                if price <= buy_zone * 1.005 and price >= sup:
+                    status = "✅ Strong Buy Zone"
+                elif price < sup:
+                    status = "🚨 Panic Breakout"
+                elif dist_pct <= 3.0:
+                    status = "👀 Near Buy Zone"
+                else:
+                    status = "⏳ Waiting"
+                    
+                summary_list.append({
+                    "เหรียญ": display_name,
+                    "ราคาปัจจุบัน (USDT)": f"{price:,.6f}",
+                    "AI Buy Zone (USDT)": f"{buy_zone:,.6f}",
+                    "Max High Target (USDT)": f"{max_high:,.6f}",
+                    "ห่างจากจุดซื้อ (%)": f"{dist_pct:+.2f}%",
+                    "สถานะสัญญาณ": status
+                })
+            except Exception:
+                summary_list.append({
+                    "เหรียญ": display_name,
+                    "ราคาปัจจุบัน (USDT)": "Error",
+                    "AI Buy Zone (USDT)": "-",
+                    "Max High Target (USDT)": "-",
+                    "ห่างจากจุดซื้อ (%)": "-",
+                    "สถานะสัญญาณ": "⚠️ Data Error"
+                })
+                
+        st.dataframe(pd.DataFrame(summary_list), use_container_width=True, hide_index=True)
+except Exception as e:
+    st.error(f"⚠️ เกิดข้อผิดพลาดในการโหลดตารางสรุป: {str(e)}")
+
 st.markdown("---")
 
 # -----------------------------------------------------------------------------
-# 8. กราฟเจาะลึกรายเหรียญ
+# 7. แสดงผลกราฟเจาะลึกรายเหรียญ
 # -----------------------------------------------------------------------------
 st.markdown(f"### 📈 เจาะลึกกราฟ & สัญญาณเทรด: **{selected_display}**")
 
 try:
-    df_chart = get_crypto_klines_safe(selected_display, days=7)
+    df_chart = get_single_crypto_detail(selected_display, tf_choice)
     current_price = df_chart['Close'].iloc[-1]
     
     df_chart['EMA_50'] = df_chart['Close'].ewm(span=50, adjust=False).mean()
     main_trend_ema = df_chart['EMA_50'].iloc[-1]
     
-    ai_support_line, ai_buy_zone_line, ai_max_high_line, _ = calculate_daily_fixed_signals(selected_display)
+    # สัญญาณรายวันสำหรับสร้างเส้นแนวนอน
+    df_daily_single = all_data[CRYPTO_MAP[selected_display]].copy()
+    ai_support_line, ai_buy_zone_line, ai_max_high_line, _ = process_daily_ai_signals(df_daily_single)
     
     # Sidebar Slider
     st.sidebar.markdown("---")
@@ -186,7 +191,7 @@ try:
     )
     st.session_state.user_price = user_custom_price
 
-    # Metric Cards
+    # Cards Summary
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric(label=f"ราคาปัจจุบัน ({selected_display})", value=f"{current_price:,.6f} USDT")
@@ -198,11 +203,11 @@ try:
         user_dist = ((user_custom_price - current_price) / current_price) * 100
         st.metric(label="✏️ เส้นวิเคราะห์ส่วนตัว", value=f"{user_custom_price:,.6f} USDT", delta=f"{user_dist:.2f}%")
 
-    # Chart
+    # Plotly Chart
     fig = go.Figure()
     fig.add_trace(go.Candlestick(
         x=df_chart['Time'], open=df_chart['Open'], high=df_chart['High'], low=df_chart['Low'], close=df_chart['Close'],
-        name='ราคา Realtime', increasing_line_color='#0ecb81', decreasing_line_color='#f6465d'
+        name='ราคาตลาดจริง', increasing_line_color='#0ecb81', decreasing_line_color='#f6465d'
     ))
 
     fig.add_hline(
@@ -230,8 +235,8 @@ except Exception as e:
     st.error(f"⚠️ เกิดข้อผิดพลาดในการโหลดกราฟ: {str(e)}")
 
 # -----------------------------------------------------------------------------
-# 9. Auto Refresh (15s)
+# 8. Auto Refresh (30s เพื่อประหยัด Bandwidth)
 # -----------------------------------------------------------------------------
 if auto_refresh:
-    time.sleep(15)
+    time.sleep(30)
     st.rerun()

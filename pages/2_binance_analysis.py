@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 import time
 
 # -----------------------------------------------------------------------------
-# 1. ตั้งค่าหน้าจอ Streamlit Dashboard (Wide Mode)
+# 1. ตั้งค่าหน้าจอ Streamlit Dashboard
 # -----------------------------------------------------------------------------
 st.set_page_config(
     page_title="Binance Multi-Crypto AI Buy Zone Dashboard",
@@ -14,10 +14,10 @@ st.set_page_config(
 )
 
 st.title("⚡ Binance Realtime & Multi-Crypto Daily AI Model")
-st.subheader("แดชบอร์ดสรุปจุดซื้อ AI Buy Zone ของเหรียญยอดนิยม + กราฟวิเคราะห์เจาะลึก")
+st.subheader("ระบบสรุปจุดซื้อ AI Buy Zone (แก้ไขปัญหา Connection Fail)")
 
 # -----------------------------------------------------------------------------
-# 2. รายชื่อเหรียญยอดนิยมคู่ USDT บน Binance (10 เหรียญ)
+# 2. รายชื่อเหรียญยอดนิยม
 # -----------------------------------------------------------------------------
 CRYPTO_LIST = [
     "DOGEUSDT",
@@ -45,20 +45,43 @@ tf_choice = st.sidebar.selectbox(
 )
 
 st.sidebar.markdown("---")
-auto_refresh = st.sidebar.checkbox("เปิดระบบดึงราคา Realtime (อัปเดตทุก 5 วินาที)", value=True)
+auto_refresh = st.sidebar.checkbox("เปิดระบบดึงราคา Realtime (อัปเดตทุก 10 วินาที)", value=True)
 
 # -----------------------------------------------------------------------------
-# 4. ฟังก์ชันดึงข้อมูลแท่งเทียนจาก Binance API
+# 4. ฟังก์ชันดึงข้อมูลแบบปลอดภัย (มี Fallback Endpoint + Custom Headers)
 # -----------------------------------------------------------------------------
-@st.cache_data(ttl=3)
-def get_binance_klines(symbol, interval, limit=100):
-    url = "https://api.binance.com/api/v3/klines"
-    params = {"symbol": symbol, "interval": interval, "limit": limit}
-    response = requests.get(url, params=params, timeout=5)
+@st.cache_data(ttl=5)
+def get_binance_klines_safe(symbol, interval, limit=100):
+    # รายชื่อ Backup Endpoints ของ Binance เผื่อ URL หลักโดนบล็อก IP
+    endpoints = [
+        "https://api.binance.com/api/v3/klines",
+        "https://api1.binance.com/api/v3/klines",
+        "https://api2.binance.com/api/v3/klines",
+        "https://api3.binance.com/api/v3/klines"
+    ]
     
-    if response.status_code != 200:
-        raise Exception(f"Binance API Error [{symbol}]: {response.status_code}")
-        
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
+    
+    params = {"symbol": symbol, "interval": interval, "limit": limit}
+    
+    response = None
+    last_exception = None
+
+    for url in endpoints:
+        try:
+            res = requests.get(url, params=params, headers=headers, timeout=3)
+            if res.status_code == 200:
+                response = res
+                break
+        except Exception as e:
+            last_exception = e
+            continue
+
+    if response is None or response.status_code != 200:
+        raise Exception(f"ไม่สามารถเชื่อมต่อ Binance ได้ (ลองเปลี่ยนเน็ต/เปิด VPN): {last_exception}")
+
     data = response.json()
     df = pd.DataFrame(data, columns=[
         'Open_Time', 'Open', 'High', 'Low', 'Close', 'Volume',
@@ -76,7 +99,7 @@ def get_binance_klines(symbol, interval, limit=100):
 # 5. ฟังก์ชันคำนวณสัญญาณ AI รายวัน (Fixed Daily Zone)
 # -----------------------------------------------------------------------------
 def calculate_daily_fixed_signals(symbol):
-    df_daily = get_binance_klines(symbol, "1d", limit=30)
+    df_daily = get_binance_klines_safe(symbol, "1d", limit=30)
     
     ai_max_high = float(df_daily['High'].rolling(window=20).max().iloc[-1])
     ai_support = float(df_daily['Low'].rolling(window=20).min().iloc[-1])
@@ -102,7 +125,7 @@ def calculate_daily_fixed_signals(symbol):
     return ai_support, ai_buy_zone, ai_max_high, current_price
 
 # -----------------------------------------------------------------------------
-# 6. ฟังก์ชันสร้างตารางสรุป 10 เหรียญแบบ Batch Processing
+# 6. ฟังก์ชันสร้างตารางสรุป 10 เหรียญ
 # -----------------------------------------------------------------------------
 def get_all_crypto_summary(symbol_list):
     summary_data = []
@@ -111,7 +134,6 @@ def get_all_crypto_summary(symbol_list):
             sup, buy_zone, max_high, price = calculate_daily_fixed_signals(sym)
             dist_pct = ((price - buy_zone) / buy_zone) * 100
             
-            # กำหนดสถานะสัญญาณ
             if price <= buy_zone * 1.005 and price >= sup:
                 status = "✅ Strong Buy Zone"
             elif price < sup:
@@ -129,19 +151,19 @@ def get_all_crypto_summary(symbol_list):
                 "ห่างจากจุดซื้อ (%)": f"{dist_pct:+.2f}%",
                 "สถานะสัญญาณ": status
             })
-        except Exception:
+        except Exception as err:
             summary_data.append({
                 "เหรียญ": sym,
                 "ราคาปัจจุบัน (USDT)": "Error",
                 "AI Buy Zone (USDT)": "-",
                 "Max High Target (USDT)": "-",
                 "ห่างจากจุดซื้อ (%)": "-",
-                "สถานะสัญญาณ": "⚠️ Connection Fail"
+                "สถานะสัญญาณ": f"⚠️ Blocked"
             })
     return pd.DataFrame(summary_data)
 
 # -----------------------------------------------------------------------------
-# 7. ส่วนแสดงผลตารางสรุป 10 เหรียญด้านบนสุด
+# 7. ส่วนแสดงผลตารางสรุปด้านบน
 # -----------------------------------------------------------------------------
 st.markdown("### 📋 ตารางสรุปจุดซื้อ AI Buy Zone ของทุกเหรียญ (ประจำวัน)")
 
@@ -157,12 +179,12 @@ st.dataframe(
 st.markdown("---")
 
 # -----------------------------------------------------------------------------
-# 8. ส่วนแสดงผลกราฟและเจาะลึกรายเหรียญ (Selected Symbol)
+# 8. ส่วนแสดงผลกราฟและเจาะลึกรายเหรียญ
 # -----------------------------------------------------------------------------
 st.markdown(f"### 📈 เจาะลึกกราฟ & สัญญาณเทรด: **{selected_symbol}**")
 
 try:
-    df_chart = get_binance_klines(selected_symbol, tf_choice)
+    df_chart = get_binance_klines_safe(selected_symbol, tf_choice)
     current_price = df_chart['Close'].iloc[-1]
     
     df_chart['EMA_50'] = df_chart['Close'].ewm(span=50, adjust=False).mean()
@@ -170,7 +192,7 @@ try:
     
     ai_support_line, ai_buy_zone_line, ai_max_high_line, _ = calculate_daily_fixed_signals(selected_symbol)
     
-    # ไม้บรรทัดลากเส้นส่วนตัว Sidebar
+    # ไม้บรรทัด Sidebar
     st.sidebar.markdown("---")
     st.sidebar.subheader("📐 ไม้บรรทัดลากเส้นวิเคราะห์เอง")
     min_chart_price = float(df_chart['Low'].min())
@@ -189,7 +211,7 @@ try:
     )
     st.session_state.user_price = user_custom_price
 
-    # Metric Cards
+    # Card Metrics
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric(label=f"ราคาปัจจุบัน ({selected_symbol})", value=f"{current_price:,.6f} USDT")
@@ -201,7 +223,7 @@ try:
         user_dist = ((user_custom_price - current_price) / current_price) * 100
         st.metric(label="✏️ เส้นวิเคราะห์ส่วนตัว", value=f"{user_custom_price:,.6f} USDT", delta=f"{user_dist:.2f}%")
 
-    # Plotly Chart
+    # Chart
     fig = go.Figure()
     fig.add_trace(go.Candlestick(
         x=df_chart['Time'], open=df_chart['Open'], high=df_chart['High'], low=df_chart['Low'], close=df_chart['Close'],
@@ -229,7 +251,7 @@ try:
     )
     st.plotly_chart(fig, use_container_width=True)
 
-    # AI Analysis Text
+    # AI Text Analysis
     st.markdown("### 🧠 AI Direction & Market Psychology")
     if current_price > main_trend_ema:
         st.info(f"📈 **แนวโน้มระยะสั้น ({tf_choice}) : ขาขึ้น (Bullish Bias)** — ได้เปรียบฝั่ง Buy แนะนำรอย่อเข้าซื้อที่จุดสีฟ้า")
@@ -237,11 +259,11 @@ try:
         st.warning(f"📉 **แนวโน้มระยะสั้น ({tf_choice}) : ขาลง (Bearish Bias)** — ระวังแรงเทขายสะสม เล่นด้วยความระมัดระวัง")
 
 except Exception as e:
-    st.error(f"⚠️ ไม่สามารถโหลดข้อมูลเจาะลึกของ {selected_symbol} ได้: {str(e)}")
+    st.error(f"⚠️ เกิดข้อผิดพลาดในการโหลดกราฟ: {str(e)}")
 
 # -----------------------------------------------------------------------------
-# 9. ลูป Auto Refresh
+# 9. Auto Refresh (ปรับเวลาเป็น 10 วินาทีเพื่อไม่ให้ติด Rate Limit)
 # -----------------------------------------------------------------------------
 if auto_refresh:
-    time.sleep(5)
+    time.sleep(10)
     st.rerun()

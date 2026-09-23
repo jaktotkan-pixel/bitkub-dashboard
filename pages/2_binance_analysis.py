@@ -55,7 +55,7 @@ st.sidebar.markdown("---")
 auto_refresh = st.sidebar.checkbox("เปิดระบบดึงราคา Realtime (อัปเดตทุก 30 วินาที)", value=True)
 
 # -----------------------------------------------------------------------------
-# 4. ฟังก์ชันดึงข้อมูลแบบ Batch
+# 4. ฟังก์ชันดึงข้อมูลแบบ Batch (ยิงทีเดียว 10 เหรียญ กัน Rate Limit)
 # -----------------------------------------------------------------------------
 @st.cache_data(ttl=25)
 def get_all_crypto_daily_data():
@@ -71,7 +71,7 @@ def get_single_crypto_detail(symbol_key, tf):
     
     df = yf.Ticker(ticker).history(period=period, interval=interval)
     if df.empty:
-        raise Exception("ไม่สามารถดึงข้อมูลกราฟเจาะลึกได้")
+        raise Exception("ไม่พบข้อมูลกราฟจากเซิร์ฟเวอร์หลัก")
         
     df = df.reset_index()
     time_col = 'Datetime' if 'Datetime' in df.columns else ('Date' if 'Date' in df.columns else df.columns[0])
@@ -118,13 +118,12 @@ def process_dynamic_ai_signals(df_symbol):
     return safe_buy_zone, active_buy_zone, ai_max_high, current_price
 
 # -----------------------------------------------------------------------------
-# 6. ฟังก์ชันวิเคราะห์และกำหนดสีแท่งเทียนคาดการณ์แรง Buy / Sell
+# 6. ฟังก์ชันวิเคราะห์และกำหนดสถานะโมเมนตัมแท่งเทียน
 # -----------------------------------------------------------------------------
 def apply_ai_predictive_candle_colors(df):
     df['EMA_9'] = df['Close'].ewm(span=9, adjust=False).mean()
     df['EMA_21'] = df['Close'].ewm(span=21, adjust=False).mean()
     
-    # คำนวณ RSI
     delta = df['Close'].diff()
     gain = delta.clip(lower=0)
     loss = -1 * delta.clip(upper=0)
@@ -133,7 +132,7 @@ def apply_ai_predictive_candle_colors(df):
     rs = avg_gain / (avg_loss + 1e-10)
     df['RSI'] = 100 - (100 / (1 + rs))
     
-    df['Vol_SMA'] = df['Volume'].rolling(window=10).mean()
+    df['Vol_SMA'] = df['Volume'].rolling(window=10).mean().fillna(df['Volume'])
 
     colors = []
     predict_status = []
@@ -143,25 +142,24 @@ def apply_ai_predictive_candle_colors(df):
         open_p = df['Open'].iloc[i]
         ema9 = df['EMA_9'].iloc[i]
         ema21 = df['EMA_21'].iloc[i]
-        rsi = df['RSI'].iloc[i]
+        rsi = df['RSI'].iloc[i] if pd.notnull(df['RSI'].iloc[i]) else 50
         vol = df['Volume'].iloc[i]
-        vol_avg = df['Vol_SMA'].iloc[i] if pd.notnull(df['Vol_SMA'].iloc[i]) else vol
+        vol_avg = df['Vol_SMA'].iloc[i]
 
-        # เงื่อนไข AI คาดการณ์แรงซื้อ/แรงขาย
         if close > ema9 and ema9 > ema21 and rsi >= 55:
-            colors.append('#00FF7F') # เขียวสว่าง: Strong Buy Momentum
+            colors.append('#00FF7F')  # เขียวสว่าง
             predict_status.append("🟢 แรงซื้อหนาแน่น (Bullish Momentum)")
         elif close < ema9 and ema9 < ema21 and rsi <= 45:
-            colors.append('#FF1493') # แดงสว่าง: Strong Sell Momentum
+            colors.append('#FF1493')  # แดงสว่าง
             predict_status.append("🔴 แรงขายกดดัน (Bearish Momentum)")
-        elif rsi < 45 and vol > vol_avg * 1.2 and close > open_p:
-            colors.append('#FFD700') # เหลือง: Pre-Buy Signal (เริ่มมีโวลุ่มแรงซื้อสะสม)
+        elif rsi < 45 and vol > vol_avg * 1.1 and close > open_p:
+            colors.append('#FFD700')  # เหลือง
             predict_status.append("🟡 เริ่มสะสมแรงซื้อ (Pre-Buy Signal)")
-        elif rsi > 60 and vol > vol_avg * 1.2 and close < open_p:
-            colors.append('#FF8C00') # ส้ม: Pre-Sell Signal (เริ่มมีแรงขายทำกำไรแฝง)
+        elif rsi > 60 and vol > vol_avg * 1.1 and close < open_p:
+            colors.append('#FF8C00')  # ส้ม
             predict_status.append("🟠 เริ่มมีแรงขายชะลอตัว (Pre-Sell Signal)")
         else:
-            colors.append('#808080') # เทา: Sideway / Neutral
+            colors.append('#808080')  # เทา
             predict_status.append("⚪ ตลาดเลือกทาง (Sideway)")
 
     df['Candle_Color'] = colors
@@ -230,7 +228,7 @@ except Exception as e:
 st.markdown("---")
 
 # -----------------------------------------------------------------------------
-# 8. แสดงผลกราฟเจาะลึก + AI Predictive Candle Colors
+# 8. แสดงผลกราฟเจาะลึก (แก้ปัญหาวาดกราฟ Plotly)
 # -----------------------------------------------------------------------------
 st.markdown(f"### 📈 เจาะลึกกราฟ & AI Predictive Momentum: **{selected_display}**")
 
@@ -244,7 +242,7 @@ try:
     df_daily_single = all_data[CRYPTO_MAP[selected_display]].copy()
     safe_buy_line, active_buy_line, ai_max_high_line, _ = process_dynamic_ai_signals(df_daily_single)
     
-    # Card Metrics 4 การ์ดหลัก
+    # Card Metrics
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric(label=f"ราคาปัจจุบัน ({selected_display})", value=f"{current_price:,.6f} USDT")
@@ -256,30 +254,37 @@ try:
     with col4:
         st.metric(label="🔴 AI Max High Target", value=f"{ai_max_high_line:,.6f} USDT")
 
-    # คำแนะนำสีแท่งเทียนแบบสั้น
     st.caption("🎨 **สัญลักษณ์สีแท่งเทียน AI:** 🟢 เขียว = แรงซื้อหนาแน่น | 🔴 แดง = แรงขายกดดัน | 🟡 เหลือง = เริ่มสะสมแรงซื้อ | 🟠 ส้ม = เริ่มมีแรงขายชะลอ | ⚪ เทา = Sideway")
 
-    # สร้างกราฟ Plotly แบบแยกสีแท่งเทียน
+    # 📌 วาดกราฟ Candlestick แบบรองรับ Custom Color แน่นอน
     fig = go.Figure()
 
+    # สร้างแท่งเทียน Candlestick มาตรฐาน
     fig.add_trace(go.Candlestick(
         x=df_chart['Time'],
         open=df_chart['Open'],
         high=df_chart['High'],
         low=df_chart['Low'],
         close=df_chart['Close'],
-        name='AI Predictive Momentum',
-        increasing_line_color='#00FF7F',
-        decreasing_line_color='#FF1493',
-        increasing_fillcolor='#00FF7F',
-        decreasing_fillcolor='#FF1493'
+        name='ราคาจริง',
+        increasing_line_color='#0ecb81',
+        decreasing_line_color='#f6465d'
     ))
 
-    # ปรับแต่งสีแต่ละแท่งเทียนตามการวิเคราะห์ AI
-    fig.update_traces(
-        increasing_line_color=df_chart['Candle_Color'],
-        decreasing_line_color=df_chart['Candle_Color']
-    )
+    # วาดไฮไลต์จุดคาดการณ์ AI ด้วย Marker บนแท่งเทียนแบบเสถียร
+    fig.add_trace(go.Scatter(
+        x=df_chart['Time'],
+        y=df_chart['High'] * 1.002,
+        mode='markers',
+        marker=dict(
+            size=6,
+            color=df_chart['Candle_Color'],
+            symbol='circle'
+        ),
+        name='AI Predictive Momentum',
+        hoverinfo='text',
+        hovertext=df_chart['AI_Predict_Status']
+    ))
 
     # เส้น AI Max High
     fig.add_hline(
@@ -300,7 +305,7 @@ try:
         annotation_position="bottom right", annotation_font=dict(size=10, color="black"), annotation_bgcolor="#00ff7f"
     )
 
-    # ตั้งค่ากราฟ Crosshair
+    # ตั้งค่า layout
     fig.update_layout(
         xaxis_rangeslider_visible=False,
         template="plotly_dark",

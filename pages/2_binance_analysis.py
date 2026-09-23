@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import yfinance as yf
 import plotly.graph_objects as go
 import time
@@ -8,13 +9,13 @@ import time
 # 1. ตั้งค่าหน้าจอ Streamlit Dashboard
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Multi-Crypto AI Dynamic & Predictive Model",
+    page_title="Multi-Crypto AI Dynamic & Predictive Line Model",
     page_icon="⚡",
     layout="wide"
 )
 
-st.title("⚡ Multi-Crypto AI Dynamic & Predictive Model")
-st.subheader("ระบบสรุปจุดซื้อ Dynamic AI พร้อมคาดการณ์แรงซื้อ/แรงขายบนแท่งเทียน (Predictive Momentum)")
+st.title("⚡ Multi-Crypto AI Dynamic & Predictive Line Model")
+st.subheader("ระบบสรุปจุดซื้อ Dynamic AI พร้อมเส้นประ AI คาดการณ์แนวโน้มอนาคต (Predictive Trend Line)")
 
 # -----------------------------------------------------------------------------
 # 2. รายชื่อเหรียญและ Ticker บน Yahoo Finance
@@ -55,7 +56,7 @@ st.sidebar.markdown("---")
 auto_refresh = st.sidebar.checkbox("เปิดระบบดึงราคา Realtime (อัปเดตทุก 30 วินาที)", value=True)
 
 # -----------------------------------------------------------------------------
-# 4. ฟังก์ชันดึงข้อมูลแบบ Batch (ยิงทีเดียว 10 เหรียญ กัน Rate Limit)
+# 4. ฟังก์ชันดึงข้อมูลแบบ Batch
 # -----------------------------------------------------------------------------
 @st.cache_data(ttl=25)
 def get_all_crypto_daily_data():
@@ -118,53 +119,47 @@ def process_dynamic_ai_signals(df_symbol):
     return safe_buy_zone, active_buy_zone, ai_max_high, current_price
 
 # -----------------------------------------------------------------------------
-# 6. ฟังก์ชันวิเคราะห์และกำหนดสถานะโมเมนตัมแท่งเทียน
+# 6. ฟังก์ชัน AI คำนวณคาดการณ์เส้นแนวโน้มอนาคต (Predictive Trend Line Projection)
 # -----------------------------------------------------------------------------
-def apply_ai_predictive_candle_colors(df):
-    df['EMA_9'] = df['Close'].ewm(span=9, adjust=False).mean()
-    df['EMA_21'] = df['Close'].ewm(span=21, adjust=False).mean()
+def predict_future_trend_line(df, future_steps=5):
+    df_calc = df.copy()
     
-    delta = df['Close'].diff()
-    gain = delta.clip(lower=0)
-    loss = -1 * delta.clip(upper=0)
-    avg_gain = gain.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
-    avg_loss = loss.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
-    rs = avg_gain / (avg_loss + 1e-10)
-    df['RSI'] = 100 - (100 / (1 + rs))
+    # ใช้ข้อมูล 15 แท่งล่าสุดมาสร้างสมการ Linear Trend & Momentum Delta
+    recent_closes = df_calc['Close'].tail(15).values
+    x = np.arange(len(recent_closes))
     
-    df['Vol_SMA'] = df['Volume'].rolling(window=10).mean().fillna(df['Volume'])
-
-    colors = []
-    predict_status = []
-
-    for i in range(len(df)):
-        close = df['Close'].iloc[i]
-        open_p = df['Open'].iloc[i]
-        ema9 = df['EMA_9'].iloc[i]
-        ema21 = df['EMA_21'].iloc[i]
-        rsi = df['RSI'].iloc[i] if pd.notnull(df['RSI'].iloc[i]) else 50
-        vol = df['Volume'].iloc[i]
-        vol_avg = df['Vol_SMA'].iloc[i]
-
-        if close > ema9 and ema9 > ema21 and rsi >= 55:
-            colors.append('#00FF7F')  # เขียวสว่าง
-            predict_status.append("🟢 แรงซื้อหนาแน่น (Bullish Momentum)")
-        elif close < ema9 and ema9 < ema21 and rsi <= 45:
-            colors.append('#FF1493')  # แดงสว่าง
-            predict_status.append("🔴 แรงขายกดดัน (Bearish Momentum)")
-        elif rsi < 45 and vol > vol_avg * 1.1 and close > open_p:
-            colors.append('#FFD700')  # เหลือง
-            predict_status.append("🟡 เริ่มสะสมแรงซื้อ (Pre-Buy Signal)")
-        elif rsi > 60 and vol > vol_avg * 1.1 and close < open_p:
-            colors.append('#FF8C00')  # ส้ม
-            predict_status.append("🟠 เริ่มมีแรงขายชะลอตัว (Pre-Sell Signal)")
-        else:
-            colors.append('#808080')  # เทา
-            predict_status.append("⚪ ตลาดเลือกทาง (Sideway)")
-
-    df['Candle_Color'] = colors
-    df['AI_Predict_Status'] = predict_status
-    return df
+    # คำนวณความชัน (Slope / Trend Direction)
+    slope, intercept = np.polyfit(x, recent_closes, 1)
+    
+    # คำนวณ Momentum ล่าสุดผ่าน EMA
+    df_calc['EMA_9'] = df_calc['Close'].ewm(span=9, adjust=False).mean()
+    df_calc['EMA_21'] = df_calc['Close'].ewm(span=21, adjust=False).mean()
+    last_ema_diff = df_calc['EMA_9'].iloc[-1] - df_calc['EMA_21'].iloc[-1]
+    
+    # สร้างจุดอนาคต
+    last_time = df_calc['Time'].iloc[-1]
+    time_delta = df_calc['Time'].iloc[-1] - df_calc['Time'].iloc[-2]
+    
+    future_times = [last_time + (i * time_delta) for i in range(1, future_steps + 1)]
+    
+    # คำนวณราคาคาดการณ์
+    last_price = df_calc['Close'].iloc[-1]
+    future_prices = []
+    
+    current_proj = last_price
+    for i in range(1, future_steps + 1):
+        # รวมแรง Slope และ EMA Momentum เข้าด้วยกัน
+        step_delta = (slope * 0.6) + (last_ema_diff * 0.05)
+        current_proj += step_delta
+        future_prices.append(current_proj)
+        
+    # เชื่อมจุดสุดท้ายของราคาจริงเข้ากับเส้นคาดการณ์
+    proj_times = [last_time] + future_times
+    proj_prices = [last_price] + future_prices
+    
+    trend_dir = "📈 ขาขึ้น (Bullish Projection)" if future_prices[-1] > last_price else "📉 ขาลง (Bearish Projection)"
+    
+    return proj_times, proj_prices, trend_dir
 
 # -----------------------------------------------------------------------------
 # 7. แสดงผลตารางสรุป
@@ -172,7 +167,7 @@ def apply_ai_predictive_candle_colors(df):
 st.markdown("### 📋 ตารางสรุปจุดซื้อ Dynamic AI Buy Zone")
 
 try:
-    with st.spinner("กำลังคำนวณจุดซื้อ Dynamic และวิเคราะห์โมเมนตัม..."):
+    with st.spinner("กำลังคำนวณจุดซื้อ Dynamic และวิเคราะห์เส้นคาดการณ์..."):
         all_data = get_all_crypto_daily_data()
         summary_list = []
         
@@ -228,16 +223,21 @@ except Exception as e:
 st.markdown("---")
 
 # -----------------------------------------------------------------------------
-# 8. แสดงผลกราฟเจาะลึก (แก้ปัญหาวาดกราฟ Plotly)
+# 8. แสดงผลกราฟเจาะลึก (Line Chart + AI Predictive Projection)
 # -----------------------------------------------------------------------------
-st.markdown(f"### 📈 เจาะลึกกราฟ & AI Predictive Momentum: **{selected_display}**")
+st.markdown(f"### 📈 เจาะลึกกราฟราคา & เส้นประ AI คาดการณ์อนาคต: **{selected_display}**")
 
 try:
     df_chart = get_single_crypto_detail(selected_display, tf_choice)
-    df_chart = apply_ai_predictive_candle_colors(df_chart)
+    
+    # คำนวณเส้นเคลื่อนที่ EMA 2 เส้นสำหรับแสดงทิศทาง
+    df_chart['EMA_9'] = df_chart['Close'].ewm(span=9, adjust=False).mean()
+    df_chart['EMA_21'] = df_chart['Close'].ewm(span=21, adjust=False).mean()
+    
+    # คำนวณเส้นประคาดการณ์อนาคต
+    proj_times, proj_prices, trend_dir = predict_future_trend_line(df_chart, future_steps=6)
     
     current_price = df_chart['Close'].iloc[-1]
-    latest_predict = df_chart['AI_Predict_Status'].iloc[-1]
     
     df_daily_single = all_data[CRYPTO_MAP[selected_display]].copy()
     safe_buy_line, active_buy_line, ai_max_high_line, _ = process_dynamic_ai_signals(df_daily_single)
@@ -247,43 +247,52 @@ try:
     with col1:
         st.metric(label=f"ราคาปัจจุบัน ({selected_display})", value=f"{current_price:,.6f} USDT")
     with col2:
-        st.metric(label="🔮 AI Momentum คาดการณ์แท่งปัจจุบัน", value=latest_predict)
+        st.metric(label="🔮 AI คาดการณ์แนวโน้มล่วงหน้า", value=trend_dir)
     with col3:
         diff_act = ((current_price - active_buy_line) / active_buy_line) * 100
         st.metric(label="⚡ Dynamic Buy Zone", value=f"{active_buy_line:,.6f} USDT", delta=f"{diff_act:.2f}%")
     with col4:
         st.metric(label="🔴 AI Max High Target", value=f"{ai_max_high_line:,.6f} USDT")
 
-    st.caption("🎨 **สัญลักษณ์สีแท่งเทียน AI:** 🟢 เขียว = แรงซื้อหนาแน่น | 🔴 แดง = แรงขายกดดัน | 🟡 เหลือง = เริ่มสะสมแรงซื้อ | 🟠 ส้ม = เริ่มมีแรงขายชะลอ | ⚪ เทา = Sideway")
-
-    # 📌 วาดกราฟ Candlestick แบบรองรับ Custom Color แน่นอน
+    # 📌 วาดกราฟ Plotly แบบ Line Chart + AI Projection
     fig = go.Figure()
 
-    # สร้างแท่งเทียน Candlestick มาตรฐาน
-    fig.add_trace(go.Candlestick(
-        x=df_chart['Time'],
-        open=df_chart['Open'],
-        high=df_chart['High'],
-        low=df_chart['Low'],
-        close=df_chart['Close'],
-        name='ราคาจริง',
-        increasing_line_color='#0ecb81',
-        decreasing_line_color='#f6465d'
-    ))
-
-    # วาดไฮไลต์จุดคาดการณ์ AI ด้วย Marker บนแท่งเทียนแบบเสถียร
+    # 1. เส้นราคาหลัก (Close Price Line)
     fig.add_trace(go.Scatter(
         x=df_chart['Time'],
-        y=df_chart['High'] * 1.002,
-        mode='markers',
-        marker=dict(
-            size=6,
-            color=df_chart['Candle_Color'],
-            symbol='circle'
-        ),
-        name='AI Predictive Momentum',
-        hoverinfo='text',
-        hovertext=df_chart['AI_Predict_Status']
+        y=df_chart['Close'],
+        mode='lines',
+        name='ราคาตลาด (Close Price)',
+        line=dict(color='#00E6FF', width=2.5)
+    ))
+
+    # 2. เส้น EMA 9 (สีส้ม)
+    fig.add_trace(go.Scatter(
+        x=df_chart['Time'],
+        y=df_chart['EMA_9'],
+        mode='lines',
+        name='EMA 9 (Fast)',
+        line=dict(color='#FFA500', width=1.5, dash='solid')
+    ))
+
+    # 3. เส้น EMA 21 (สีม่วง)
+    fig.add_trace(go.Scatter(
+        x=df_chart['Time'],
+        y=df_chart['EMA_21'],
+        mode='lines',
+        name='EMA 21 (Slow)',
+        line=dict(color='#BF55EC', width=1.5, dash='solid')
+    ))
+
+    # 4. 🔥 เส้นประคาดการณ์ราคาอนาคต AI (Predictive Projection Line - สีเหลืองสะท้อนแสง)
+    proj_color = '#FFFF00' if proj_prices[-1] > current_price else '#FF007F'
+    fig.add_trace(go.Scatter(
+        x=proj_times,
+        y=proj_prices,
+        mode='lines+markers',
+        name='🔮 AI Trend Prediction (อนาคต)',
+        line=dict(color=proj_color, width=3, dash='dot'),
+        marker=dict(size=6, symbol='circle')
     ))
 
     # เส้น AI Max High
@@ -294,7 +303,7 @@ try:
     )
     # เส้น Dynamic Buy Zone
     fig.add_hline(
-        y=active_buy_line, line_dash="solid", line_color="#00e6ff", line_width=2.5,
+        y=active_buy_line, line_dash="solid", line_color="#00e6ff", line_width=2,
         annotation_text=f"⚡ DYNAMIC BUY ZONE: {active_buy_line:,.6f} USDT", 
         annotation_position="bottom left", annotation_font=dict(size=11, color="black"), annotation_bgcolor="#00e6ff"
     )
@@ -305,7 +314,7 @@ try:
         annotation_position="bottom right", annotation_font=dict(size=10, color="black"), annotation_bgcolor="#00ff7f"
     )
 
-    # ตั้งค่า layout
+    # ตั้งค่า layout + Crosshair
     fig.update_layout(
         xaxis_rangeslider_visible=False,
         template="plotly_dark",

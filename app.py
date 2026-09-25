@@ -773,7 +773,49 @@ def show_pdf_library():
                 height=660,
                 scrolling=False
             )
+# =================================================================
+# 📊 ระบบจัดการ EXCEL (Upload / Download) - สร้างใหม่
+# =================================================================
+def convert_df_to_excel(df):
+    """ฟังก์ชันสำหรับแปลง Pandas DataFrame เป็นไฟล์ Excel (.xlsx) ในหน่วยความจำ"""
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Sheet1')
+    processed_data = output.getvalue()
+    return processed_data
 
+def excel_management_page():
+    st.header("📊 ระบบจัดการไฟล์ Excel")
+    st.markdown("เมนูนี้ใช้สำหรับอัปโหลดไฟล์ `.xlsx` เข้ามาดูบน Dashboard และสามารถดาวน์โหลดข้อมูลออกไปเป็นไฟล์ Excel ได้")
+
+    # ส่วนอัปโหลด
+    st.subheader("📥 1. อัปโหลดไฟล์ Excel")
+    uploaded_file = st.file_uploader("ลากไฟล์ หรือ เลือกไฟล์ .xlsx ของคุณ", type=['xlsx'])
+
+    if uploaded_file is not None:
+        try:
+            df = pd.read_excel(uploaded_file)
+            st.success(f"โหลดไฟล์ {uploaded_file.name} สำเร็จ!")
+            st.dataframe(df, use_container_width=True)
+            st.session_state['excel_data'] = df
+        except Exception as e:
+            st.error(f"เกิดข้อผิดพลาดในการอ่านไฟล์: {e}")
+
+    st.markdown("---")
+
+    # ส่วนดาวน์โหลด
+    st.subheader("📤 2. ดาวน์โหลดข้อมูลเป็นไฟล์ Excel")
+    if 'excel_data' in st.session_state and not st.session_state['excel_data'].empty:
+        df_to_download = st.session_state['excel_data']
+        excel_bytes = convert_df_to_excel(df_to_download)
+        st.download_button(
+            label="💾 คลิกเพื่อดาวน์โหลดไฟล์ Excel (.xlsx)",
+            data=excel_bytes,
+            file_name="Dashboard_Export.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    else:
+        st.warning("ยังไม่มีข้อมูลในระบบ กรุณาอัปโหลดไฟล์ด้านบนก่อน")
 
 # =================================================================
 # ⚙️ Dictionary คลังคำสั่ง

@@ -775,48 +775,72 @@ def show_pdf_library():
                 scrolling=False
             )
 # =================================================================
-# 📊 ระบบจัดการ EXCEL (Upload / Download) - สร้างใหม่
+import os
+
 # =================================================================
-def convert_df_to_excel(df):
-    """ฟังก์ชันสำหรับแปลง Pandas DataFrame เป็นไฟล์ Excel (.xlsx) ในหน่วยความจำ"""
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Sheet1')
-    processed_data = output.getvalue()
-    return processed_data
+# 📊 ระบบจัดการ EXCEL (Upload / Download) - แบบคลังเก็บไฟล์
+# =================================================================
+EXCEL_DIR = "excel_store"
+os.makedirs(EXCEL_DIR, exist_ok=True)
 
 def excel_management_page():
-    st.header("📊 ระบบจัดการไฟล์ Excel")
-    st.markdown("เมนูนี้ใช้สำหรับอัปโหลดไฟล์ `.xlsx` เข้ามาดูบน Dashboard และสามารถดาวน์โหลดข้อมูลออกไปเป็นไฟล์ Excel ได้")
+    st.markdown("## 📁 ระบบคลังไฟล์ Excel")
+    st.markdown("อัปโหลดไฟล์ Excel เข้าคลัง และกดดาวน์โหลดไฟล์ออกไปใช้งานได้ทันที")
+    st.markdown("---")
 
-    # ส่วนอัปโหลด
-    st.subheader("📥 1. อัปโหลดไฟล์ Excel")
-    uploaded_file = st.file_uploader("ลากไฟล์ หรือ เลือกไฟล์ .xlsx ของคุณ", type=['xlsx'])
+    # --- ส่วนที่ 1: อัปโหลดไฟล์ ---
+    st.markdown("### 📥 1. เพิ่มไฟล์ Excel เข้าระบบ")
+    uploaded_file = st.file_uploader(
+        "เลือกไฟล์ Excel (.xlsx / .xls) ของคุณ", 
+        type=["xlsx", "xls"],
+        key="excel_simple_uploader"
+    )
 
     if uploaded_file is not None:
-        try:
-            df = pd.read_excel(uploaded_file)
-            st.success(f"โหลดไฟล์ {uploaded_file.name} สำเร็จ!")
-            st.dataframe(df, use_container_width=True)
-            st.session_state['excel_data'] = df
-        except Exception as e:
-            st.error(f"เกิดข้อผิดพลาดในการอ่านไฟล์: {e}")
+        save_path = os.path.join(EXCEL_DIR, uploaded_file.name)
+        with open(save_path, "wb") as f:
+            f.write(uploaded_file.getbuffer())
+        st.success(f"✅ เพิ่มไฟล์ `{uploaded_file.name}` เข้าสู่ระบบเรียบร้อยแล้ว!")
+        st.rerun()
 
     st.markdown("---")
 
-    # ส่วนดาวน์โหลด
-    st.subheader("📤 2. ดาวน์โหลดข้อมูลเป็นไฟล์ Excel")
-    if 'excel_data' in st.session_state and not st.session_state['excel_data'].empty:
-        df_to_download = st.session_state['excel_data']
-        excel_bytes = convert_df_to_excel(df_to_download)
-        st.download_button(
-            label="💾 คลิกเพื่อดาวน์โหลดไฟล์ Excel (.xlsx)",
-            data=excel_bytes,
-            file_name="Dashboard_Export.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+    # --- ส่วนที่ 2: รายการไฟล์และปุ่มดาวน์โหลด ---
+    st.markdown("### 📊 2. รายการไฟล์ Excel ทั้งหมดในคลัง")
+    
+    files = os.listdir(EXCEL_DIR)
+    excel_files = [f for f in files if f.endswith(('.xlsx', '.xls'))]
+
+    if not excel_files:
+        st.info("📌 ยังไม่มีไฟล์ Excel ในระบบ กรุณาอัปโหลดไฟล์ด้านบน")
     else:
-        st.warning("ยังไม่มีข้อมูลในระบบ กรุณาอัปโหลดไฟล์ด้านบนก่อน")
+        for file_name in excel_files:
+            file_path = os.path.join(EXCEL_DIR, file_name)
+            col_icon, col_name, col_down, col_del = st.columns([1, 5, 2, 1])
+            
+            with col_icon:
+                st.markdown("📊")
+            with col_name:
+                st.markdown(f"**{file_name}**")
+            with col_down:
+                with open(file_path, "rb") as f:
+                    st.download_button(
+                        label="⬇️ ดาวน์โหลด",
+                        data=f,
+                        file_name=file_name,
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        key=f"dl_{file_name}",
+                        use_container_width=True,
+                        type="primary"
+                    )
+            with col_del:
+                with st.popover("🗑️", help="ลบไฟล์"):
+                    st.write("ยืนยันลบไฟล์นี้?")
+                    if st.button("ยืนยัน", key=f"del_{file_name}", type="primary"):
+                        os.remove(file_path)
+                        st.success("ลบไฟล์แล้ว")
+                        st.rerun()
+            st.markdown("<hr style='margin: 8px 0; border-color: #222;'/>", unsafe_allow_html=True)
 
 # =================================================================
 # ⚙️ Dictionary คลังคำสั่ง

@@ -778,6 +778,9 @@ def show_pdf_library():
 # =================================================================
 # 📊 ระบบจัดการ EXCEL (Upload / Download) - แบบคลังเก็บไฟล์
 # =================================================================
+import os
+import streamlit as st
+
 EXCEL_DIR = "excel_store"
 os.makedirs(EXCEL_DIR, exist_ok=True)
 
@@ -796,10 +799,12 @@ def excel_management_page():
 
     if uploaded_file is not None:
         save_path = os.path.join(EXCEL_DIR, uploaded_file.name)
-        with open(save_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
-        st.success(f"✅ เพิ่มไฟล์ `{uploaded_file.name}` เข้าสู่ระบบเรียบร้อยแล้ว!")
-        st.rerun()
+        # เช็คว่ามีไฟล์นี้อยู่ในโฟลเดอร์หรือยัง เพื่อป้องกันการสั่ง st.rerun() วนลูปไม่จบ
+        if not os.path.exists(save_path):
+            with open(save_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+            st.success(f"✅ เพิ่มไฟล์ `{uploaded_file.name}` เข้าสู่ระบบเรียบร้อยแล้ว!")
+            st.rerun()
 
     st.markdown("---")
 

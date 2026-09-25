@@ -79,7 +79,21 @@ def commit_to_github(file_path: Path, commit_message: str):
 # --- 1. SETUP PAGE ---
 st.set_page_config(page_title="ZTE OLT & PC Command Center", layout="wide")
 
-    st.markdown("""
+   # --- ฟังก์ชันตรวจสอบรหัสผ่าน ---
+def check_password():
+    """Returns `True` if the user had the correct password."""
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        if st.session_state["password"] == APP_PASSWORD:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # ไม่เก็บบันทึกรหัสผ่านไว้ใน memory
+        else:
+            st.session_state["password_correct"] = False
+
+    if st.session_state.get("password_correct", False):
+        return True
+
+st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&family=JetBrains+Mono:wght@600&display=swap');
         .stApp {

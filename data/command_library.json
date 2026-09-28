@@ -26,6 +26,10 @@
       [
         "ค้นหาเลขวงจรลูกค้าที่ผูกอยู่ข้างในพอร์ต PON",
         "show running-config | begin gpon-onu_{slot}"
+      ],
+      [
+        "คืนค่า onu",
+        "pon-onu-mng gpon-onu_...\nrestore factory"
       ]
     ],
     "🌐 ตรวจสอบสถานะอุปกรณ์ (MAC / IP / LAN Ports)": [

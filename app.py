@@ -1548,15 +1548,7 @@ def delete_command_from_library(filename, library, category, sub_cat, item_idx):
 
 
 # --- 2. SIDEBAR NAVIGATION ---
-st.sidebar.markdown("## 📌 เมนูหลัก")
-
-# 🌟 1. เพิ่มตัวเลือกสลับโหมดการทำงานตรงนี้
-app_mode = st.sidebar.radio(
-    "เลือกโหมดการทำงาน:",
-    ["🏠 Dashboard & คลังคำสั่ง", "📊 แปลงไฟล์ / จัดการ Excel"],
-    label_visibility="collapsed"
-)
-st.sidebar.markdown("---")
+app_mode = "🏠 Dashboard & คลังคำสั่ง"
 
 with st.sidebar.expander("🌐 Web", expanded=True):
     current_web_data = render_web_section("web_links.json", WEB_SEED)

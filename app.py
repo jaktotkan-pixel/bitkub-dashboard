@@ -775,7 +775,8 @@ def show_pdf_library():
                 scrolling=False
             )
   
-def render_manual_section():
+
+   def render_manual_section():
     """แสดงส่วนคู่มือเป็นกล่องพับเก็บได้ (Expander) บนหน้า Dashboard"""
     manual_list = load_manual_data()
     if not manual_list:

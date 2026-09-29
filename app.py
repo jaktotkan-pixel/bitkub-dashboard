@@ -776,74 +776,11 @@ def show_pdf_library():
             )
 # =================================================================
 # =================================================================
-# 📊 ระบบจัดการ EXCEL (Upload / Download) - แบบคลังเก็บไฟล์
-# =================================================================
-import os
-import streamlit as st
+# ในส่วน Sidebar Navigation
+app_mode = st.sidebar.radio("เมนูหลัก", ["🏠 Dashboard", "📊 จัดการ Excel", "📖 คู่มือการใช้งาน"])
 
-EXCEL_DIR = "excel_store"
-os.makedirs(EXCEL_DIR, exist_ok=True)
-
-def excel_management_page():
-    st.markdown("## 📁 ระบบคลังไฟล์ Excel")
-    st.markdown("อัปโหลดไฟล์ Excel เข้าคลัง และกดดาวน์โหลดไฟล์ออกไปใช้งานได้ทันที")
-    st.markdown("---")
-
-    # --- ส่วนที่ 1: อัปโหลดไฟล์ ---
-    st.markdown("### 📥 1. เพิ่มไฟล์ Excel เข้าระบบ")
-    uploaded_file = st.file_uploader(
-        "เลือกไฟล์ Excel (.xlsx / .xls) ของคุณ", 
-        type=["xlsx", "xls"],
-        key="excel_simple_uploader"
-    )
-
-    if uploaded_file is not None:
-        save_path = os.path.join(EXCEL_DIR, uploaded_file.name)
-        # เช็คว่ามีไฟล์นี้อยู่ในโฟลเดอร์หรือยัง เพื่อป้องกันการสั่ง st.rerun() วนลูปไม่จบ
-        if not os.path.exists(save_path):
-            with open(save_path, "wb") as f:
-                f.write(uploaded_file.getbuffer())
-            st.success(f"✅ เพิ่มไฟล์ `{uploaded_file.name}` เข้าสู่ระบบเรียบร้อยแล้ว!")
-            st.rerun()
-
-    st.markdown("---")
-
-    # --- ส่วนที่ 2: รายการไฟล์และปุ่มดาวน์โหลด ---
-    st.markdown("### 📊 2. รายการไฟล์ Excel ทั้งหมดในคลัง")
-    
-    files = os.listdir(EXCEL_DIR)
-    excel_files = [f for f in files if f.endswith(('.xlsx', '.xls'))]
-
-    if not excel_files:
-        st.info("📌 ยังไม่มีไฟล์ Excel ในระบบ กรุณาอัปโหลดไฟล์ด้านบน")
-    else:
-        for file_name in excel_files:
-            file_path = os.path.join(EXCEL_DIR, file_name)
-            col_icon, col_name, col_down, col_del = st.columns([1, 5, 2, 1])
-            
-            with col_icon:
-                st.markdown("📊")
-            with col_name:
-                st.markdown(f"**{file_name}**")
-            with col_down:
-                with open(file_path, "rb") as f:
-                    st.download_button(
-                        label="⬇️ ดาวน์โหลด",
-                        data=f,
-                        file_name=file_name,
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        key=f"dl_{file_name}",
-                        use_container_width=True,
-                        type="primary"
-                    )
-            with col_del:
-                with st.popover("🗑️", help="ลบไฟล์"):
-                    st.write("ยืนยันลบไฟล์นี้?")
-                    if st.button("ยืนยัน", key=f"del_{file_name}", type="primary"):
-                        os.remove(file_path)
-                        st.success("ลบไฟล์แล้ว")
-                        st.rerun()
-            st.markdown("<hr style='margin: 8px 0; border-color: #222;'/>", unsafe_allow_html=True)
+if app_mode == "📖 คู่มือการใช้งาน":
+    manual_page()
 # =================================================================
 # ⚙️ Dictionary คลังคำสั่ง
 # =================================================================

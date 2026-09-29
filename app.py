@@ -780,14 +780,13 @@ import json
 import streamlit as st
 
 # =================================================================
-# 📖 1. ระบบคู่มือการใช้งานแบบไดนามิก (เพิ่ม/แก้ไข/ใส่รูป/ลบ ได้)
+# 📖 ระบบคู่มือการใช้งาน (รวมอยู่ในหน้า Dashboard)
 # =================================================================
 MANUAL_DATA_FILE = "manual_data.json"
 MANUAL_IMG_DIR = "manual_images"
 os.makedirs(MANUAL_IMG_DIR, exist_ok=True)
 
 def load_manual_data():
-    """โหลดข้อมูลคู่มือจากไฟล์ json"""
     if os.path.exists(MANUAL_DATA_FILE):
         try:
             with open(MANUAL_DATA_FILE, "r", encoding="utf-8") as f:
@@ -797,101 +796,82 @@ def load_manual_data():
     return []
 
 def save_manual_data(data):
-    """บันทึกข้อมูลคู่มือลงไฟล์ json"""
     with open(MANUAL_DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
-def manual_page():
-    st.markdown("## 📖 คู่มือการใช้งานระบบ (User Manual)")
-    st.markdown("---")
+def render_manual_section():
+    """แสดงส่วนคู่มือเป็นกล่องพับเก็บได้ (Expander) บนหน้า Dashboard"""
+    with st.expander("📖 คู่มือการใช้งานระบบ (User Manual)", expanded=False):
+        manual_list = load_manual_data()
+        tab_view, tab_manage = st.tabs(["👁️ อ่านคู่มือการใช้งาน", "✏️ เพิ่ม / จัดการคู่มือ"])
 
-    manual_list = load_manual_data()
-
-    # แยกแท็บ: อ่านคู่มือ และ เพิ่ม/จัดการข้อมูล
-    tab_view, tab_manage = st.tabs(["👁️ อ่านคู่มือการใช้งาน", "✏️ เพิ่ม / จัดการคู่มือ"])
-
-    # --- แท็บที่ 1: แสดงคู่มือ ---
-    with tab_view:
-        if not manual_list:
-            st.info("📌 ยังไม่มีข้อมูลคู่มือ กรุณาเพิ่มหัวข้อใหม่ที่แท็บ '✏️ เพิ่ม / จัดการคู่มือ'")
-        else:
-            for item in manual_list:
-                with st.expander(f"📌 {item.get('title', 'ไม่มีหัวข้อ')}", expanded=True):
-                    st.write(item.get('content', ''))
+        # --- แท็บที่ 1: แสดงคู่มือ ---
+        with tab_view:
+            if not manual_list:
+                st.info("📌 ยังไม่มีข้อมูลคู่มือ สามารถเพิ่มหัวข้อใหม่ได้ที่แท็บ '✏️ เพิ่ม / จัดการคู่มือ'")
+            else:
+                for item in manual_list:
+                    st.markdown(f"### 📌 {item.get('title', 'ไม่มีหัวข้อ')}")
+                    if item.get('content'):
+                        st.write(item.get('content'))
                     img_path = item.get('image_path')
                     if img_path and os.path.exists(img_path):
                         st.image(img_path, use_container_width=True)
+                    st.markdown("---")
 
-    # --- แท็บที่ 2: เพิ่มและลบข้อมูลคู่มือ ---
-    with tab_manage:
-        st.markdown("### ➕ เพิ่มหัวข้อคู่มือใหม่")
-        with st.form("add_manual_form", clear_on_submit=True):
-            new_title = st.text_input("หัวข้อ (Title)")
-            new_content = st.text_area("คำอธิบาย (Description)", height=120)
-            uploaded_img = st.file_uploader("เลือกรูปภาพประกอบ (ถ้ามี)", type=["png", "jpg", "jpeg", "webp"])
-            
-            submitted = st.form_submit_button("💾 บันทึกหัวข้อใหม่", type="primary")
-            if submitted:
-                if not new_title.strip():
-                    st.warning("กรุณากรอกหัวข้อก่อนบันทึก")
-                else:
-                    img_path = ""
-                    if uploaded_img is not None:
-                        img_path = os.path.join(MANUAL_IMG_DIR, uploaded_img.name)
-                        with open(img_path, "wb") as f:
-                            f.write(uploaded_img.getbuffer())
-                    
-                    new_item = {
-                        "title": new_title,
-                        "content": new_content,
-                        "image_path": img_path
-                    }
-                    manual_list.append(new_item)
-                    save_manual_data(manual_list)
-                    st.success("✅ บันทึกคู่มือเรียบร้อยแล้ว!")
-                    st.rerun()
-
-        st.markdown("---")
-        st.markdown("### 🗑️ รายการคู่มือทั้งหมด (กดลบได้)")
-        if not manual_list:
-            st.caption("ไม่มีรายการให้จัดการ")
-        else:
-            for idx, item in enumerate(manual_list):
-                col_txt, col_btn = st.columns([5, 1])
-                with col_txt:
-                    st.write(f"**{idx+1}. {item.get('title')}**")
-                with col_btn:
-                    if st.button("🗑️ ลบ", key=f"del_manual_{idx}"):
-                        img_p = item.get('image_path')
-                        if img_p and os.path.exists(img_p):
-                            try:
-                                os.remove(img_p)
-                            except Exception:
-                                pass
-                        manual_list.pop(idx)
+        # --- แท็บที่ 2: เพิ่มและลบข้อมูลคู่มือ ---
+        with tab_manage:
+            st.markdown("#### ➕ เพิ่มหัวข้อคู่มือใหม่")
+            with st.form("add_manual_form_dashboard", clear_on_submit=True):
+                new_title = st.text_input("หัวข้อ (Title)")
+                new_content = st.text_area("คำอธิบาย (Description)", height=120)
+                uploaded_img = st.file_uploader("เลือกรูปภาพประกอบ (ถ้ามี)", type=["png", "jpg", "jpeg", "webp"])
+                
+                submitted = st.form_submit_button("💾 บันทึกหัวข้อใหม่", type="primary")
+                if submitted:
+                    if not new_title.strip():
+                        st.warning("กรุณากรอกหัวข้อก่อนบันทึก")
+                    else:
+                        img_path = ""
+                        if uploaded_img is not None:
+                            img_path = os.path.join(MANUAL_IMG_DIR, uploaded_img.name)
+                            with open(img_path, "wb") as f:
+                                f.write(uploaded_img.getbuffer())
+                        
+                        new_item = {
+                            "title": new_title,
+                            "content": new_content,
+                            "image_path": img_path
+                        }
+                        manual_list.append(new_item)
                         save_manual_data(manual_list)
-                        st.success("ลบหัวข้อเรียบร้อยแล้ว")
+                        st.success("✅ บันทึกคู่มือเรียบร้อยแล้ว!")
                         st.rerun()
 
+            st.markdown("---")
+            st.markdown("#### 🗑️ รายการคู่มือทั้งหมด")
+            if not manual_list:
+                st.caption("ไม่มีรายการให้จัดการ")
+            else:
+                for idx, item in enumerate(manual_list):
+                    col_txt, col_btn = st.columns([5, 1])
+                    with col_txt:
+                        st.write(f"**{idx+1}. {item.get('title')}**")
+                    with col_btn:
+                        if st.button("🗑️ ลบ", key=f"del_manual_dash_{idx}"):
+                            img_p = item.get('image_path')
+                            if img_p and os.path.exists(img_p):
+                                try:
+                                    os.remove(img_p)
+                                except Exception:
+                                    pass
+                            manual_list.pop(idx)
+                            save_manual_data(manual_list)
+                            st.success("ลบหัวข้อเรียบร้อยแล้ว")
+                            st.rerun()
 
-# =================================================================
-# 🧭 2. SIDEBAR NAVIGATION & MAIN CALL
-# =================================================================
-# ใส่ key="nav_main_menu" ป้องกัน ID ชนกัน
-app_mode = st.sidebar.radio(
-    "เมนูหลัก", 
-    ["🏠 Dashboard & คลังคำสั่ง", "📖 คู่มือการใช้งาน"],
-    key="nav_main_menu"
-)
-
-if app_mode == "🏠 Dashboard & คลังคำสั่ง":
-    try:
-        dashboard_page()
-    except NameError:
-        st.title("🏠 Dashboard & คลังคำสั่ง")
-        st.info("โปรดเปลี่ยนชื่อคำสั่งเรียกหน้า Dashboard ให้ตรงกับฟังก์ชันในโค้ดเดิมของคุณ")
-elif app_mode == "📖 คู่มือการใช้งาน":
-    manual_page()
+# เรียกใช้งานส่วนคู่มือตรงนี้ได้เลย (จะแสดงอยู่ด้านบนสุดของ Dashboard)
+render_manual_section()
 # =================================================================
 
 c300_commands = {

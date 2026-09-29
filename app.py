@@ -776,11 +776,19 @@ def show_pdf_library():
             )
   
 def render_manual_section():
-"""แสดงส่วนคู่มือเป็นกล่องพับเก็บได้ (Expander) บนหน้า Dashboard"""
-with st.expander("📖 คู่มือการใช้งานระบบ (User Manual)", expanded=False):
+    """แสดงส่วนคู่มือเป็นกล่องพับเก็บได้ (Expander) บนหน้า Dashboard"""
     manual_list = load_manual_data()
-    tab_view, tab_manage = st.tabs(["👁️ อ่านคู่มือการใช้งาน", "✏️ เพิ่ม / จัดการคู่มือ"])
-
+    if not manual_list:
+        st.info("📌 ยังไม่มีคู่มือการใช้งาน")
+    else:
+        with st.expander("📖 คู่มือการใช้งานระบบ (User Manual)", expanded=False):
+            for item in manual_list:
+                st.markdown(f"**📌 {item.get('title')}**")
+                if item.get('content'):
+                    st.caption(item.get('content'))
+                if item.get('image_path') and os.path.exists(item.get('image_path')):
+                    st.image(item.get('image_path'))
+                st.markdown("---")
 # ===================================================
 # 🖥️ หน้าหลัก Dashboard & คลังคำสั่ง
 # ===================================================

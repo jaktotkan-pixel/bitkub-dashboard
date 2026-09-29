@@ -774,41 +774,50 @@ def show_pdf_library():
                 height=660,
                 scrolling=False
             )
-   # =================================================================
+  
+def render_manual_section():
+"""แสดงส่วนคู่มือเป็นกล่องพับเก็บได้ (Expander) บนหน้า Dashboard"""
+with st.expander("📖 คู่มือการใช้งานระบบ (User Manual)", expanded=False):
+    manual_list = load_manual_data()
+    tab_view, tab_manage = st.tabs(["👁️ อ่านคู่มือการใช้งาน", "✏️ เพิ่ม / จัดการคู่มือ"])
+
+# ===================================================
 # 🖥️ หน้าหลัก Dashboard & คลังคำสั่ง
-# =================================================================
-if menu == "🏠 Dashboard & คลังคำสั่ง":
+# ===================================================
 
-    # 1. Header หลักของระบบ
-    st.markdown("## `root@kri-noc:~$ ZTE_OLT_COMMAND_CENTER` 🟢 `SYSTEM ONLINE`")
-    st.caption("# คลังคำสั่งและข้อมูลหน้างานเครือข่าย ZTE / OLT / DSLAM / Switch — ค้นหาได้จากทุกหมวดในจุดเดียว")
+# 1. Header หลักของระบบ
+st.markdown("## `root@kri-noc:~$ ZTE_OLT_COMMAND_CENTER` 🟢 `SYSTEM ONLINE`")[cite: 8]
+st.caption("# คลังคำสั่งและข้อมูลหน้างานเครือข่าย ZTE / OLT / DSLAM / Switch — ค้นหาได้จากทุกหมวดในจุดเดียว")[cite: 8]
 
-    st.markdown("---")
+st.markdown("---")[cite: 8]
 
-    # 2. จัดวางกล่อง คู่มือ และ คลังเอกสาร PDF ให้อยู่คู่กันอย่างเป็นระเบียบ
-    col_pdf, col_manual = st.columns(2)
+# 2. จัดวางกล่อง คู่มือ และ คลังเอกสาร PDF
+col_pdf, col_manual = st.columns(2)[cite: 8]
 
-    with col_pdf:
-        with st.expander("📑 คลังเอกสาร PDF", expanded=False):
-            st.write("รายการเอกสาร PDF สำหรับดาวน์โหลด/เปิดดู...")
-            # (ใส่โค้ดคลัง PDF เดิมของคุณตรงนี้)
+with col_pdf:[cite: 8]
+    with st.expander("📑 คลังเอกสาร PDF", expanded=False):[cite: 8]
+        st.write("รายการเอกสาร PDF สำหรับดาวน์โหลด/เปิดดู...")[cite: 8]
+        # (ใส่โค้ดคลัง PDF เดิมของคุณตรงนี้)[cite: 8]
 
-    with col_manual:
-        with st.expander("📖 คู่มือการใช้งานระบบ (User Manual)", expanded=False):
-            manual_list = load_manual_data()
-            if not manual_list:
-                st.info("📌 ยังไม่มีคู่มือการใช้งาน")
-            else:
-                for item in manual_list:
-                    st.markdown(f"**📌 {item.get('title')}**")
-                    if item.get('content'):
-                        st.caption(item.get('content'))
-                    if item.get('image_path') and os.path.exists(item.get('image_path')):
-                        st.image(item.get('image_path'))
-                    st.markdown("---")
+with col_manual:
+    render_manual_section()  # เรียกใช้กล่องคู่มือตรงนี้ได้เลย
 
-    # 3. ส่วนค้นหา และ สถิติต่างๆ
-    # (ต่อด้วยโค้ดสถิติ ค้นหา และ ZTE C300 Series ตามปกติ)
+with col_manual:
+    with st.expander("📖 คู่มือการใช้งานระบบ (User Manual)", expanded=False):
+        manual_list = load_manual_data()
+        if not manual_list:
+            st.info("📌 ยังไม่มีคู่มือการใช้งาน")
+        else:
+            for item in manual_list:
+                st.markdown(f"**📌 {item.get('title')}**")
+                if item.get('content'):
+                    st.caption(item.get('content'))
+                if item.get('image_path') and os.path.exists(item.get('image_path')):
+                    st.image(item.get('image_path'))
+                st.markdown("---")
+
+# 3. ส่วนค้นหา และ สถิติต่างๆ
+# (ต่อด้วยโค้ดสถิติ ค้นหา และ ZTE C300 Series ตามปกติ)
 # =================================================================
 import os
 import json
@@ -822,231 +831,231 @@ MANUAL_IMG_DIR = "manual_images"
 os.makedirs(MANUAL_IMG_DIR, exist_ok=True)
 
 def load_manual_data():
-    if os.path.exists(MANUAL_DATA_FILE):
-        try:
-            with open(MANUAL_DATA_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return []
-    return []
+if os.path.exists(MANUAL_DATA_FILE):
+    try:
+        with open(MANUAL_DATA_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+return []
 
 def save_manual_data(data):
-    with open(MANUAL_DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+with open(MANUAL_DATA_FILE, "w", encoding="utf-8") as f:
+    json.dump(data, f, ensure_ascii=False, indent=4)
 
 def render_manual_section():
-    """แสดงส่วนคู่มือเป็นกล่องพับเก็บได้ (Expander) บนหน้า Dashboard"""
-    with st.expander("📖 คู่มือการใช้งานระบบ (User Manual)", expanded=False):
-        manual_list = load_manual_data()
-        tab_view, tab_manage = st.tabs(["👁️ อ่านคู่มือการใช้งาน", "✏️ เพิ่ม / จัดการคู่มือ"])
+"""แสดงส่วนคู่มือเป็นกล่องพับเก็บได้ (Expander) บนหน้า Dashboard"""
+with st.expander("📖 คู่มือการใช้งานระบบ (User Manual)", expanded=False):
+    manual_list = load_manual_data()
+    tab_view, tab_manage = st.tabs(["👁️ อ่านคู่มือการใช้งาน", "✏️ เพิ่ม / จัดการคู่มือ"])
 
-        # --- แท็บที่ 1: แสดงคู่มือ ---
-        with tab_view:
-            if not manual_list:
-                st.info("📌 ยังไม่มีข้อมูลคู่มือ สามารถเพิ่มหัวข้อใหม่ได้ที่แท็บ '✏️ เพิ่ม / จัดการคู่มือ'")
-            else:
-                for item in manual_list:
-                    st.markdown(f"### 📌 {item.get('title', 'ไม่มีหัวข้อ')}")
-                    if item.get('content'):
-                        st.write(item.get('content'))
-                    img_path = item.get('image_path')
-                    if img_path and os.path.exists(img_path):
-                        st.image(img_path, use_container_width=True)
-                    st.markdown("---")
+    # --- แท็บที่ 1: แสดงคู่มือ ---
+    with tab_view:
+        if not manual_list:
+            st.info("📌 ยังไม่มีข้อมูลคู่มือ สามารถเพิ่มหัวข้อใหม่ได้ที่แท็บ '✏️ เพิ่ม / จัดการคู่มือ'")
+        else:
+            for item in manual_list:
+                st.markdown(f"### 📌 {item.get('title', 'ไม่มีหัวข้อ')}")
+                if item.get('content'):
+                    st.write(item.get('content'))
+                img_path = item.get('image_path')
+                if img_path and os.path.exists(img_path):
+                    st.image(img_path, use_container_width=True)
+                st.markdown("---")
 
-        # --- แท็บที่ 2: เพิ่มและลบข้อมูลคู่มือ ---
-        with tab_manage:
-            st.markdown("#### ➕ เพิ่มหัวข้อคู่มือใหม่")
-            with st.form("add_manual_form_dashboard", clear_on_submit=True):
-                new_title = st.text_input("หัวข้อ (Title)")
-                new_content = st.text_area("คำอธิบาย (Description)", height=120)
-                uploaded_img = st.file_uploader("เลือกรูปภาพประกอบ (ถ้ามี)", type=["png", "jpg", "jpeg", "webp"])
-                
-                submitted = st.form_submit_button("💾 บันทึกหัวข้อใหม่", type="primary")
-                if submitted:
-                    if not new_title.strip():
-                        st.warning("กรุณากรอกหัวข้อก่อนบันทึก")
-                    else:
-                        img_path = ""
-                        if uploaded_img is not None:
-                            img_path = os.path.join(MANUAL_IMG_DIR, uploaded_img.name)
-                            with open(img_path, "wb") as f:
-                                f.write(uploaded_img.getbuffer())
-                        
-                        new_item = {
-                            "title": new_title,
-                            "content": new_content,
-                            "image_path": img_path
-                        }
-                        manual_list.append(new_item)
+    # --- แท็บที่ 2: เพิ่มและลบข้อมูลคู่มือ ---
+    with tab_manage:
+        st.markdown("#### ➕ เพิ่มหัวข้อคู่มือใหม่")
+        with st.form("add_manual_form_dashboard", clear_on_submit=True):
+            new_title = st.text_input("หัวข้อ (Title)")
+            new_content = st.text_area("คำอธิบาย (Description)", height=120)
+            uploaded_img = st.file_uploader("เลือกรูปภาพประกอบ (ถ้ามี)", type=["png", "jpg", "jpeg", "webp"])
+            
+            submitted = st.form_submit_button("💾 บันทึกหัวข้อใหม่", type="primary")
+            if submitted:
+                if not new_title.strip():
+                    st.warning("กรุณากรอกหัวข้อก่อนบันทึก")
+                else:
+                    img_path = ""
+                    if uploaded_img is not None:
+                        img_path = os.path.join(MANUAL_IMG_DIR, uploaded_img.name)
+                        with open(img_path, "wb") as f:
+                            f.write(uploaded_img.getbuffer())
+                    
+                    new_item = {
+                        "title": new_title,
+                        "content": new_content,
+                        "image_path": img_path
+                    }
+                    manual_list.append(new_item)
+                    save_manual_data(manual_list)
+                    st.success("✅ บันทึกคู่มือเรียบร้อยแล้ว!")
+                    st.rerun()
+
+        st.markdown("---")
+        st.markdown("#### 🗑️ รายการคู่มือทั้งหมด")
+        if not manual_list:
+            st.caption("ไม่มีรายการให้จัดการ")
+        else:
+            for idx, item in enumerate(manual_list):
+                col_txt, col_btn = st.columns([5, 1])
+                with col_txt:
+                    st.write(f"**{idx+1}. {item.get('title')}**")
+                with col_btn:
+                    if st.button("🗑️ ลบ", key=f"del_manual_dash_{idx}"):
+                        img_p = item.get('image_path')
+                        if img_p and os.path.exists(img_p):
+                            try:
+                                os.remove(img_p)
+                            except Exception:
+                                pass
+                        manual_list.pop(idx)
                         save_manual_data(manual_list)
-                        st.success("✅ บันทึกคู่มือเรียบร้อยแล้ว!")
+                        st.success("ลบหัวข้อเรียบร้อยแล้ว")
                         st.rerun()
-
-            st.markdown("---")
-            st.markdown("#### 🗑️ รายการคู่มือทั้งหมด")
-            if not manual_list:
-                st.caption("ไม่มีรายการให้จัดการ")
-            else:
-                for idx, item in enumerate(manual_list):
-                    col_txt, col_btn = st.columns([5, 1])
-                    with col_txt:
-                        st.write(f"**{idx+1}. {item.get('title')}**")
-                    with col_btn:
-                        if st.button("🗑️ ลบ", key=f"del_manual_dash_{idx}"):
-                            img_p = item.get('image_path')
-                            if img_p and os.path.exists(img_p):
-                                try:
-                                    os.remove(img_p)
-                                except Exception:
-                                    pass
-                            manual_list.pop(idx)
-                            save_manual_data(manual_list)
-                            st.success("ลบหัวข้อเรียบร้อยแล้ว")
-                            st.rerun()
 
 # เรียกใช้งานส่วนคู่มือตรงนี้ได้เลย (จะแสดงอยู่ด้านบนสุดของ Dashboard)
 render_manual_section()
 # =================================================================
 
 c300_commands = {
-    "🔦 เช็คระดับแสง (Optical Monitoring)": [
-        ["เช็คระดับแสงทั้ง OLT และ ONU พร้อมค่า Attenuation", "show pon power attenuation gpon-onu_{slot}"],
-        ["เช็คแสงผ่านพอร์ตย่อยอินเตอร์เฟส PON", "show gpon remote-onu interface pon gpon-onu_{slot}"]
-    ],
-    "📝 ตรวจสอบ Configuration & วงจร": [
-        ["ดู Config รวมอินเตอร์เฟส (เข้าตำแหน่งเบอร์)", "show running-config interface gpon-onu_{slot}"],
-        ["ดูเนื้อหา Config หลัง ONU (Profile / VLAN Port)", "show running-config | begin pon-onu-mng gpon-onu_{slot}"],
-        ["ส่องดูเฉพาะฝั่ง PON Profile ของลูกค้า", "show onu running-config gpon-onu_{slot}"],
-        ["ค้นหาเลขวงจรลูกค้าที่ผูกอยู่ข้างในพอร์ต PON", "show running-config | begin gpon-onu_{slot}"]
-    ],
-    "🌐 ตรวจสอบสถานะอุปกรณ์ (MAC / IP / LAN Ports)": [
-        ["ส่องดูหมายเลข MAC Address ที่เรียนรู้ผ่านตัว ONU ล่าสุด", "show mac gpon onu gpon-onu_{slot}"],
-        ["ดู MAC Address ทั้งหมดในพอร์ต PON ย่อย (ตาม Slot/Port)", "show mac gpon onu gpon-onu_{clean_slot}/"],
-        ["ตรวจสอบหมายเลข IP Address ฝั่ง WAN/Host ของตัว ONU", "show gpon remote-onu ip-host gpon-onu_{slot}"],
-        ["ตรวจสอบสถานะพอร์ตแลน (Ethernet) แต่ละช่องที่ตัว ONU ในบ้าน", "show gpon remote-onu interface eth gpon-onu_{slot}"]
-    ],
-    "📊 ตรวจสอบข้อมูลประวัติ & Log ย้อนหลัง": [
-        ["เช็คประวัติอย่างละเอียดของการ Up/Down และสาเหตุสายหลุด", "show gpon onu detail-info gpon-onu_{slot}"],
-        ["เช็คสถานะภาพรวม ONU ออนไลน์/ออฟไลน์ ทั้งหมดในการ์ด PON", "show gpon onu state gpon-olt_{clean_slot}"],
-        ["เช็คประวัติ Log ย้อนหลังเพื่อดูพฤติกรรมสายลูกค้า", "show pon onu information gpon-onu_{slot}"]
-    ]
+"🔦 เช็คระดับแสง (Optical Monitoring)": [
+    ["เช็คระดับแสงทั้ง OLT และ ONU พร้อมค่า Attenuation", "show pon power attenuation gpon-onu_{slot}"],
+    ["เช็คแสงผ่านพอร์ตย่อยอินเตอร์เฟส PON", "show gpon remote-onu interface pon gpon-onu_{slot}"]
+],
+"📝 ตรวจสอบ Configuration & วงจร": [
+    ["ดู Config รวมอินเตอร์เฟส (เข้าตำแหน่งเบอร์)", "show running-config interface gpon-onu_{slot}"],
+    ["ดูเนื้อหา Config หลัง ONU (Profile / VLAN Port)", "show running-config | begin pon-onu-mng gpon-onu_{slot}"],
+    ["ส่องดูเฉพาะฝั่ง PON Profile ของลูกค้า", "show onu running-config gpon-onu_{slot}"],
+    ["ค้นหาเลขวงจรลูกค้าที่ผูกอยู่ข้างในพอร์ต PON", "show running-config | begin gpon-onu_{slot}"]
+],
+"🌐 ตรวจสอบสถานะอุปกรณ์ (MAC / IP / LAN Ports)": [
+    ["ส่องดูหมายเลข MAC Address ที่เรียนรู้ผ่านตัว ONU ล่าสุด", "show mac gpon onu gpon-onu_{slot}"],
+    ["ดู MAC Address ทั้งหมดในพอร์ต PON ย่อย (ตาม Slot/Port)", "show mac gpon onu gpon-onu_{clean_slot}/"],
+    ["ตรวจสอบหมายเลข IP Address ฝั่ง WAN/Host ของตัว ONU", "show gpon remote-onu ip-host gpon-onu_{slot}"],
+    ["ตรวจสอบสถานะพอร์ตแลน (Ethernet) แต่ละช่องที่ตัว ONU ในบ้าน", "show gpon remote-onu interface eth gpon-onu_{slot}"]
+],
+"📊 ตรวจสอบข้อมูลประวัติ & Log ย้อนหลัง": [
+    ["เช็คประวัติอย่างละเอียดของการ Up/Down และสาเหตุสายหลุด", "show gpon onu detail-info gpon-onu_{slot}"],
+    ["เช็คสถานะภาพรวม ONU ออนไลน์/ออฟไลน์ ทั้งหมดในการ์ด PON", "show gpon onu state gpon-olt_{clean_slot}"],
+    ["เช็คประวัติ Log ย้อนหลังเพื่อดูพฤติกรรมสายลูกค้า", "show pon onu information gpon-onu_{slot}"]
+]
 }
 
 c600_commands = {
-    "🔦 เช็คระดับแสง (Optical Monitoring)": [
-        ["เช็คระดับแสงขาเข้าที่ตัว ONU (C600)", "show pon power onu-rx gpon_onu-{slot}"],
-        ["เช็คระดับแสงขาเข้าที่การ์ดตู้ OLT (C600)", "show pon power olt-rx gpon_onu-{slot}"]
-    ],
-    "📝 ตรวจสอบ Configuration & วงจร": [
-        ["เช็ค Running Config บนพอร์ต ONU ล่าสุด (C600)", "show running-config-interface gpon_onu-{slot}"],
-        ["เช็คโครงสร้างพอร์ตแลนและพอร์ตแมป VLAN (vport C600)", "show running-config-interface vport-1/{slot}"]
-    ],
-    "📊 ตรวจสอบข้อมูลประวัติ & Log ย้อนหลัง": [
-        ["เช็คประวัติอย่างละเอียดและสาเหตุการ Up/Down ล่าสุด (C600)", "show gpon onu detail-info gpon_onu-{slot}"]
-    ]
+"🔦 เช็คระดับแสง (Optical Monitoring)": [
+    ["เช็คระดับแสงขาเข้าที่ตัว ONU (C600)", "show pon power onu-rx gpon_onu-{slot}"],
+    ["เช็คระดับแสงขาเข้าที่การ์ดตู้ OLT (C600)", "show pon power olt-rx gpon_onu-{slot}"]
+],
+"📝 ตรวจสอบ Configuration & วงจร": [
+    ["เช็ค Running Config บนพอร์ต ONU ล่าสุด (C600)", "show running-config-interface gpon_onu-{slot}"],
+    ["เช็คโครงสร้างพอร์ตแลนและพอร์ตแมป VLAN (vport C600)", "show running-config-interface vport-1/{slot}"]
+],
+"📊 ตรวจสอบข้อมูลประวัติ & Log ย้อนหลัง": [
+    ["เช็คประวัติอย่างละเอียดและสาเหตุการ Up/Down ล่าสุด (C600)", "show gpon onu detail-info gpon_onu-{slot}"]
+]
 }
 
 zte_pracharath_commands = {
-    "🔑 รหัสผ่านเข้าใช้งาน (Account & Credentials)": [
-        ["ข้อมูลการเข้าใช้งาน SW ZTE ประชารัฐ", 
+"🔑 รหัสผ่านเข้าใช้งาน (Account & Credentials)": [
+    ["ข้อมูลการเข้าใช้งาน SW ZTE ประชารัฐ", 
 """User: nex
 Pass: N3x@autoconfig 
 Login enable Pass: zxr10"""]
-    ],
-    "🔍 คำสั่งตรวจสอบและเช็คแสง (Switch ZTE)": [
-        ["แสดงสถานะ Port Up / Down", "show interface description"],
-        ["เช็คสถานะ Port โดยรวมทั้งหมด", "show running-config"],
-        ["เช็คแสงออกจาก SFP (TX Power)", "show optical-inform details tx-power interface xgei_0/"],
-        ["เช็คแสงกลับมาจาก SFP (RX Power)", "show optical-inform details rx-power interface xgei_0/"],
-        ["คำสั่งสำหรับ Sw 24k (เปิด/ปิด ระบบเช็คแสง)", "# optical-inform monitor enable"]
-    ]
+],
+"🔍 คำสั่งตรวจสอบและเช็คแสง (Switch ZTE)": [
+    ["แสดงสถานะ Port Up / Down", "show interface description"],
+    ["เช็คสถานะ Port โดยรวมทั้งหมด", "show running-config"],
+    ["เช็คแสงออกจาก SFP (TX Power)", "show optical-inform details tx-power interface xgei_0/"],
+    ["เช็คแสงกลับมาจาก SFP (RX Power)", "show optical-inform details rx-power interface xgei_0/"],
+    ["คำสั่งสำหรับ Sw 24k (เปิด/ปิด ระบบเช็คแสง)", "# optical-inform monitor enable"]
+]
 }
 
 extreme_commands = {
-    "🔍 คำสั่งตรวจสอบสถานะ & MAC Address": [
-        ["ดู Status (แสดงแบบ No-Refresh ไม่ใช่ Real-time)", "show port no-refresh"],
-        ["ดู MAC Address ภายใน VLAN ที่กำหนด", "show fdb vlan v..."],
-        ["ดูว่าพอร์ตที่ระบุ มี VLAN อะไรผ่านบ้าง", "show fdb port ..."],
-        ["ล้างข้อมูล FDB ในพอร์ตที่ระบุ", "cler fdb ports ..."]
-    ],
-    "⚙️ คำสั่งจัดการ VLAN & Configuration": [
-        ["เพิ่ม VLAN แบบ Tagged ใส่พอร์ต", "config vlan v... add port ... tagged"],
-        ["ลบ VLAN ออกจากพอร์ต", "config vlan v... delete port ..."],
-        ["ตรวจสอบว่า VLAN ถูกใส่ไปที่พอร์ตไหนบ้าง", "show vlan v..."],
-        ["สร้าง VLAN ใหม่พร้อมกำหนด Tag", "create vlan v... tag ..."],
-        ["แสดงการตั้งค่าเฉพาะพอร์ต", "configure ports 17 display"]
-    ],
-    "🔦 คำสั่งตรวจสอบค่าแสง SFP (Transceiver)": [
-        ["เช็คระดับแสงภาพรวมทุกพอร์ต", "show ports transceiver information detail"],
-        ["เช็คระดับแสงแยกเฉพาะพอร์ต (ตัวอย่างพอร์ต 11)", "show ports 11 transceiver information detail"]
-    ]
+"🔍 คำสั่งตรวจสอบสถานะ & MAC Address": [
+    ["ดู Status (แสดงแบบ No-Refresh ไม่ใช่ Real-time)", "show port no-refresh"],
+    ["ดู MAC Address ภายใน VLAN ที่กำหนด", "show fdb vlan v..."],
+    ["ดูว่าพอร์ตที่ระบุ มี VLAN อะไรผ่านบ้าง", "show fdb port ..."],
+    ["ล้างข้อมูล FDB ในพอร์ตที่ระบุ", "cler fdb ports ..."]
+],
+"⚙️ คำสั่งจัดการ VLAN & Configuration": [
+    ["เพิ่ม VLAN แบบ Tagged ใส่พอร์ต", "config vlan v... add port ... tagged"],
+    ["ลบ VLAN ออกจากพอร์ต", "config vlan v... delete port ..."],
+    ["ตรวจสอบว่า VLAN ถูกใส่ไปที่พอร์ตไหนบ้าง", "show vlan v..."],
+    ["สร้าง VLAN ใหม่พร้อมกำหนด Tag", "create vlan v... tag ..."],
+    ["แสดงการตั้งค่าเฉพาะพอร์ต", "configure ports 17 display"]
+],
+"🔦 คำสั่งตรวจสอบค่าแสง SFP (Transceiver)": [
+    ["เช็คระดับแสงภาพรวมทุกพอร์ต", "show ports transceiver information detail"],
+    ["เช็คระดับแสงแยกเฉพาะพอร์ต (ตัวอย่างพอร์ต 11)", "show ports 11 transceiver information detail"]
+]
 }
 
 fixline_commands = {
-    "🔍 คำสั่งตรวจสอบสถานะ & ตำแหน่ง": [
-        ["ดูสถานะเลขหมาย", "stsup:sub=xxxx ;"],
-        ["ดูตำแหน่งวงจร/พอร์ต", "exdrp:dev=li3-xxxx ;"],
-        ["ดู Category (cat)", "suscp:snb=xxxx ;"],
-        ["ดูสถานะภาพรวมชุมสาย", "ststp:emg=xxxx ; emts=all ;"]
-    ],
-    "🔒 คำสั่งบล็อค & ปลดบล็อค (Block/Unblock)": [
-        ["สั่งบล็อคพอร์ตอุปกรณ์", "blodi:dev=li3-xxxx;"],
-        ["สั่งปลดบล็อคพอร์ตอุปกรณ์", "blode:dev=li3-xxxx;"],
-        ["สั่งบล็อคที่ระดับชุมสาย", "remei:emg=xxxx,pcb=emrp-a-meu,mag=em-xx;"],
-        ["สั่งปลดบล็อคที่ระดับ MAC", "blece:emg=xxxx,em=xx;"],
-        ["สั่งปลดบล็อคทั้งหมด", "recei:emg=xxxx,emrp=o-a;"]
-    ]
+"🔍 คำสั่งตรวจสอบสถานะ & ตำแหน่ง": [
+    ["ดูสถานะเลขหมาย", "stsup:sub=xxxx ;"],
+    ["ดูตำแหน่งวงจร/พอร์ต", "exdrp:dev=li3-xxxx ;"],
+    ["ดู Category (cat)", "suscp:snb=xxxx ;"],
+    ["ดูสถานะภาพรวมชุมสาย", "ststp:emg=xxxx ; emts=all ;"]
+],
+"🔒 คำสั่งบล็อค & ปลดบล็อค (Block/Unblock)": [
+    ["สั่งบล็อคพอร์ตอุปกรณ์", "blodi:dev=li3-xxxx;"],
+    ["สั่งปลดบล็อคพอร์ตอุปกรณ์", "blode:dev=li3-xxxx;"],
+    ["สั่งบล็อคที่ระดับชุมสาย", "remei:emg=xxxx,pcb=emrp-a-meu,mag=em-xx;"],
+    ["สั่งปลดบล็อคที่ระดับ MAC", "blece:emg=xxxx,em=xx;"],
+    ["สั่งปลดบล็อคทั้งหมด", "recei:emg=xxxx,emrp=o-a;"]
+]
 }
 
 sg300_commands = {
-    "⚙️ คำสั่งพื้นฐาน & จัดการ VLAN (Cisco SG300)": [
-        ["เช็คการตั้งค่า Switch", "show running-config"],
-        ["เข้าสู่โหมด Configuration", "config terminal"],
-        ["สร้าง/เพิ่ม VLAN ใน Switch", "vlan ..."],
-        ["เข้าจัดการพอร์ตที่ต้องการ", "interface gigabitethernet ..."],
-        ["เพิ่ม VLAN แบบ Trunk ใส่พอร์ต", "switchport trunk allowed vlan add ..."],
-        ["ปิดระบบป้องกัน VLAN หลุด (Smartport)", "no macro auto smartport"]
-    ],
-    "🌐 การตั้งค่า IP Address & Gateway": [
-        ["ตั้งค่า Gateway ของ Switch", "ip default-gateway ...,...,...,..."],
-        ["ลบค่า Gateway", "no ip default-gateway ...,...,...,..."],
-        ["เข้าอินเตอร์เฟส VLAN เพื่อเปลี่ยน IP", "interface vlan 166"],
-        ["กำหนดหมายเลข IP Address & Subnet", "ip address 10.223.128.33 255.255.255.0"]
-    ]
+"⚙️ คำสั่งพื้นฐาน & จัดการ VLAN (Cisco SG300)": [
+    ["เช็คการตั้งค่า Switch", "show running-config"],
+    ["เข้าสู่โหมด Configuration", "config terminal"],
+    ["สร้าง/เพิ่ม VLAN ใน Switch", "vlan ..."],
+    ["เข้าจัดการพอร์ตที่ต้องการ", "interface gigabitethernet ..."],
+    ["เพิ่ม VLAN แบบ Trunk ใส่พอร์ต", "switchport trunk allowed vlan add ..."],
+    ["ปิดระบบป้องกัน VLAN หลุด (Smartport)", "no macro auto smartport"]
+],
+"🌐 การตั้งค่า IP Address & Gateway": [
+    ["ตั้งค่า Gateway ของ Switch", "ip default-gateway ...,...,...,..."],
+    ["ลบค่า Gateway", "no ip default-gateway ...,...,...,..."],
+    ["เข้าอินเตอร์เฟส VLAN เพื่อเปลี่ยน IP", "interface vlan 166"],
+    ["กำหนดหมายเลข IP Address & Subnet", "ip address 10.223.128.33 255.255.255.0"]
+]
 }
 
 huawei_commands = {
-    "⚙️ คำสั่งตั้งค่า Switch (Huawei)": [
-        ["เช็คการตั้งค่า Switch", "show running-config"],
-        ["เข้าสู่โหมด Configuration", "config terminal"],
-        ["สร้าง/เพิ่ม VLAN ใน Switch", "vlan ..."],
-        ["เข้าจัดการพอร์ตที่ต้องการ", "interface gigabitethernet ..."],
-        ["เพิ่ม VLAN แบบ Trunk ใส่พอร์ต", "switchport trunk allowed vlan add ..."],
-        ["ตั้งค่า Gateway ของ Switch", "ip default-gateway ...,...,...,..."],
-        ["ลบค่า Gateway", "no ip default-gateway ...,...,...,..."],
-        ["เข้าอินเตอร์เฟส VLAN เพื่อเปลี่ยน IP", "interface vlan 166"],
-        ["กำหนดหมายเลข IP Address & Subnet", "ip address 10.223.128.33 255.255.255.0"],
-        ["ปิดระบบป้องกัน VLAN หลุด (Smartport)", "no macro auto smartport"]
-    ]
+"⚙️ คำสั่งตั้งค่า Switch (Huawei)": [
+    ["เช็คการตั้งค่า Switch", "show running-config"],
+    ["เข้าสู่โหมด Configuration", "config terminal"],
+    ["สร้าง/เพิ่ม VLAN ใน Switch", "vlan ..."],
+    ["เข้าจัดการพอร์ตที่ต้องการ", "interface gigabitethernet ..."],
+    ["เพิ่ม VLAN แบบ Trunk ใส่พอร์ต", "switchport trunk allowed vlan add ..."],
+    ["ตั้งค่า Gateway ของ Switch", "ip default-gateway ...,...,...,..."],
+    ["ลบค่า Gateway", "no ip default-gateway ...,...,...,..."],
+    ["เข้าอินเตอร์เฟส VLAN เพื่อเปลี่ยน IP", "interface vlan 166"],
+    ["กำหนดหมายเลข IP Address & Subnet", "ip address 10.223.128.33 255.255.255.0"],
+    ["ปิดระบบป้องกัน VLAN หลุด (Smartport)", "no macro auto smartport"]
+]
 }
 
 dslam_commands = {
-    "📟 ข้อมูลการเชื่อมต่อ DSLAM Forth": [
-        ["Forth โหนด 577 (10.227.11.253)", 
+"📟 ข้อมูลการเชื่อมต่อ DSLAM Forth": [
+    ["Forth โหนด 577 (10.227.11.253)", 
 """IP: 10.227.11.253
 User: krimsan
 Pass: 577kri"""],
-        ["Forth โหนด 222 (10.227.0.246)", 
+    ["Forth โหนด 222 (10.227.0.246)", 
 """IP: 10.227.0.246
 User: kri01, kri02, kri03, kri04, kri05
 Pass: admin1"""]
-    ]
+]
 }
 
 olt_ip_commands = {
-    "📍 รายชื่อ IP OLT ในพื้นที่ & โครงข่าย": [
-        ["รายการ IP OLT ทั้งหมดในระบบ (รวมชุดเดิมและชุดใหม่ล่าสุด)", 
+"📍 รายชื่อ IP OLT ในพื้นที่ & โครงข่าย": [
+    ["รายการ IP OLT ทั้งหมดในระบบ (รวมชุดเดิมและชุดใหม่ล่าสุด)", 
 """• OLT-วังปลาหมู729 : 10.223.194.3
 • OLT-ท่าอ้อ : 10.223.194.4
 • OLT-บ้านดอนขลุบ737 : 10.223.194.8
@@ -1235,12 +1244,12 @@ olt_ip_commands = {
 • หม่องกะลา(Fttx) : 10.233.17.224
 • Zte_หนองอำเภอจีน : 10.233.17.133
 • OLT_หนองเข้ : 10.233.17.150"""]
-    ]
+]
 }
 
 system_commands = {
-    "🏗️ ชุดคำสั่งเริ่มต้นตู้ใหม่ (Initial Config)": [
-        ["คำสั่งรวดเดียว สำหรับจัดบอร์ดตั้งชื่อระบบ แฟน เทส และสร้างโพรไฟล์บนตู้ OLT ตัวใหม่", 
+"🏗️ ชุดคำสั่งเริ่มต้นตู้ใหม่ (Initial Config)": [
+    ["คำสั่งรวดเดียว สำหรับจัดบอร์ดตั้งชื่อระบบ แฟน เทส และสร้างโพรไฟล์บนตู้ OLT ตัวใหม่", 
 """configure terminal 
 hostname kri-sigm4-24kolt02
 username nex password N3x@autoconfig privilege 15
@@ -1288,340 +1297,340 @@ exit
 traffic-profile MDES-30M-OUT ip cir 39000 cbs 128 pir 39000 pbs 256
 exit
 write"""]
-    ],
-    "📡 ตรวจสอบพอร์ตเชื่อมต่อหลัก (Uplink)": [
-        ["เช็คสถานะทางกายภาพและระดับความเร็ว (Speed) พอร์ต Uplink", "show interface port-status xgei_1/"],
-        ["เช็คข้อมูลโมดูลแสงและระดับแสงของพอร์ต Uplink ล่าสุด (วิธีที่ 1)", "show interface optical-module-info xgei_1/"],
-        ["เช็คระดับความแรงแสงโมดูลพอร์ต Uplink (วิธีที่ 2)", "show optical-module-info xgei-1/4"]
-    ],
-    "❌ คำสั่งลบค่า / เคลียร์ระบบ": [
-        ["ล้างตารางเคลียร์ตารางค้าง MAC Address บน VLAN", "mac delete vlan {circuit}"],
-        ["เข้าโหมดคอนฟิกเพื่อสั่งลบ MAC vlan ขยะ (เคลียร์ Session ค้าง)", "configure terminal\nmac delete vlan {circuit}"],
-        ["สั่งเคลียร์ค่าตัวนับข้อผิดพลาดสายแลน (แก้ไขปัญหา CRC Error)", "Clear counter ethernet"]
-    ],
-    "🔍 การค้นหาข้อมูลภาพรวมตู้": [
-        ["ค้นหาจุดเริ่มต้น Config บนตู้ตามเลขวงจรลูกค้า", "show run | begin {circuit}"],
-        ["โชว์รายชื่อ ONU ป้ายแดงที่พึ่งเสียบสายเข้ามา (หาเลข S/N ลอย)", "show gpon onu uncfg"]
-    ]
+],
+"📡 ตรวจสอบพอร์ตเชื่อมต่อหลัก (Uplink)": [
+    ["เช็คสถานะทางกายภาพและระดับความเร็ว (Speed) พอร์ต Uplink", "show interface port-status xgei_1/"],
+    ["เช็คข้อมูลโมดูลแสงและระดับแสงของพอร์ต Uplink ล่าสุด (วิธีที่ 1)", "show interface optical-module-info xgei_1/"],
+    ["เช็คระดับความแรงแสงโมดูลพอร์ต Uplink (วิธีที่ 2)", "show optical-module-info xgei-1/4"]
+],
+"❌ คำสั่งลบค่า / เคลียร์ระบบ": [
+    ["ล้างตารางเคลียร์ตารางค้าง MAC Address บน VLAN", "mac delete vlan {circuit}"],
+    ["เข้าโหมดคอนฟิกเพื่อสั่งลบ MAC vlan ขยะ (เคลียร์ Session ค้าง)", "configure terminal\nmac delete vlan {circuit}"],
+    ["สั่งเคลียร์ค่าตัวนับข้อผิดพลาดสายแลน (แก้ไขปัญหา CRC Error)", "Clear counter ethernet"]
+],
+"🔍 การค้นหาข้อมูลภาพรวมตู้": [
+    ["ค้นหาจุดเริ่มต้น Config บนตู้ตามเลขวงจรลูกค้า", "show run | begin {circuit}"],
+    ["โชว์รายชื่อ ONU ป้ายแดงที่พึ่งเสียบสายเข้ามา (หาเลข S/N ลอย)", "show gpon onu uncfg"]
+]
 }
 
 pc_cmd_commands = {
-    "🚀 ทางลัดเปิดโปรแกรมระบบ & หน้าต่างด่วน (Shortcut)": [
-        ["javis (คำสั่งด่วนเรียกเปิดระบบช่วยเหลือ หรือเปิดลิงก์ Javis ผ่านบราวเซอร์หลัก)", "start https://javis.nt.co.th"],
-        ["ncpa.cpl (คีย์ลัดเปิดหน้าต่าง Network Connections เพื่อไปจัดการการ์ดแลน / Fix IP)", "ncpa.cpl"],
-        ["notepad (เปิดโปรแกรมจดบันทึก Notepad ขึ้นมาทดสคริปต์ด่วน)", "notepad"],
-        ["compmgmt.msc (เปิดหน้า Computer Management จัดการระบบฮาร์ดแวร์/เช็คไดรเวอร์คอม)", "compmgmt.msc"]
-    ],
-    "💻 คำสั่งวิเคราะห์เน็ตหน้างานผ่านคอมพิวเตอร์": [
-        ["ipconfig (เช็คหมายเลข IP Address เบื้องต้นในการ์ดแลนคอมพิวเตอร์)", "ipconfig"],
-        ["ipconfig /all (เช็คไอพี, แมคแอดเดรส และข้อมูล DNS การ์ดแลนทั้งหมดในคอม)", "ipconfig /all"],
-        ["arp -a (ตรวจสอบหมายเลขไอพีและแมคของอุปกรณ์อื่นๆ ในวง LAN เดียวกัน)", "arp -a"],
-        ["nslookup (ใช้ตรวจสอบการทำงานและแปลชื่อโดเมน/DNS)", "nslookup google.com"],
-        ["tracert (ทดสอบวิ่งหาเส้นทาง Network ยิงเช็คว่าเน็ตไปติดคอขวดที่ฮอปไหน)", "tracert 8.8.8.8"]
-    ]
+"🚀 ทางลัดเปิดโปรแกรมระบบ & หน้าต่างด่วน (Shortcut)": [
+    ["javis (คำสั่งด่วนเรียกเปิดระบบช่วยเหลือ หรือเปิดลิงก์ Javis ผ่านบราวเซอร์หลัก)", "start https://javis.nt.co.th"],
+    ["ncpa.cpl (คีย์ลัดเปิดหน้าต่าง Network Connections เพื่อไปจัดการการ์ดแลน / Fix IP)", "ncpa.cpl"],
+    ["notepad (เปิดโปรแกรมจดบันทึก Notepad ขึ้นมาทดสคริปต์ด่วน)", "notepad"],
+    ["compmgmt.msc (เปิดหน้า Computer Management จัดการระบบฮาร์ดแวร์/เช็คไดรเวอร์คอม)", "compmgmt.msc"]
+],
+"💻 คำสั่งวิเคราะห์เน็ตหน้างานผ่านคอมพิวเตอร์": [
+    ["ipconfig (เช็คหมายเลข IP Address เบื้องต้นในการ์ดแลนคอมพิวเตอร์)", "ipconfig"],
+    ["ipconfig /all (เช็คไอพี, แมคแอดเดรส และข้อมูล DNS การ์ดแลนทั้งหมดในคอม)", "ipconfig /all"],
+    ["arp -a (ตรวจสอบหมายเลขไอพีและแมคของอุปกรณ์อื่นๆ ในวง LAN เดียวกัน)", "arp -a"],
+    ["nslookup (ใช้ตรวจสอบการทำงานและแปลชื่อโดเมน/DNS)", "nslookup google.com"],
+    ["tracert (ทดสอบวิ่งหาเส้นทาง Network ยิงเช็คว่าเน็ตไปติดคอขวดที่ฮอปไหน)", "tracert 8.8.8.8"]
+]
 }
 
 javis_bot_commands = {
-    "🔍 คำสั่งค้นหารายชื่อ Node และเช็คสถานะทางกายภาพ": [
-        ["nodelist,hw. (ดูชื่อ node ต่างๆ ทั้งหมดในระบบ)", "nodelist,hw."],
-        ["showoptical,hw[ชื่อ node] (สั่งดูค่าแสงของโหนดนั้นๆ เช่น ตลุงเหนือ)", "showoptical,hwตลุงเหนือ"]
-    ],
-    "⚡ คำสั่งตรวจสอบสถานะทั่วไป (Check Status)": [
-        ["1. ดูซีรี ลอย (เช็ค Serial Number ที่ยังไม่ได้ลงทะเบียน)", "sn,กาญ"],
-        ["2. ดูจำนวน ONU ใน PON (เช็คปริมาณอุปกรณ์ในพอร์ตของการ์ดนั้นๆ)", "state,กาญ"],
-        ["3. ดู run config (ส่องโปรไฟล์การตั้งค่าปัจจุบันของ ONU)", "run,3451j0000"],
-        ["4. ดู Port Lan (เช็คสถานะการเชื่อมต่อพอร์ตแลนหลัง ONU)", "lanstate,3451j0000"],
-        ["13. ดู แสง / เช็คแสง (ตรวจสอบระดับสัญญาณ Optical ด่วน)", "!!,3451j0000"],
-        ["14. ดู mac (ตรวจสอบตาราง MAC Address ที่ผ่านตัวอุปกรณ์)", "mac,3451j0000"]
-    ],
-    "🛠️ คำสั่งควบคุมระบบและแก้ไขพอร์ต (Control & Block)": [
-        ["5. Block แสง (สั่งปิดสัญญาณแสงไปที่ ONU ชั่วคราว)", "block,3451j0000"],
-        ["6. DeBlock แสง (สั่งเปิดสัญญาณแสงกลับคืนให้ ONU)", "deblock,3451j0000"],
-        ["19. reboot onu (สั่งรีสตาร์ทตัว ONU ลูกค้าจากระยะไกล)", "reboot,3451j5000"]
-    ],
-    "➕❌ คำสั่งเพิ่ม / ลบ / เปลี่ยนแปลงอุปกรณ์ (Provisioning)": [
-        ["7. ลบ ONU (ลบข้อมูล ONU ออกจากระบบโหนด [โหนด,พิกัด,วงจร])", "delonu,กาญ,1/2/2,100"],
-        ["8. เปลี่ยน ONU (สลับเปลี่ยนเครื่องใหม่โดยใช้ค่า Config เดิม)", "replace,3451j0000,ZTEGC9999999"]
-    ],
-    "⚙️ คำสั่งตั้งค่าโปรไฟล์สลับโหมด (Configuration & Mode)": [
-        ["9. config route (สั่งตั้งค่าเป็นโหมด Route โหมดเริ่มต้น)", "autoroute,กาญ,ZTEGC9999999,3003,3451j8888"],
-        ["10. config bridge (สั่งตั้งค่าเป็นโหมด Bridge ต่อพ่วงเลเยอร์ 2)", "bridge,กาญ,ZTEGC9999999,3003,3451j8888"],
-        ["11. เปลี่ยน route to bridge (สลับโหมดจาก Route ไปเป็น Bridge)", "rtob,3451j0000"],
-        ["12. เปลี่ยน bridge to route (สลับโหมดจาก Bridge กลับมาเป็น Route)", "btor,3451j0000"],
-        ["15. config ด้าน interface (จัดการระบบเชื่อมต่อพอร์ตโครงสร้าง)", "interface,3451j0000"],
-        ["16. configด้าน pon (ตั้งค่าโปรไฟล์ฝั่งเครือข่าย PON)", "ponconfig,3451j0000"],
-        ["17. config autoroute (คำสั่งสร้างเส้นทางแบบระบุรายละเอียดโหนดคริ)", "autoroute,kri,ZTEGC1E1E1EE,3001,3451j8888"],
-        ["18. setdhcpfromnet (สั่งกำหนดดึง IP รับแจกผ่านระบบเครือข่าย)", "dhcpfromnet,3459j5063"]
-    ]
+"🔍 คำสั่งค้นหารายชื่อ Node และเช็คสถานะทางกายภาพ": [
+    ["nodelist,hw. (ดูชื่อ node ต่างๆ ทั้งหมดในระบบ)", "nodelist,hw."],
+    ["showoptical,hw[ชื่อ node] (สั่งดูค่าแสงของโหนดนั้นๆ เช่น ตลุงเหนือ)", "showoptical,hwตลุงเหนือ"]
+],
+"⚡ คำสั่งตรวจสอบสถานะทั่วไป (Check Status)": [
+    ["1. ดูซีรี ลอย (เช็ค Serial Number ที่ยังไม่ได้ลงทะเบียน)", "sn,กาญ"],
+    ["2. ดูจำนวน ONU ใน PON (เช็คปริมาณอุปกรณ์ในพอร์ตของการ์ดนั้นๆ)", "state,กาญ"],
+    ["3. ดู run config (ส่องโปรไฟล์การตั้งค่าปัจจุบันของ ONU)", "run,3451j0000"],
+    ["4. ดู Port Lan (เช็คสถานะการเชื่อมต่อพอร์ตแลนหลัง ONU)", "lanstate,3451j0000"],
+    ["13. ดู แสง / เช็คแสง (ตรวจสอบระดับสัญญาณ Optical ด่วน)", "!!,3451j0000"],
+    ["14. ดู mac (ตรวจสอบตาราง MAC Address ที่ผ่านตัวอุปกรณ์)", "mac,3451j0000"]
+],
+"🛠️ คำสั่งควบคุมระบบและแก้ไขพอร์ต (Control & Block)": [
+    ["5. Block แสง (สั่งปิดสัญญาณแสงไปที่ ONU ชั่วคราว)", "block,3451j0000"],
+    ["6. DeBlock แสง (สั่งเปิดสัญญาณแสงกลับคืนให้ ONU)", "deblock,3451j0000"],
+    ["19. reboot onu (สั่งรีสตาร์ทตัว ONU ลูกค้าจากระยะไกล)", "reboot,3451j5000"]
+],
+"➕❌ คำสั่งเพิ่ม / ลบ / เปลี่ยนแปลงอุปกรณ์ (Provisioning)": [
+    ["7. ลบ ONU (ลบข้อมูล ONU ออกจากระบบโหนด [โหนด,พิกัด,วงจร])", "delonu,กาญ,1/2/2,100"],
+    ["8. เปลี่ยน ONU (สลับเปลี่ยนเครื่องใหม่โดยใช้ค่า Config เดิม)", "replace,3451j0000,ZTEGC9999999"]
+],
+"⚙️ คำสั่งตั้งค่าโปรไฟล์สลับโหมด (Configuration & Mode)": [
+    ["9. config route (สั่งตั้งค่าเป็นโหมด Route โหมดเริ่มต้น)", "autoroute,กาญ,ZTEGC9999999,3003,3451j8888"],
+    ["10. config bridge (สั่งตั้งค่าเป็นโหมด Bridge ต่อพ่วงเลเยอร์ 2)", "bridge,กาญ,ZTEGC9999999,3003,3451j8888"],
+    ["11. เปลี่ยน route to bridge (สลับโหมดจาก Route ไปเป็น Bridge)", "rtob,3451j0000"],
+    ["12. เปลี่ยน bridge to route (สลับโหมดจาก Bridge กลับมาเป็น Route)", "btor,3451j0000"],
+    ["15. config ด้าน interface (จัดการระบบเชื่อมต่อพอร์ตโครงสร้าง)", "interface,3451j0000"],
+    ["16. configด้าน pon (ตั้งค่าโปรไฟล์ฝั่งเครือข่าย PON)", "ponconfig,3451j0000"],
+    ["17. config autoroute (คำสั่งสร้างเส้นทางแบบระบุรายละเอียดโหนดคริ)", "autoroute,kri,ZTEGC1E1E1EE,3001,3451j8888"],
+    ["18. setdhcpfromnet (สั่งกำหนดดึง IP รับแจกผ่านระบบเครือข่าย)", "dhcpfromnet,3459j5063"]
+]
 }
 
 ofc_distances = [
-    ("หนองปรือ - เขาโจด", "19.2 km", "Core 17, 16 | Bead core 7 (1.7km จากเขาโจด)"),
-    ("เขาโจด - สมเด็จเจริญ", "19.0 km", "Core 14, 18"),
-    ("RTหนองปลิง ม.1 - RTหนองปลิง ม.8", "10.7 km", "-"),
-    ("เลาขวัญ - หนองปลิง ม.8", "21.5 km", "-"),
-    ("ดอนแสลบ - สยามฟอร์เรดทรี", "11.2 km", "-"),
-    ("บ่อพลอย - หนองปรือ VDR", "39.0 km", "-"),
-    ("ลาดหญ้า - ไมด้า รีสอร์ท", "22.2 km", "-"),
-    ("กาญ - หนองบัว ม.6", "16.3 km", "-"),
-    ("พนมทวน - ดอนตาเพชร ม.1", "7.1 km", "-"),
-    ("กาญ - ด่านมะขามเตี้ย", "32.7 km", "-"),
-    ("กาญ - เขาปูน", "4.1 km", "-"),
-    ("เขาน้อย - รางสาลี่", "11.6 km", "-"),
-    ("ชะแล - สังขละบุรี", "51.0 km", "-"),
-    ("Exดอนแสลบ - Exเลาขวัญ", "39.0 km", "-"),
-    ("พนมทวน - แยกรางหวาย", "13.5 km", "-"),
-    ("กาญ - เขาป่าห้าม", "49.8 km", "-"),
-    ("เลาขวัญ - หนองปรือ", "41.5 km", "-"),
-    ("พนมทวน - หนองสาหร่าย ม.4", "14.6 km", "-"),
-    ("ลาดหญ้า - ช่องสะเดา", "27.9 km", "-"),
-    ("ช่องสะเดา - ท่าเสา", "18.4 km", "-"),
-    ("ท่าเสา - ป่าห้าม", "8.3 km", "-"),
-    ("ดอนตาเพชร ม.6 - ดอนแสลบ ม.8", "13.5 km", "-"),
-    ("กาญ - หนองบัว ม.7", "28.0 km", "-"),
-    ("วังมะสัง - เขื่อนศรี", "11.3 km", "-"),
-    ("วังมะสัง - ท่ากระดานม.1", "13.3 km", "-"),
-    ("RTด่านมะขามเตี้ย - RTหนองไผ่", "10.2 km", "-"),
-    ("พนมทวน - ตลาดเขต", "28.8 km", "-"),
-    ("ตลาดเขต - ดอนแสลบ ม.2", "16.9 km", "-"),
-    ("ท่ามะกา - RTพงตึก", "7.3 km", "-"),
-    ("ดอนแสลบ ม.2 - RTหนองประดู่ ม.4", "19.0 km", "-"),
-    ("ท่ากระดาน ม.4 - ช่องสะเดา ม.3", "18.4 km", "-"),
-    ("ท่ากระดาน ม.4 - เขาวังมะสัง", "13.5 km", "-"),
-    ("กาญ - พนมทวน", "24.0 km", "-"),
-    ("บ่อพลอย - หลุมรัง ม.1", "27.5 km", "-"),
-    ("กาญ - บ้านเก่า ม.9", "44.0 km", "-"),
-    ("กาญ - ลิ้นช้าง", "1.4 km", "-"),
-    ("กาญ - พุน้ำร้อน", "74.0 km", "-"),
-    ("ทองผาภูมิ - ห้วยเขย่ง ม.8", "20.9 km", "-"),
-    ("ห้วยเขย่ง ม.8 - ห้วยเขย่ง ม.2", "7.9 km", "-"),
-    ("กาญ - อิตาเลี่ยน", "76.0 km", "-"),
-    ("บ้านเก่า ม.9 - พุน้ำร้อน", "30.0 km", "-"),
-    ("พุน้ำร้อน - อิตาเลี่ยน", "2.0 km", "-"),
-    ("ท่าเรือ - อุโลกสี่หมื่น", "9.1 km", "-"),
-    ("ศรีมงคล - บ้องตี้", "35.7 km", "-"),
-    ("ทองผาภูมิ - ชะแล", "30.1 km", "-"),
-    ("ทองผาภูมิ - สะพานข้ามสุด", "19.2 km", "-"),
-    ("สะพานข้ามสุด - ชะแล", "15.0 km", "-"),
-    ("ทองผาภูมิ - ท่าขนุน", "18.2 km", "-"),
-    ("ดอนแสลบ - เลาขวัญ", "39.2 km", "-"),
-    ("พงตึก - โคกบอง", "4.6 km", "-"),
-    ("กาญ - กลอนโด ม.2 - วังเย็น", "36.4 km", "-"),
-    ("ไทรโยค ม.7 - วังเขมร", "14.0 km", "-"),
-    ("สามสิบหาบ - ท่าไม้ ม.4", "11.6 km", "-"),
-    ("สามสิบหาบ - หนองตากยา", "31.1 km", "-"),
-    ("RTอุโลกสี่หมื่น - หนองลาน ม.4", "12.4 km", "-"),
-    ("กาญ - ลาดหญ้า ม.3", "23.3 km", "-"),
-    ("กาญ - หนองหญ้า", "14.7 km", "-"),
-    ("ค่ายสุรศรี - ลาดหญ้า", "8.8 km", "-"),
-    ("แยกม่วงชุม - บ้านถ้ำ", "5.0 km", "-"),
-    ("ท่าม่วง - เขาน้อย", "10.9 km", "-"),
-    ("กาญ - ยางเกาะ", "25.0 km", "-"),
-    ("หนองกุ่ม ม.7 - หนองกุ่ม ม.1", "11.1 km", "-"),
-    ("หนองกุ่ม ม.7 - ลาดหญ้า ม.3", "7.6 km", "-"),
-    ("กาญ - บ่อพลอย", "51.0 km", "-"),
-    ("กาญ - แสงชูโต", "30.0+ km", "-"),
-    ("ชะแล - สังขละ", "52.0 km", "-"),
-    ("พิพิธภัณฑ์บ้านเก่า - สิงห์ ม.1", "9.3 km", "-"),
-    ("ท่าม่วง - รางสาลี่", "22.9 km", "-"),
-    ("วังเขมร - ทองผาภูมิ", "65.9 km", "-"),
-    ("เลาขวัญ - ห้วยยาง", "33.3 km", "-"),
-    ("ลาดหญ้า - พาวิเลียม", "9.7 km", "-"),
-    ("พนมทวน - ชุมสายพังตรุ", "11.1 km", "-"),
-    ("ลาดหญ้า - เขื่อน", "55.7 km", "-"),
-    ("ท่าโป่ง - ป่าห้าม", "15.5 km", "-"),
-    ("ดอนแสลย - หนองประดู่ ม.4", "19.2 km", "-"),
-    ("ท่าม่วง - ดอนคราม", "8.1 km", "-"),
-    ("กาญ - ม่วงชุม", "18.0 km", "-"),
-    ("ป่าห้าม - สิงห์ ม.4", "24.1 km", "-"),
-    ("RTป่าห้าม - ศรีมงคล - บ้องตี้", "56.0 km", "-"),
-    ("ป่าห้าม - ศรีมงคล", "20.6 km", "-"),
-    ("Oltป่าห้าม - บ้องตี้", "25.6 km", "-"),
-    ("ป่าห้าม - สามัคคีธรรม", "39.9 km", "-"),
-    ("ช่องด่าน - oltยางสูง", "14.0 km", "-"),
-    ("บ้านเก่า ม.9 - ลำทหาร", "7.4 km", "-"),
-    ("วังกระแจะ - oltต้นมะม่วง", "14.1 km", "-"),
-    ("ท่าม่วง - winetหนองรี", "11.2 km", "-"),
-    ("เขื่อนศรี - oltน้ำมุด", "34.0 km", "-"),
-    ("ดอนแสลบ - winetสระลงเรือ", "7.2 km", "-"),
-    ("หนองฝ้าย - sg300หนองปลิง ม.8", "6.0 km", "-"),
-    ("หนองปรือ - oltลำอีซู", "17.6 km", "-"),
-    ("ห้วยกระเจา ม.3 - oltวังไผ่ ม.7", "9.7 km", "-"),
-    ("วังเขมร - ไทรโยค ม.2", "17.7 km", "-"),
-    ("ไทรโยค ม.2 - ลิ้นถิ่น", "11.1 km", "-"),
-    ("พฤษากาญ - oltแก่งเสี้ยน", "12.9 km", "-"),
-    ("พฤษากาญ - สถานพินิจ", "14.7 km", "-"),
-    ("สถานพินิจ - oltแก่งเสี้ยน", "1.8 km", "-"),
-    ("ป่าห้าม - เลคเฮฟเว่น", "8.6 km", "-"),
-    ("ป่าห้าม - dslam ลุ่มผึ้ง", "5.4 km", "-"),
-    ("LPE-พุเลียบ - LPE-ป่าห้าม", "32.7 km", "-"),
-    ("ป่าห้าม - วังโพธิ์", "3.6 km", "-"),
-    ("บ้านเก่าม.1 - สิงห์ม.1", "10.2 km", "-"),
-    ("ดอนแสลบ - ตลาดเขต", "11.4 km", "-"),
-    ("SG300 บ้องตี้ - ร.รทุ่งมะเซอย่อ", "12.6 km", "-"),
-    ("Lpeด่านมะขามเตี้ย - oltพระธาตุโป่งนก", "4.8 km", "-"),
-    ("ป่าห้าม - base หนองสามพราน", "23.4 km", "-"),
-    ("Rt หนองโรง - ชุมสายพนมทวน", "11.9 km", "-"),
-    ("หนองประดู่ม.4 - ฟาร์มโปร่งไหม", "1.8688 km", "-"),
-    ("ท่าม่วง - แสงชูโต", "15.2 km", "-"),
-    ("แสงชูโต - ท่ามะกา", "9.1 km", "-"),
-    ("บ่อพลอย - sw24 kช่องด่าน", "8.9 km", "-"),
-    ("ลาดหญ้า - olt พุพรม", "37.2 km", "-"),
-    ("กาญ - ราชภัฏ", "18.8 km", "-"),
-    ("ลาดหญ้า - บ่อพลอย", "33.0 km", "-"),
-    ("กาญ - olt หนองสองตอน", "14.0 km", "-"),
-    ("olt เขาปูน - APE2 เมือง", "11.2 km", "-"),
-    ("บ้านเก่าม.9 - olt ตะเคียนงาม", "26.5 km", "-"),
-    ("กาญ - สุราทิพย์พระราช", "29.7 km", "-"),
-    ("ชุมสายลาดหญ้า - ลาดหญ้าม.3", "13.7 km", "-"),
-    ("กาญ - บิ๊กc", "5.5 km", "-")
+("หนองปรือ - เขาโจด", "19.2 km", "Core 17, 16 | Bead core 7 (1.7km จากเขาโจด)"),
+("เขาโจด - สมเด็จเจริญ", "19.0 km", "Core 14, 18"),
+("RTหนองปลิง ม.1 - RTหนองปลิง ม.8", "10.7 km", "-"),
+("เลาขวัญ - หนองปลิง ม.8", "21.5 km", "-"),
+("ดอนแสลบ - สยามฟอร์เรดทรี", "11.2 km", "-"),
+("บ่อพลอย - หนองปรือ VDR", "39.0 km", "-"),
+("ลาดหญ้า - ไมด้า รีสอร์ท", "22.2 km", "-"),
+("กาญ - หนองบัว ม.6", "16.3 km", "-"),
+("พนมทวน - ดอนตาเพชร ม.1", "7.1 km", "-"),
+("กาญ - ด่านมะขามเตี้ย", "32.7 km", "-"),
+("กาญ - เขาปูน", "4.1 km", "-"),
+("เขาน้อย - รางสาลี่", "11.6 km", "-"),
+("ชะแล - สังขละบุรี", "51.0 km", "-"),
+("Exดอนแสลบ - Exเลาขวัญ", "39.0 km", "-"),
+("พนมทวน - แยกรางหวาย", "13.5 km", "-"),
+("กาญ - เขาป่าห้าม", "49.8 km", "-"),
+("เลาขวัญ - หนองปรือ", "41.5 km", "-"),
+("พนมทวน - หนองสาหร่าย ม.4", "14.6 km", "-"),
+("ลาดหญ้า - ช่องสะเดา", "27.9 km", "-"),
+("ช่องสะเดา - ท่าเสา", "18.4 km", "-"),
+("ท่าเสา - ป่าห้าม", "8.3 km", "-"),
+("ดอนตาเพชร ม.6 - ดอนแสลบ ม.8", "13.5 km", "-"),
+("กาญ - หนองบัว ม.7", "28.0 km", "-"),
+("วังมะสัง - เขื่อนศรี", "11.3 km", "-"),
+("วังมะสัง - ท่ากระดานม.1", "13.3 km", "-"),
+("RTด่านมะขามเตี้ย - RTหนองไผ่", "10.2 km", "-"),
+("พนมทวน - ตลาดเขต", "28.8 km", "-"),
+("ตลาดเขต - ดอนแสลบ ม.2", "16.9 km", "-"),
+("ท่ามะกา - RTพงตึก", "7.3 km", "-"),
+("ดอนแสลบ ม.2 - RTหนองประดู่ ม.4", "19.0 km", "-"),
+("ท่ากระดาน ม.4 - ช่องสะเดา ม.3", "18.4 km", "-"),
+("ท่ากระดาน ม.4 - เขาวังมะสัง", "13.5 km", "-"),
+("กาญ - พนมทวน", "24.0 km", "-"),
+("บ่อพลอย - หลุมรัง ม.1", "27.5 km", "-"),
+("กาญ - บ้านเก่า ม.9", "44.0 km", "-"),
+("กาญ - ลิ้นช้าง", "1.4 km", "-"),
+("กาญ - พุน้ำร้อน", "74.0 km", "-"),
+("ทองผาภูมิ - ห้วยเขย่ง ม.8", "20.9 km", "-"),
+("ห้วยเขย่ง ม.8 - ห้วยเขย่ง ม.2", "7.9 km", "-"),
+("กาญ - อิตาเลี่ยน", "76.0 km", "-"),
+("บ้านเก่า ม.9 - พุน้ำร้อน", "30.0 km", "-"),
+("พุน้ำร้อน - อิตาเลี่ยน", "2.0 km", "-"),
+("ท่าเรือ - อุโลกสี่หมื่น", "9.1 km", "-"),
+("ศรีมงคล - บ้องตี้", "35.7 km", "-"),
+("ทองผาภูมิ - ชะแล", "30.1 km", "-"),
+("ทองผาภูมิ - สะพานข้ามสุด", "19.2 km", "-"),
+("สะพานข้ามสุด - ชะแล", "15.0 km", "-"),
+("ทองผาภูมิ - ท่าขนุน", "18.2 km", "-"),
+("ดอนแสลบ - เลาขวัญ", "39.2 km", "-"),
+("พงตึก - โคกบอง", "4.6 km", "-"),
+("กาญ - กลอนโด ม.2 - วังเย็น", "36.4 km", "-"),
+("ไทรโยค ม.7 - วังเขมร", "14.0 km", "-"),
+("สามสิบหาบ - ท่าไม้ ม.4", "11.6 km", "-"),
+("สามสิบหาบ - หนองตากยา", "31.1 km", "-"),
+("RTอุโลกสี่หมื่น - หนองลาน ม.4", "12.4 km", "-"),
+("กาญ - ลาดหญ้า ม.3", "23.3 km", "-"),
+("กาญ - หนองหญ้า", "14.7 km", "-"),
+("ค่ายสุรศรี - ลาดหญ้า", "8.8 km", "-"),
+("แยกม่วงชุม - บ้านถ้ำ", "5.0 km", "-"),
+("ท่าม่วง - เขาน้อย", "10.9 km", "-"),
+("กาญ - ยางเกาะ", "25.0 km", "-"),
+("หนองกุ่ม ม.7 - หนองกุ่ม ม.1", "11.1 km", "-"),
+("หนองกุ่ม ม.7 - ลาดหญ้า ม.3", "7.6 km", "-"),
+("กาญ - บ่อพลอย", "51.0 km", "-"),
+("กาญ - แสงชูโต", "30.0+ km", "-"),
+("ชะแล - สังขละ", "52.0 km", "-"),
+("พิพิธภัณฑ์บ้านเก่า - สิงห์ ม.1", "9.3 km", "-"),
+("ท่าม่วง - รางสาลี่", "22.9 km", "-"),
+("วังเขมร - ทองผาภูมิ", "65.9 km", "-"),
+("เลาขวัญ - ห้วยยาง", "33.3 km", "-"),
+("ลาดหญ้า - พาวิเลียม", "9.7 km", "-"),
+("พนมทวน - ชุมสายพังตรุ", "11.1 km", "-"),
+("ลาดหญ้า - เขื่อน", "55.7 km", "-"),
+("ท่าโป่ง - ป่าห้าม", "15.5 km", "-"),
+("ดอนแสลย - หนองประดู่ ม.4", "19.2 km", "-"),
+("ท่าม่วง - ดอนคราม", "8.1 km", "-"),
+("กาญ - ม่วงชุม", "18.0 km", "-"),
+("ป่าห้าม - สิงห์ ม.4", "24.1 km", "-"),
+("RTป่าห้าม - ศรีมงคล - บ้องตี้", "56.0 km", "-"),
+("ป่าห้าม - ศรีมงคล", "20.6 km", "-"),
+("Oltป่าห้าม - บ้องตี้", "25.6 km", "-"),
+("ป่าห้าม - สามัคคีธรรม", "39.9 km", "-"),
+("ช่องด่าน - oltยางสูง", "14.0 km", "-"),
+("บ้านเก่า ม.9 - ลำทหาร", "7.4 km", "-"),
+("วังกระแจะ - oltต้นมะม่วง", "14.1 km", "-"),
+("ท่าม่วง - winetหนองรี", "11.2 km", "-"),
+("เขื่อนศรี - oltน้ำมุด", "34.0 km", "-"),
+("ดอนแสลบ - winetสระลงเรือ", "7.2 km", "-"),
+("หนองฝ้าย - sg300หนองปลิง ม.8", "6.0 km", "-"),
+("หนองปรือ - oltลำอีซู", "17.6 km", "-"),
+("ห้วยกระเจา ม.3 - oltวังไผ่ ม.7", "9.7 km", "-"),
+("วังเขมร - ไทรโยค ม.2", "17.7 km", "-"),
+("ไทรโยค ม.2 - ลิ้นถิ่น", "11.1 km", "-"),
+("พฤษากาญ - oltแก่งเสี้ยน", "12.9 km", "-"),
+("พฤษากาญ - สถานพินิจ", "14.7 km", "-"),
+("สถานพินิจ - oltแก่งเสี้ยน", "1.8 km", "-"),
+("ป่าห้าม - เลคเฮฟเว่น", "8.6 km", "-"),
+("ป่าห้าม - dslam ลุ่มผึ้ง", "5.4 km", "-"),
+("LPE-พุเลียบ - LPE-ป่าห้าม", "32.7 km", "-"),
+("ป่าห้าม - วังโพธิ์", "3.6 km", "-"),
+("บ้านเก่าม.1 - สิงห์ม.1", "10.2 km", "-"),
+("ดอนแสลบ - ตลาดเขต", "11.4 km", "-"),
+("SG300 บ้องตี้ - ร.รทุ่งมะเซอย่อ", "12.6 km", "-"),
+("Lpeด่านมะขามเตี้ย - oltพระธาตุโป่งนก", "4.8 km", "-"),
+("ป่าห้าม - base หนองสามพราน", "23.4 km", "-"),
+("Rt หนองโรง - ชุมสายพนมทวน", "11.9 km", "-"),
+("หนองประดู่ม.4 - ฟาร์มโปร่งไหม", "1.8688 km", "-"),
+("ท่าม่วง - แสงชูโต", "15.2 km", "-"),
+("แสงชูโต - ท่ามะกา", "9.1 km", "-"),
+("บ่อพลอย - sw24 kช่องด่าน", "8.9 km", "-"),
+("ลาดหญ้า - olt พุพรม", "37.2 km", "-"),
+("กาญ - ราชภัฏ", "18.8 km", "-"),
+("ลาดหญ้า - บ่อพลอย", "33.0 km", "-"),
+("กาญ - olt หนองสองตอน", "14.0 km", "-"),
+("olt เขาปูน - APE2 เมือง", "11.2 km", "-"),
+("บ้านเก่าม.9 - olt ตะเคียนงาม", "26.5 km", "-"),
+("กาญ - สุราทิพย์พระราช", "29.7 km", "-"),
+("ชุมสายลาดหญ้า - ลาดหญ้าม.3", "13.7 km", "-"),
+("กาญ - บิ๊กc", "5.5 km", "-")
 ]
 
 circuit_list = [
-    ("3452J1796", "พี่ปุ๋ย"),
-    ("3452J1425, 3452J3606", "หวานเย็น"),
-    ("3452J1426", "น้าแดง"),
-    ("3451J9174", "พี่นก"),
-    ("3451J2660", "นุ่น"),
-    ("3452J8002", "ตาคิด"),
-    ("3451J5651", "อ.เดชา"),
-    ("3452J2060", "บ้านอ้อน"),
-    ("3451J4720", "บ้านเป้")
+("3452J1796", "พี่ปุ๋ย"),
+("3452J1425, 3452J3606", "หวานเย็น"),
+("3452J1426", "น้าแดง"),
+("3451J9174", "พี่นก"),
+("3451J2660", "นุ่น"),
+("3452J8002", "ตาคิด"),
+("3451J5651", "อ.เดชา"),
+("3452J2060", "บ้านอ้อน"),
+("3451J4720", "บ้านเป้")
 ]
 
 # =================================================================
 # 🌱 ข้อมูลตั้งต้น (Seed) สำหรับหัวข้อต่างๆ
 # =================================================================
 WEB_SEED = [
-    {"name": "Data Kan", "url": "https://sites.google.com/view/datakan"},
-    {"name": "182.52.113.237", "url": "http://182.52.113.237/"},
-    {"name": "TSP Login", "url": "https://tsp.totbb.net/index.php?r=tbl-users%2Flogin"},
-    {"name": "SCOMS NT", "url": "https://scoms.intra.ntplc.co.th/Default.aspx"},
-    {"name": "Umbo System", "url": "http://10.228.59.45/umbo/login.php?uri=%2Fumbo%2F"},
-    {"name": "NT 1888 Request", "url": "https://nt1888.ntplc.co.th/request"},
-    {"name": "TOP NT Central", "url": "https://top.ntcentral.net/login"},
-    {"name": "NEX Intra NT", "url": "https://nex.intra.ntplc.co.th/ip/nex/"},
-    {"name": "Ruijie Cloud", "url": "https://cloud-as.ruijienetworks.com/sso/login"},
-    {"name": "IP Server (10.0.105.85)", "url": "http://10.0.105.85/"},
-    {"name": "System Login (203.113.70.137)", "url": "http://203.113.70.137/login"},
-    {"name": "CPE", "url": "https://pete.intra.ntplc.co.th/#/login"},
-    {"name": "NT OS", "url": "http://203.113.70.137/employee/profile"},
-    {"name": "CCTV OBJ", "url": "https://script.google.com/macros/s/AKfycbwRHsxi7OasLOreOmTe0JboHWmEo4KY8OEOrLy7xn8xsPiOOSKBK-vCzMq4P4ngNrvu/exec"},
+{"name": "Data Kan", "url": "https://sites.google.com/view/datakan"},
+{"name": "182.52.113.237", "url": "http://182.52.113.237/"},
+{"name": "TSP Login", "url": "https://tsp.totbb.net/index.php?r=tbl-users%2Flogin"},
+{"name": "SCOMS NT", "url": "https://scoms.intra.ntplc.co.th/Default.aspx"},
+{"name": "Umbo System", "url": "http://10.228.59.45/umbo/login.php?uri=%2Fumbo%2F"},
+{"name": "NT 1888 Request", "url": "https://nt1888.ntplc.co.th/request"},
+{"name": "TOP NT Central", "url": "https://top.ntcentral.net/login"},
+{"name": "NEX Intra NT", "url": "https://nex.intra.ntplc.co.th/ip/nex/"},
+{"name": "Ruijie Cloud", "url": "https://cloud-as.ruijienetworks.com/sso/login"},
+{"name": "IP Server (10.0.105.85)", "url": "http://10.0.105.85/"},
+{"name": "System Login (203.113.70.137)", "url": "http://203.113.70.137/login"},
+{"name": "CPE", "url": "https://pete.intra.ntplc.co.th/#/login"},
+{"name": "NT OS", "url": "http://203.113.70.137/employee/profile"},
+{"name": "CCTV OBJ", "url": "https://script.google.com/macros/s/AKfycbwRHsxi7OasLOreOmTe0JboHWmEo4KY8OEOrLy7xn8xsPiOOSKBK-vCzMq4P4ngNrvu/exec"},
 ]
 
 OFC_SEED = [
-    {"route": route, "distance": dist, "note": note}
-    for route, dist, note in ofc_distances
+{"route": route, "distance": dist, "note": note}
+for route, dist, note in ofc_distances
 ]
 
 CIRCUIT_SEED = [
-    {"code": code, "owner": owner}
-    for code, owner in circuit_list
+{"code": code, "owner": owner}
+for code, owner in circuit_list
 ]
 
 ADDRESS_SEED = [
-    {"title": "ตึกเก่า", "detail": "111/2 ถ.อู่ทอง ต.บ้านเหนือ อ.เมือง จ.กาญจนบุรี 71000"},
-    {"title": "ตึกเขาตอง", "detail": "1/11 ม.9 ต.ปากแพรก อ.เมือง จ.กาญจนบุรี 71000"},
+{"title": "ตึกเก่า", "detail": "111/2 ถ.อู่ทอง ต.บ้านเหนือ อ.เมือง จ.กาญจนบุรี 71000"},
+{"title": "ตึกเขาตอง", "detail": "1/11 ม.9 ต.ปากแพรก อ.เมือง จ.กาญจนบุรี 71000"},
 ]
 
 IP_PHONE_SEED = [
-    {"value": "sipp11.totbb.net", "note": ""},
-    {"value": "sipp12.totbb.net", "note": ""},
-    {"value": "sipp13.totbb.net", "note": ""},
-    {"value": "172.31.83.4", "note": "อยุธยา"},
-    {"value": "172.31.92.4", "note": "เพชร"},
-    {"value": "172.30.202.4", "note": ""},
+{"value": "sipp11.totbb.net", "note": ""},
+{"value": "sipp12.totbb.net", "note": ""},
+{"value": "sipp13.totbb.net", "note": ""},
+{"value": "172.31.83.4", "note": "อยุธยา"},
+{"value": "172.31.92.4", "note": "เพชร"},
+{"value": "172.30.202.4", "note": ""},
 ]
 
 SECURECRT_SEED = [
-    {"value": "10.227.102.190", "note": "ใช้อยู่"},
-    {"value": "10.224.55.121", "note": ""},
-    {"value": "10.224.55.125", "note": ""},
-    {"value": "10.224.55.129", "note": ""},
+{"value": "10.227.102.190", "note": "ใช้อยู่"},
+{"value": "10.224.55.121", "note": ""},
+{"value": "10.224.55.125", "note": ""},
+{"value": "10.224.55.129", "note": ""},
 ]
 
 all_categories = {
-    "🍏 ZTE C300 Series": c300_commands,
-    "⚡ ZTE C600 Series": c600_commands,
-    "🟢 SW ZTE ประชารัฐ": zte_pracharath_commands,
-    "🟣 Extreme Switch": extreme_commands,
-    "🔵 Cisco SG300": sg300_commands,
-    "🔴 Huawei Switch": huawei_commands,
-    "📞 ชุมสาย Fixline": fixline_commands,
-    "📟 DSLAM Forth": dslam_commands,
-    "📍 IP OLT ในพื้นที่": olt_ip_commands,
-    "📡 Uplink & Initial Config": system_commands,
-    "💻 Windows CMD Shortcuts": pc_cmd_commands,
-    "🤖 Javis Line Bot": javis_bot_commands
+"🍏 ZTE C300 Series": c300_commands,
+"⚡ ZTE C600 Series": c600_commands,
+"🟢 SW ZTE ประชารัฐ": zte_pracharath_commands,
+"🟣 Extreme Switch": extreme_commands,
+"🔵 Cisco SG300": sg300_commands,
+"🔴 Huawei Switch": huawei_commands,
+"📞 ชุมสาย Fixline": fixline_commands,
+"📟 DSLAM Forth": dslam_commands,
+"📍 IP OLT ในพื้นที่": olt_ip_commands,
+"📡 Uplink & Initial Config": system_commands,
+"💻 Windows CMD Shortcuts": pc_cmd_commands,
+"🤖 Javis Line Bot": javis_bot_commands
 }
 
 COMMAND_LIBRARY_SEED = copy.deepcopy(all_categories)
 
 
 def add_command_to_library(filename, library, category, sub_cat, desc, code):
-    """เพิ่มคำสั่งใหม่เข้าคลัง และ Auto Commit ไปที่ GitHub"""
-    library.setdefault(category, {})
-    library[category].setdefault(sub_cat, [])
-    library[category][sub_cat].append([desc, code])
-    save_section_data(
-        filename, 
-        library, 
-        commit_msg=f"Add command in [{category} -> {sub_cat}]: {desc}"
-    )
+"""เพิ่มคำสั่งใหม่เข้าคลัง และ Auto Commit ไปที่ GitHub"""
+library.setdefault(category, {})
+library[category].setdefault(sub_cat, [])
+library[category][sub_cat].append([desc, code])
+save_section_data(
+    filename, 
+    library, 
+    commit_msg=f"Add command in [{category} -> {sub_cat}]: {desc}"
+)
 
 
 def delete_command_from_library(filename, library, category, sub_cat, item_idx):
-    """ลบคำสั่งออกจากคลัง และ Auto Commit ไปที่ GitHub"""
-    removed = library[category][sub_cat].pop(item_idx)
-    if not library[category][sub_cat]:
-        del library[category][sub_cat]
-    save_section_data(
-        filename, 
-        library, 
-        commit_msg=f"Delete command from [{category} -> {sub_cat}]: {removed[0]}"
-    )
+"""ลบคำสั่งออกจากคลัง และ Auto Commit ไปที่ GitHub"""
+removed = library[category][sub_cat].pop(item_idx)
+if not library[category][sub_cat]:
+    del library[category][sub_cat]
+save_section_data(
+    filename, 
+    library, 
+    commit_msg=f"Delete command from [{category} -> {sub_cat}]: {removed[0]}"
+)
 
 
 # --- 2. SIDEBAR NAVIGATION ---
 app_mode = "🏠 Dashboard & คลังคำสั่ง"
 
 with st.sidebar.expander("🌐 Web", expanded=True):
-    current_web_data = render_web_section("web_links.json", WEB_SEED)
+current_web_data = render_web_section("web_links.json", WEB_SEED)
 
 with st.sidebar.expander("📏 ระยะสาย Optic", expanded=False):
-    current_ofc_data = render_ofc_section("ofc_distances.json", OFC_SEED)
+current_ofc_data = render_ofc_section("ofc_distances.json", OFC_SEED)
 
 with st.sidebar.expander("🆔 เลขวงจรลูกค้า", expanded=False):
-    current_circuit_data = render_circuit_section("circuit_list.json", CIRCUIT_SEED)
+current_circuit_data = render_circuit_section("circuit_list.json", CIRCUIT_SEED)
 
 with st.sidebar.expander("📍 ที่อยู่ NT", expanded=False):
-    current_address_data = render_address_section("addresses.json", ADDRESS_SEED)
+current_address_data = render_address_section("addresses.json", ADDRESS_SEED)
 
 with st.sidebar.expander("📞 IP Phone", expanded=False):
-    current_ip_phone_data = render_simple_value_section(
-        "ip_phone.json", IP_PHONE_SEED, "หมายเลข / โฮสต์", "ipphone"
-    )
+current_ip_phone_data = render_simple_value_section(
+    "ip_phone.json", IP_PHONE_SEED, "หมายเลข / โฮสต์", "ipphone"
+)
 
 with st.sidebar.expander("🔐 SecureCRT", expanded=False):
-    current_securecrt_data = render_simple_value_section(
-        "securecrt.json", SECURECRT_SEED, "IP / โฮสต์", "securecrt"
-    )
+current_securecrt_data = render_simple_value_section(
+    "securecrt.json", SECURECRT_SEED, "IP / โฮสต์", "securecrt"
+)
 
 command_library_data = load_section_data("command_library.json", COMMAND_LIBRARY_SEED)
 
 selected_menu = None
 with st.sidebar.expander("⚙️ Config", expanded=False):
-    selected_menu = st.radio("เลือกหมวดหมู่การใช้งาน:", list(command_library_data.keys()), label_visibility="collapsed")
+selected_menu = st.radio("เลือกหมวดหมู่การใช้งาน:", list(command_library_data.keys()), label_visibility="collapsed")
 
 if selected_menu is None:
-    selected_menu = list(command_library_data.keys())[0]
+selected_menu = list(command_library_data.keys())[0]
 
 # =================================================================
 # 📊 คำนวณสรุปตัวเลขสำหรับแถบ Ticker บนหน้า Dashboard
 # =================================================================
 total_categories = len(command_library_data)
 total_commands = sum(
-    len(items) for cat_dict in command_library_data.values() for items in cat_dict.values()
+len(items) for cat_dict in command_library_data.values() for items in cat_dict.values()
 )
 total_olt_ip = len(olt_ip_commands["📍 รายชื่อ IP OLT ในพื้นที่ & โครงข่าย"][0][1].strip().split("\n"))
 total_circuits = len(current_circuit_data)
@@ -1632,207 +1641,207 @@ total_ofc_routes = len(current_ofc_data)
 
 # 🌟 2. เงื่อนไขแยกหน้าจอ: ถ้าเลือก Excel ให้รันฟังก์ชัน Excel, ถ้าไม่ใช่ให้แสดงหน้าเดิม
 if app_mode == "📊 แปลงไฟล์ / จัดการ Excel":
-    excel_management_page()
-    
+excel_management_page()
+
 else:
-    st.markdown("""
-    <div style="display:flex; align-items:baseline; justify-content:space-between; margin-top:-10px; flex-wrap:wrap; gap:8px;">
-        <h1 style="margin:0; font-weight:800; font-size:28px; color:#7bffa0; letter-spacing:-0.5px;">
-            root@kri-noc:~$ ZTE_OLT_COMMAND_CENTER<span class="blink-cursor"></span>
-        </h1>
-        <div style="font-family:'JetBrains Mono', monospace; font-size:12px; color:#35603f;">
-            <span class="live-dot"></span>SYSTEM ONLINE
-        </div>
+st.markdown("""
+<div style="display:flex; align-items:baseline; justify-content:space-between; margin-top:-10px; flex-wrap:wrap; gap:8px;">
+    <h1 style="margin:0; font-weight:800; font-size:28px; color:#7bffa0; letter-spacing:-0.5px;">
+        root@kri-noc:~$ ZTE_OLT_COMMAND_CENTER<span class="blink-cursor"></span>
+    </h1>
+    <div style="font-family:'JetBrains Mono', monospace; font-size:12px; color:#35603f;">
+        <span class="live-dot"></span>SYSTEM ONLINE
     </div>
-    <div style="font-family:'JetBrains Mono', monospace; font-size:12.5px; color:#4fa868; margin-top:6px;">
-        # คลังคำสั่งและข้อมูลหน้างานเครือข่าย ZTE / OLT / DSLAM / Switch — ค้นหาได้จากทุกหมวดในจุดเดียว
+</div>
+<div style="font-family:'JetBrains Mono', monospace; font-size:12.5px; color:#4fa868; margin-top:6px;">
+    # คลังคำสั่งและข้อมูลหน้างานเครือข่าย ZTE / OLT / DSLAM / Switch — ค้นหาได้จากทุกหมวดในจุดเดียว
+</div>
+""", unsafe_allow_html=True)
+
+# แถบสรุปตัวเลขภาพรวมระบบ แบบ Stock Ticker
+st.markdown(f"""
+<div class="ticker-wrap">
+    <div class="ticker-item">
+        <div class="ticker-label">หมวดคำสั่งทั้งหมด</div>
+        <div class="ticker-value up">{total_categories}<span class="ticker-unit">หมวด</span></div>
     </div>
-    """, unsafe_allow_html=True)
-
-    # แถบสรุปตัวเลขภาพรวมระบบ แบบ Stock Ticker
-    st.markdown(f"""
-    <div class="ticker-wrap">
-        <div class="ticker-item">
-            <div class="ticker-label">หมวดคำสั่งทั้งหมด</div>
-            <div class="ticker-value up">{total_categories}<span class="ticker-unit">หมวด</span></div>
-        </div>
-        <div class="ticker-item">
-            <div class="ticker-label">คำสั่ง / เอกสารในคลัง</div>
-            <div class="ticker-value up">{total_commands}<span class="ticker-unit">รายการ</span></div>
-        </div>
-        <div class="ticker-item">
-            <div class="ticker-label">IP OLT ในพื้นที่</div>
-            <div class="ticker-value up">{total_olt_ip}<span class="ticker-unit">จุด</span></div>
-        </div>
-        <div class="ticker-item">
-            <div class="ticker-label">เส้นทางสาย OFC</div>
-            <div class="ticker-value">{total_ofc_routes}<span class="ticker-unit">เส้นทาง</span></div>
-        </div>
-        <div class="ticker-item">
-            <div class="ticker-label">เลขวงจรลูกค้า</div>
-            <div class="ticker-value">{total_circuits}<span class="ticker-unit">วงจร</span></div>
-        </div>
+    <div class="ticker-item">
+        <div class="ticker-label">คำสั่ง / เอกสารในคลัง</div>
+        <div class="ticker-value up">{total_commands}<span class="ticker-unit">รายการ</span></div>
     </div>
-    """, unsafe_allow_html=True)
+    <div class="ticker-item">
+        <div class="ticker-label">IP OLT ในพื้นที่</div>
+        <div class="ticker-value up">{total_olt_ip}<span class="ticker-unit">จุด</span></div>
+    </div>
+    <div class="ticker-item">
+        <div class="ticker-label">เส้นทางสาย OFC</div>
+        <div class="ticker-value">{total_ofc_routes}<span class="ticker-unit">เส้นทาง</span></div>
+    </div>
+    <div class="ticker-item">
+        <div class="ticker-label">เลขวงจรลูกค้า</div>
+        <div class="ticker-value">{total_circuits}<span class="ticker-unit">วงจร</span></div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-    # แสดงคลังเอกสารส่วนกลางบนหน้า Dashboard
-    show_pdf_library()
+# แสดงคลังเอกสารส่วนกลางบนหน้า Dashboard
+show_pdf_library()
 
-    col_input, col_btn = st.columns([5, 1])
+col_input, col_btn = st.columns([5, 1])
 
-    with col_input:
-        dash_search = st.text_input(
-            "ค้นหาข้ามระบบ", 
-            placeholder="🔍 พิมพ์คำค้นหาด่วน เช่น โป่งช้าง, ท่าเสา, OLT, nodelist, IP...", 
-            label_visibility="collapsed",
-            key="dash_global_search"
-        ).strip()
+with col_input:
+    dash_search = st.text_input(
+        "ค้นหาข้ามระบบ", 
+        placeholder="🔍 พิมพ์คำค้นหาด่วน เช่น โป่งช้าง, ท่าเสา, OLT, nodelist, IP...", 
+        label_visibility="collapsed",
+        key="dash_global_search"
+    ).strip()
 
-    with col_btn:
-        search_clicked = st.button("🔍 ค้นหา", use_container_width=True, type="primary")
+with col_btn:
+    search_clicked = st.button("🔍 ค้นหา", use_container_width=True, type="primary")
 
-    st.markdown("---")
+st.markdown("---")
 
-    if dash_search:
-        st.markdown(f"### 🎯 ผลการค้นหาสำหรับ: `<mark class='highlight'>{dash_search}</mark>`", unsafe_allow_html=True)
-        found_global = False
+if dash_search:
+    st.markdown(f"### 🎯 ผลการค้นหาสำหรับ: `<mark class='highlight'>{dash_search}</mark>`", unsafe_allow_html=True)
+    found_global = False
 
-        matched_ofc = [
-            item for item in current_ofc_data
-            if dash_search.lower() in item["route"].lower()
-            or dash_search.lower() in item["distance"].lower()
-            or dash_search.lower() in item.get("note", "").lower()
-        ]
-        if matched_ofc:
-            found_global = True
-            st.markdown("#### 📏 พบใน: ระยะสาย Optic (OFC)")
-            for item in matched_ofc:
-                h_route = highlight_text(item["route"], dash_search)
-                h_note = highlight_text(item.get("note", "-"), dash_search)
-                st.markdown(f"• **{h_route}** : `{item['distance']}` (หมายเหตุ: {h_note})", unsafe_allow_html=True)
-            st.markdown("---")
-
-        matched_circuits = [
-            item for item in current_circuit_data
-            if dash_search.lower() in item["code"].lower() or dash_search.lower() in item["owner"].lower()
-        ]
-        if matched_circuits:
-            found_global = True
-            st.markdown("#### 🆔 พบใน: เลขวงจรลูกค้า")
-            for item in matched_circuits:
-                h_code = highlight_text(item["code"], dash_search)
-                h_owner = highlight_text(item["owner"], dash_search)
-                st.markdown(f"• **{h_code}** : {h_owner}", unsafe_allow_html=True)
-            st.markdown("---")
-
-        matched_web = [
-            item for item in current_web_data
-            if dash_search.lower() in item["name"].lower() or dash_search.lower() in item["url"].lower()
-        ]
-        if matched_web:
-            found_global = True
-            st.markdown("#### 🌐 พบใน: ลิงก์เว็บ")
-            for item in matched_web:
-                h_name = highlight_text(item["name"], dash_search)
-                st.markdown(f"• 🔗 [{h_name}]({item['url']})", unsafe_allow_html=True)
-            st.markdown("---")
-
-        matched_address = [
-            item for item in current_address_data
-            if dash_search.lower() in item["title"].lower() or dash_search.lower() in item["detail"].lower()
-        ]
-        if matched_address:
-            found_global = True
-            st.markdown("#### 📍 พบใน: ที่อยู่ NT")
-            for item in matched_address:
-                h_title = highlight_text(item["title"], dash_search)
-                h_detail = highlight_text(item["detail"], dash_search)
-                st.markdown(f"• **{h_title}** : {h_detail}", unsafe_allow_html=True)
-            st.markdown("---")
-
-        for cat_name, cat_dict in command_library_data.items():
-            cat_matches = []
-            for sub_cat, items in cat_dict.items():
-                for desc, code in items:
-                    if dash_search.lower() in desc.lower() or dash_search.lower() in code.lower():
-                        cat_matches.append((sub_cat, desc, code))
-            
-            if cat_matches:
-                found_global = True
-                st.markdown(f"#### ⚙️ หมวด Config: {cat_name}")
-                for sub_cat, desc, code in cat_matches:
-                    st.markdown(
-                        f"<div class='cmd-label'>🔹 {sub_cat} ➔ {highlight_text(desc, dash_search)}</div>",
-                        unsafe_allow_html=True
-                    )
-                    
-                    if cat_name == "📍 IP OLT ในพื้นที่":
-                        lines = code.strip().split("\n")
-                        highlighted_lines = []
-                        for line in lines:
-                            if dash_search.lower() in line.lower():
-                                h_line = highlight_text(line, dash_search)
-                                highlighted_lines.append(f"• {h_line}")
-                            else:
-                                highlighted_lines.append(f"• {line}")
-                        final_html = "<br>".join(highlighted_lines)
-                        st.markdown(f"<div style='background-color: #050a06; border: 1px solid #1c3320; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 14px; color: #33ff77;'>{final_html}</div>", unsafe_allow_html=True)
-                    else:
-                        st.code(code, language="text")
-                st.markdown("---")
-
-        if not found_global:
-            st.warning("❌ ไม่พบข้อมูลที่ตรงกับคำค้นหาของคุณในระบบ")
-
-    else:
-        current_dict = command_library_data[selected_menu]
-        st.markdown(f"## {selected_menu}")
+    matched_ofc = [
+        item for item in current_ofc_data
+        if dash_search.lower() in item["route"].lower()
+        or dash_search.lower() in item["distance"].lower()
+        or dash_search.lower() in item.get("note", "").lower()
+    ]
+    if matched_ofc:
+        found_global = True
+        st.markdown("#### 📏 พบใน: ระยะสาย Optic (OFC)")
+        for item in matched_ofc:
+            h_route = highlight_text(item["route"], dash_search)
+            h_note = highlight_text(item.get("note", "-"), dash_search)
+            st.markdown(f"• **{h_route}** : `{item['distance']}` (หมายเหตุ: {h_note})", unsafe_allow_html=True)
         st.markdown("---")
 
-        with st.expander("➕ เพิ่มคำสั่งใหม่ในหมวดนี้", expanded=False):
-            existing_subs = list(current_dict.keys())
-            sub_choice = st.selectbox(
-                "หมวดหมู่ย่อย (เลือกที่มีอยู่ หรือสร้างใหม่)",
-                existing_subs + ["+ สร้างหมวดหมู่ย่อยใหม่"],
-                key=f"sub_choice_{selected_menu}"
-            )
-            new_sub_name = ""
-            if sub_choice == "+ สร้างหมวดหมู่ย่อยใหม่":
-                new_sub_name = st.text_input("ชื่อหมวดหมู่ย่อยใหม่", key=f"new_sub_{selected_menu}")
+    matched_circuits = [
+        item for item in current_circuit_data
+        if dash_search.lower() in item["code"].lower() or dash_search.lower() in item["owner"].lower()
+    ]
+    if matched_circuits:
+        found_global = True
+        st.markdown("#### 🆔 พบใน: เลขวงจรลูกค้า")
+        for item in matched_circuits:
+            h_code = highlight_text(item["code"], dash_search)
+            h_owner = highlight_text(item["owner"], dash_search)
+            st.markdown(f"• **{h_code}** : {h_owner}", unsafe_allow_html=True)
+        st.markdown("---")
 
-            with st.form(f"add_cmd_form_{selected_menu}", clear_on_submit=True):
-                cmd_desc = st.text_input("คำอธิบายคำสั่ง", key=f"cmd_desc_{selected_menu}")
-                cmd_code = st.text_area("คำสั่ง / โค้ด", key=f"cmd_code_{selected_menu}", height=100)
-                submitted = st.form_submit_button("➕ เพิ่มคำสั่ง", use_container_width=True)
-                if submitted:
-                    target_sub = new_sub_name.strip() if sub_choice == "+ สร้างหมวดหมู่ย่อยใหม่" else sub_choice
-                    if not target_sub:
-                        st.warning("กรุณาระบุหมวดหมู่ย่อย")
-                    elif not cmd_desc.strip() or not cmd_code.strip():
-                        st.warning("กรุณากรอกคำอธิบายและคำสั่ง")
-                    else:
-                        add_command_to_library(
+    matched_web = [
+        item for item in current_web_data
+        if dash_search.lower() in item["name"].lower() or dash_search.lower() in item["url"].lower()
+    ]
+    if matched_web:
+        found_global = True
+        st.markdown("#### 🌐 พบใน: ลิงก์เว็บ")
+        for item in matched_web:
+            h_name = highlight_text(item["name"], dash_search)
+            st.markdown(f"• 🔗 [{h_name}]({item['url']})", unsafe_allow_html=True)
+        st.markdown("---")
+
+    matched_address = [
+        item for item in current_address_data
+        if dash_search.lower() in item["title"].lower() or dash_search.lower() in item["detail"].lower()
+    ]
+    if matched_address:
+        found_global = True
+        st.markdown("#### 📍 พบใน: ที่อยู่ NT")
+        for item in matched_address:
+            h_title = highlight_text(item["title"], dash_search)
+            h_detail = highlight_text(item["detail"], dash_search)
+            st.markdown(f"• **{h_title}** : {h_detail}", unsafe_allow_html=True)
+        st.markdown("---")
+
+    for cat_name, cat_dict in command_library_data.items():
+        cat_matches = []
+        for sub_cat, items in cat_dict.items():
+            for desc, code in items:
+                if dash_search.lower() in desc.lower() or dash_search.lower() in code.lower():
+                    cat_matches.append((sub_cat, desc, code))
+        
+        if cat_matches:
+            found_global = True
+            st.markdown(f"#### ⚙️ หมวด Config: {cat_name}")
+            for sub_cat, desc, code in cat_matches:
+                st.markdown(
+                    f"<div class='cmd-label'>🔹 {sub_cat} ➔ {highlight_text(desc, dash_search)}</div>",
+                    unsafe_allow_html=True
+                )
+                
+                if cat_name == "📍 IP OLT ในพื้นที่":
+                    lines = code.strip().split("\n")
+                    highlighted_lines = []
+                    for line in lines:
+                        if dash_search.lower() in line.lower():
+                            h_line = highlight_text(line, dash_search)
+                            highlighted_lines.append(f"• {h_line}")
+                        else:
+                            highlighted_lines.append(f"• {line}")
+                    final_html = "<br>".join(highlighted_lines)
+                    st.markdown(f"<div style='background-color: #050a06; border: 1px solid #1c3320; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 14px; color: #33ff77;'>{final_html}</div>", unsafe_allow_html=True)
+                else:
+                    st.code(code, language="text")
+            st.markdown("---")
+
+    if not found_global:
+        st.warning("❌ ไม่พบข้อมูลที่ตรงกับคำค้นหาของคุณในระบบ")
+
+else:
+    current_dict = command_library_data[selected_menu]
+    st.markdown(f"## {selected_menu}")
+    st.markdown("---")
+
+    with st.expander("➕ เพิ่มคำสั่งใหม่ในหมวดนี้", expanded=False):
+        existing_subs = list(current_dict.keys())
+        sub_choice = st.selectbox(
+            "หมวดหมู่ย่อย (เลือกที่มีอยู่ หรือสร้างใหม่)",
+            existing_subs + ["+ สร้างหมวดหมู่ย่อยใหม่"],
+            key=f"sub_choice_{selected_menu}"
+        )
+        new_sub_name = ""
+        if sub_choice == "+ สร้างหมวดหมู่ย่อยใหม่":
+            new_sub_name = st.text_input("ชื่อหมวดหมู่ย่อยใหม่", key=f"new_sub_{selected_menu}")
+
+        with st.form(f"add_cmd_form_{selected_menu}", clear_on_submit=True):
+            cmd_desc = st.text_input("คำอธิบายคำสั่ง", key=f"cmd_desc_{selected_menu}")
+            cmd_code = st.text_area("คำสั่ง / โค้ด", key=f"cmd_code_{selected_menu}", height=100)
+            submitted = st.form_submit_button("➕ เพิ่มคำสั่ง", use_container_width=True)
+            if submitted:
+                target_sub = new_sub_name.strip() if sub_choice == "+ สร้างหมวดหมู่ย่อยใหม่" else sub_choice
+                if not target_sub:
+                    st.warning("กรุณาระบุหมวดหมู่ย่อย")
+                elif not cmd_desc.strip() or not cmd_code.strip():
+                    st.warning("กรุณากรอกคำอธิบายและคำสั่ง")
+                else:
+                    add_command_to_library(
+                        "command_library.json", command_library_data,
+                        selected_menu, target_sub, cmd_desc.strip(), cmd_code
+                    )
+                    st.success("เพิ่มคำสั่งเรียบร้อยแล้ว")
+                    st.rerun()
+
+    for sub_cat, items in current_dict.items():
+        st.markdown(f"### {sub_cat}")
+        for item_idx, (desc, code) in enumerate(items):
+            col_label, col_del = st.columns([6, 1])
+            with col_label:
+                st.markdown(f"<div class='cmd-label'>📌 {desc}</div>", unsafe_allow_html=True)
+            with col_del:
+                del_key = f"del_cmd_{selected_menu}_{sub_cat}_{item_idx}"
+                with st.popover("D", key=del_key, help="ลบคำสั่งนี้"):
+                    st.write("⚠️ ยืนยันการลบคำสั่งนี้หรือไม่?")
+                    if st.button("✅ ยืนยันลบ", key=f"{del_key}_confirm", type="primary", use_container_width=True):
+                        delete_command_from_library(
                             "command_library.json", command_library_data,
-                            selected_menu, target_sub, cmd_desc.strip(), cmd_code
+                            selected_menu, sub_cat, item_idx
                         )
-                        st.success("เพิ่มคำสั่งเรียบร้อยแล้ว")
                         st.rerun()
-
-        for sub_cat, items in current_dict.items():
-            st.markdown(f"### {sub_cat}")
-            for item_idx, (desc, code) in enumerate(items):
-                col_label, col_del = st.columns([6, 1])
-                with col_label:
-                    st.markdown(f"<div class='cmd-label'>📌 {desc}</div>", unsafe_allow_html=True)
-                with col_del:
-                    del_key = f"del_cmd_{selected_menu}_{sub_cat}_{item_idx}"
-                    with st.popover("D", key=del_key, help="ลบคำสั่งนี้"):
-                        st.write("⚠️ ยืนยันการลบคำสั่งนี้หรือไม่?")
-                        if st.button("✅ ยืนยันลบ", key=f"{del_key}_confirm", type="primary", use_container_width=True):
-                            delete_command_from_library(
-                                "command_library.json", command_library_data,
-                                selected_menu, sub_cat, item_idx
-                            )
-                            st.rerun()
-                st.code(code, language="text")
-            st.markdown("")
+            st.code(code, language="text")
+        st.markdown("")

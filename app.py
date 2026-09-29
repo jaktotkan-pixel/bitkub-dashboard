@@ -774,20 +774,41 @@ def show_pdf_library():
                 height=660,
                 scrolling=False
             )
-            # --- โค้ดเดิมของคุณที่มีอยู่แล้ว ---
-    with st.expander("📑 คลังเอกสาร PDF", expanded=False):
-        # (รายละเอียดคลัง PDF ของคุณ...)
-        pass
+   # =================================================================
+# 🖥️ หน้าหลัก Dashboard & คลังคำสั่ง
+# =================================================================
+if menu == "🏠 Dashboard & คลังคำสั่ง":
 
+    # 1. Header หลักของระบบ
+    st.markdown("## `root@kri-noc:~$ ZTE_OLT_COMMAND_CENTER` 🟢 `SYSTEM ONLINE`")
+    st.caption("# คลังคำสั่งและข้อมูลหน้างานเครือข่าย ZTE / OLT / DSLAM / Switch — ค้นหาได้จากทุกหมวดในจุดเดียว")
 
-    # =================================================================
-    # 💥 นำบรรทัดนี้ไปวางแทรกต่อท้ายได้เลยครับ! 💥
-    # =================================================================
-    render_manual_section()
+    st.markdown("---")
 
+    # 2. จัดวางกล่อง คู่มือ และ คลังเอกสาร PDF ให้อยู่คู่กันอย่างเป็นระเบียบ
+    col_pdf, col_manual = st.columns(2)
 
-    # --- โค้ดเดิมส่วนถัดไป (เช่น ช่องค้นหา หรือ ZTE C300 Series) ---
-    st.text_input("พิมพ์คำค้นหาด่วน...", ...)
+    with col_pdf:
+        with st.expander("📑 คลังเอกสาร PDF", expanded=False):
+            st.write("รายการเอกสาร PDF สำหรับดาวน์โหลด/เปิดดู...")
+            # (ใส่โค้ดคลัง PDF เดิมของคุณตรงนี้)
+
+    with col_manual:
+        with st.expander("📖 คู่มือการใช้งานระบบ (User Manual)", expanded=False):
+            manual_list = load_manual_data()
+            if not manual_list:
+                st.info("📌 ยังไม่มีคู่มือการใช้งาน")
+            else:
+                for item in manual_list:
+                    st.markdown(f"**📌 {item.get('title')}**")
+                    if item.get('content'):
+                        st.caption(item.get('content'))
+                    if item.get('image_path') and os.path.exists(item.get('image_path')):
+                        st.image(item.get('image_path'))
+                    st.markdown("---")
+
+    # 3. ส่วนค้นหา และ สถิติต่างๆ
+    # (ต่อด้วยโค้ดสถิติ ค้นหา และ ZTE C300 Series ตามปกติ)
 # =================================================================
 import os
 import json

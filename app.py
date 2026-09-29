@@ -773,7 +773,86 @@ def show_pdf_library():
                 height=660,
                 scrolling=False
             )
+import os
+import base64
+import streamlit as st
 
+# =========================================================
+# 1. ส่วนจัดการไฟล์ PDF (PDF Library & Viewer)
+# =========================================================
+st.subheader("📁 คลังเอกสาร และ ไฟล์ PDF")
+
+pdf_dir = "pdf_files"
+os.makedirs(pdf_dir, exist_ok=True)
+
+# อัปโหลดไฟล์ PDF ใหม่
+uploaded_file = st.file_uploader("อัปโหลดไฟล์ PDF", type=["pdf"])
+if uploaded_file is not None:
+    file_path = os.path.join(pdf_dir, uploaded_file.name)
+    with open(file_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
+    st.success(f"อัปโหลดไฟล์ {uploaded_file.name} เรียบร้อยแล้ว")
+
+# ดึงรายการไฟล์ PDF
+pdf_files = [f for f in os.listdir(pdf_dir) if f.endswith(".pdf")]
+
+if pdf_files:
+    selected_pdf = st.selectbox("เลือกไฟล์ PDF ที่ต้องการเปิดอ่าน/ดาวน์โหลด", pdf_files)
+    selected_path = os.path.join(pdf_dir, selected_pdf)
+
+    with open(selected_path, "rb") as f:
+        pdf_bytes = f.read()
+
+    # ปุ่มดาวน์โหลดไฟล์ PDF
+    st.download_button(
+        label="📥 ดาวน์โหลดไฟล์ PDF นี้",
+        data=pdf_bytes,
+        file_name=selected_pdf,
+        mime="application/pdf"
+    )
+
+    # แสดงตัวอย่าง PDF ในหน้าเว็บ (Preview Window)
+    base64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf"></iframe>'
+    st.markdown(pdf_display, unsafe_allow_html=True)
+else:
+    st.info("ยังไม่มีไฟล์ PDF ในระบบ กรุณาอัปโหลดไฟล์")
+
+
+# =========================================================
+# 2. ฟังก์ชันคู่มือการใช้งาน (Manual Guide Section) - เพิ่มด้านล่าง PDF
+# =========================================================
+st.divider()
+st.subheader("📖 คู่มือการใช้งานระบบ (User Manual & Quick Guide)")
+
+# รูปแบบที่ 1: คู่มือแบบพับเก็บได้ (Expander) แบ่งตามหมวดหมู่
+with st.expander("📌 1. คู่มือการใช้งานระบบคำสั่ง OLT / Network Command", expanded=False):
+    st.markdown("""
+    * **การค้นหาข้อมูล (Search):** สามารถพิมพ์คำค้นหา (เช่น IP Address, VLAN, Circuit ID) ในช่องค้นหาหลักเพื่อไฮไลต์และดึงข้อมูลมาแสดงทันที
+    * **การป้อนค่าพารามิเตอร์ (Dynamic Template):** ระบุค่า `PON Port`, `ONU ID` หรือ `VLAN` ในช่องตัวแปร โค้ดคำสั่งจะเจนให้อัตโนมัติตามรูปแบบ ZTE C300/C600
+    * **การคัดลอกคำสั่ง:** กดปุ่ม **Copy** บริเวณมุมขวาของกล่องโค้ด เพื่อนำคำสั่งไปวางใน **SecureCRT** หรือ **Terminal**
+    """)
+
+with st.expander("📁 2. คู่มือการจัดการและเปิดอ่านไฟล์ PDF", expanded=False):
+    st.markdown("""
+    * **การเพิ่มเอกสาร:** ใช้เมนู `อัปโหลดไฟล์ PDF` ด้านบน เอกสารจะถูกบันทึกเข้าสู่โฟลเดอร์ระบบทันที
+    * **การแสดงผล:** หากเบราว์เซอร์ไม่แสดงพรีวิว PDF ให้กดปุ่ม `📥 ดาวน์โหลดไฟล์ PDF นี้` เพื่อเปิดอ่านด้วยโปรแกรมในเครื่องแทน
+    """)
+
+with st.expander("🛠️ 3. ข้อแนะนำการแก้ไขปัญหาเบื้องต้น (Troubleshooting)", expanded=False):
+    st.markdown("""
+    * **หาคำสั่งไม่พบ:** ตรวจสอบเว้นวรรคหรือตัวอักษรพิมพ์เล็ก-ใหญ่ในคำค้นหา
+    * **พรีวิว PDF ไม่ขึ้น:** ตรวจสอบว่าไฟล์ PDF ไม่อยู่ในสภาวะติดรหัสผ่าน (Password Protected)
+    """)
+
+# รูปแบบที่ 2 (Option): แท็บคู่มือการใช้งานอย่างเร็ว (Quick Reference Tabs)
+tab_guide1, tab_guide2 = st.tabs(["🚀 Quick Start", "💡 วิธีแก้ปัญหาที่พบบ่อย"])
+
+with tab_guide1:
+    st.info("💡 **Tip:** กด `Ctrl + F` เพื่อค้นหาคำสั่งด่วนภายในหน้านี้ได้ทันที")
+
+with tab_guide2:
+    st.warning("⚠️ หากพบระบบไม่ตอบสนอง ให้ลองรีเฟรชหน้าเว็บหรือตรวจสอบสถานะการเชื่อมต่อ Network")
 
 # =================================================================
 # ⚙️ Dictionary คลังคำสั่ง

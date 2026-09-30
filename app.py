@@ -125,19 +125,28 @@ def check_password():
 
     return False
 # =========================================================
-# 🚫 ซ่อนตัวหนังสือคำแนะนำ (Press ⌘Enter / Press Enter) ทุกช่องทั้งหน้า
+# 🚫 ซ่อนคำแนะนำ "Press Enter / Press ⌘Enter" ทุกสถานะทั้งหน้า
 # =========================================================
 st.markdown("""
     <style>
-    /* ซ่อนคำแนะนำการกดปุ่มในช่องกรอกข้อมูลและฟอร์มทั้งหมด */
+    /* ซ่อนคำแนะนำการกดปุ่มทั้งหมดทั้งตอนปกติและตอนกำลังพิมพ์ (Focus) */
     [data-testid="stInputInstructions"],
     [data-testid="stFormInstructions"],
-    div[data-testid="stInputInstructions"] {
+    div[data-testid="stInputInstructions"],
+    small[data-testid="stInputInstructions"],
+    .stTextInput small,
+    .stTextArea small,
+    [data-testid="stTextInput"] small,
+    [data-testid="stTextArea"] small,
+    [data-testid="stForm"] small,
+    form small {
         display: none !important;
+        visibility: hidden !important;
+        height: 0px !important;
+        opacity: 0 !important;
     }
     </style>
 """, unsafe_allow_html=True)
-
 #if not check_password():
  #   st.stop()
 

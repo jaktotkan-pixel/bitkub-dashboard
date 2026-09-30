@@ -1608,9 +1608,8 @@ with st.sidebar.expander("🆔 เลขวงจรลูกค้า", expande
 
 with st.sidebar.expander("📞 เบอร์ติดต่อ", expanded=False):
     current_contact_data = render_simple_value_section(
-        "contacts.json", CONTACTS_SEED, "ชื่อ / เบอร์ติดต่อ", "contacts"
+        "contacts.json", {}, "ชื่อ / เบอร์ติดต่อ", "contacts"
     )
-
 with st.sidebar.expander("📍 ที่อยู่ NT", expanded=False):
     current_address_data = render_address_section("addresses.json", ADDRESS_SEED)
 

@@ -528,12 +528,16 @@ st.markdown("""
 
 
 def highlight_text(text, keyword):
-    if not keyword:
-        return text
-    pattern = re.compile(re.escape(keyword), re.IGNORECASE)
-    return pattern.sub(lambda m: f'<mark class="highlight">{m.group(0)}</mark>', str(text))
-
-
+  if not keyword or not text:
+    return text
+  pattern = re.escape(keyword)
+  return re.sub(
+      f'({pattern})',
+      r'<mark style="background-color: #ffe066; color: #000000; font-weight:'
+      r' bold; padding: 1px 4px; border-radius: 3px;">\1</mark>',
+      str(text),
+      flags=re.IGNORECASE,
+  )
 # =================================================================
 # 🗃️ ระบบจัดการข้อมูลแบบแก้ไขได้ (เพิ่ม/ลบ + Auto GitHub Sync)
 # =================================================================

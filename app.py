@@ -1786,11 +1786,6 @@ with st.sidebar.expander("📞 เบอร์ติดต่อ", expanded=Fals
               f"ลบรายการ '{deleted_item.get('name')}' เรียบร้อยแล้ว"
           )
           st.rerun()
-  # =========================================================
- with st.sidebar.expander("📍 ที่อยู่ NT", expanded=False):
-    current_address_data = render_address_section(
-        "addresses.json", ADDRESS_SEED
-    )
 with st.sidebar.expander("📍 ที่อยู่ NT", expanded=False):
     current_address_data = render_address_section("addresses.json", ADDRESS_SEED)
 

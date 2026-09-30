@@ -1609,12 +1609,11 @@ with st.sidebar.expander("🆔 เลขวงจรลูกค้า", expande
     current_circuit_data = render_circuit_section("circuit_list.json", CIRCUIT_SEED)
 
 # =========================================================
-# 📞 ระบบจัดการเบอร์ติดต่อ (รูปแบบที่ 2 - อิสระในตัว)
+# 📞 ระบบจัดการเบอร์ติดต่อ (เพิ่ม / แก้ไข / ลบ ได้)
 # =========================================================
 with st.sidebar.expander("📞 เบอร์ติดต่อ", expanded=False):
-    st.markdown("### 📞 เบอร์ติดต่อ")
+    st.markdown("### 📞 ระบบจัดการเบอร์ติดต่อ")
     
-    # 1. ฟังก์ชันจัดการไฟล์ JSON สำหรับเบอร์ติดต่อโดยเฉพาะ
     CONTACTS_FILE = "contacts_list.json"
     
     def load_contacts_data():
@@ -1634,47 +1633,96 @@ with st.sidebar.expander("📞 เบอร์ติดต่อ", expanded=Fals
 
     contacts_list = load_contacts_data()
 
-    # 2. ช่องค้นหาข้อมูลเบอร์ติดต่อ
-    search_kw = st.text_input("🔍 ค้นหาเบอร์/ชื่อ", key="search_contact_kw")
-    
-    # กรองข้อมูล
-    filtered = [
-        c for c in contacts_list 
-        if search_kw.lower() in c.get('name', '').lower() 
-        or search_kw in c.get('phone', '') 
-        or search_kw.lower() in c.get('note', '').lower()
-    ]
-    
-    # แสดงรายการ
-    if filtered:
-        for c in filtered:
-            st.write(f"👤 **{c.get('name', '')}**: `{c.get('phone', '')}`")
-            if c.get('note'):
-                st.caption(f"📝 {c['note']}")
+    # แบ่งการทำงานออกเป็น 3 แท็บ
+    tab_view, tab_add, tab_manage = st.tabs(["🔍 ค้นหา", "➕ เพิ่ม", "⚙️ แก้ไข/ลบ"])
+
+    # ---------------------------------------------------------
+    # TAB 1: ค้นหา / แสดงรายการ
+    # ---------------------------------------------------------
+    with tab_view:
+        search_kw = st.text_input("🔍 พิมพ์คำค้นหา", key="search_contact_kw")
+        
+        filtered = [
+            c for c in contacts_list 
+            if search_kw.lower() in c.get('name', '').lower() 
+            or search_kw in c.get('phone', '') 
+            or search_kw.lower() in c.get('note', '').lower()
+        ]
+        
+        if filtered:
+            st.caption(f"พบข้อมูลทั้งหมด {len(filtered)} รายการ")
+            for c in filtered:
+                st.write(f"👤 **{c.get('name', '')}**: `{c.get('phone', '')}`")
+                if c.get('note'):
+                    st.caption(f"📝 {c['note']}")
+                st.divider()
+        else:
+            st.caption("ไม่พบข้อมูลเบอร์ติดต่อ")
+
+    # ---------------------------------------------------------
+    # TAB 2: เพิ่มเบอร์ติดต่อใหม่
+    # ---------------------------------------------------------
+    with tab_add:
+        with st.form("add_contact_form", clear_on_submit=True):
+            new_name = st.text_input("ชื่อ / หน่วยงาน")
+            new_phone = st.text_input("เบอร์โทรศัพท์")
+            new_note = st.text_input("หมายเหตุ (ถ้ามี)")
+            submit_add = st.form_submit_button("💾 บันทึกข้อมูล")
+            
+            if submit_add:
+                if new_name.strip() and new_phone.strip():
+                    contacts_list.append({
+                        "name": new_name.strip(),
+                        "phone": new_phone.strip(),
+                        "note": new_note.strip()
+                    })
+                    save_contacts_data(contacts_list)
+                    st.success("บันทึกเบอร์ติดต่อเรียบร้อยแล้ว!")
+                    st.rerun()
+                else:
+                    st.warning("กรุณากรอกชื่อและเบอร์โทรศัพท์")
+
+    # ---------------------------------------------------------
+    # TAB 3: แก้ไข / ลบ รายการเดิม
+    # ---------------------------------------------------------
+    with tab_manage:
+        if not contacts_list:
+            st.caption("ยังไม่มีข้อมูลเบอร์ติดต่อในระบบ")
+        else:
+            options = [f"{idx+1}. {c.get('name')} ({c.get('phone')})" for idx, c in enumerate(contacts_list)]
+            selected_idx = st.selectbox("เลือกรายการที่ต้องการจัดการ", range(len(options)), format_func=lambda x: options[x])
+            
+            selected_item = contacts_list[selected_idx]
+
+            # ฟอร์มแก้ไขข้อมูล
+            with st.form("edit_contact_form"):
+                st.markdown("**✏️ แก้ไขข้อมูล**")
+                edit_name = st.text_input("ชื่อ / หน่วยงาน", value=selected_item.get("name", ""))
+                edit_phone = st.text_input("เบอร์โทรศัพท์", value=selected_item.get("phone", ""))
+                edit_note = st.text_input("หมายเหตุ", value=selected_item.get("note", ""))
+                
+                submit_edit = st.form_submit_button("🔄 อัปเดตข้อมูล")
+                
+                if submit_edit:
+                    if edit_name.strip() and edit_phone.strip():
+                        contacts_list[selected_idx] = {
+                            "name": edit_name.strip(),
+                            "phone": edit_phone.strip(),
+                            "note": edit_note.strip()
+                        }
+                        save_contacts_data(contacts_list)
+                        st.success("อัปเดตข้อมูลเรียบร้อย!")
+                        st.rerun()
+                    else:
+                        st.warning("กรุณากรอกชื่อและเบอร์โทรศัพท์")
+
+            # ปุ่มลบข้อมูล
             st.divider()
-    else:
-        st.caption("ไม่พบข้อมูลเบอร์ติดต่อ")
-        
-    # 3. ฟอร์มเพิ่มเบอร์ติดต่อใหม่
-    st.markdown("**➕ เพิ่มเบอร์ติดต่อใหม่**")
-    with st.form("add_contact_form", clear_on_submit=True):
-        new_name = st.text_input("ชื่อ / หน่วยงาน")
-        new_phone = st.text_input("เบอร์โทรศัพท์")
-        new_note = st.text_input("หมายเหตุ (ถ้ามี)")
-        submit_btn = st.form_submit_button("💾 บันทึกเบอร์ติดต่อ")
-        
-        if submit_btn:
-            if new_name.strip() and new_phone.strip():
-                contacts_list.append({
-                    "name": new_name.strip(),
-                    "phone": new_phone.strip(),
-                    "note": new_note.strip()
-                })
+            if st.button("🗑️ ลบเบอร์นี้ออกจากระบบ", type="secondary", key="btn_del_contact"):
+                deleted_item = contacts_list.pop(selected_idx)
                 save_contacts_data(contacts_list)
-                st.success("บันทึกเบอร์ติดต่อเรียบร้อยแล้ว!")
+                st.warning(f"ลบรายการ '{deleted_item.get('name')}' เรียบร้อยแล้ว")
                 st.rerun()
-            else:
-                st.warning("กรุณากรอกชื่อและเบอร์โทรศัพท์")
 with st.sidebar.expander("📍 ที่อยู่ NT", expanded=False):
     current_address_data = render_address_section("addresses.json", ADDRESS_SEED)
 

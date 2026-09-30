@@ -74,5 +74,9 @@
   {
     "name": "BMS สผ",
     "url": "http://bms.intra.ntplc.co.th/"
+  },
+  {
+    "name": "Phone Yealink",
+    "url": "https://eu.ymcs.yealink.com/manager/sip/sip-product/sipManage"
   }
 ]

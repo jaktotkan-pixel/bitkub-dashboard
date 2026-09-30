@@ -1608,10 +1608,73 @@ with st.sidebar.expander("📏 ระยะสาย Optic", expanded=False):
 with st.sidebar.expander("🆔 เลขวงจรลูกค้า", expanded=False):
     current_circuit_data = render_circuit_section("circuit_list.json", CIRCUIT_SEED)
 
+# =========================================================
+# 📞 ระบบจัดการเบอร์ติดต่อ (รูปแบบที่ 2 - อิสระในตัว)
+# =========================================================
 with st.sidebar.expander("📞 เบอร์ติดต่อ", expanded=False):
-    current_contact_data = render_simple_value_section(
-        "contacts.json", [], "ชื่อ / เบอร์ติดต่อ", "contacts"
-    )
+    st.markdown("### 📞 เบอร์ติดต่อ")
+    
+    # 1. ฟังก์ชันจัดการไฟล์ JSON สำหรับเบอร์ติดต่อโดยเฉพาะ
+    CONTACTS_FILE = "contacts_list.json"
+    
+    def load_contacts_data():
+        if os.path.exists(CONTACTS_FILE):
+            try:
+                with open(CONTACTS_FILE, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if isinstance(data, list):
+                        return data
+            except Exception:
+                pass
+        return []
+
+    def save_contacts_data(data):
+        with open(CONTACTS_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+
+    contacts_list = load_contacts_data()
+
+    # 2. ช่องค้นหาข้อมูลเบอร์ติดต่อ
+    search_kw = st.text_input("🔍 ค้นหาเบอร์/ชื่อ", key="search_contact_kw")
+    
+    # กรองข้อมูล
+    filtered = [
+        c for c in contacts_list 
+        if search_kw.lower() in c.get('name', '').lower() 
+        or search_kw in c.get('phone', '') 
+        or search_kw.lower() in c.get('note', '').lower()
+    ]
+    
+    # แสดงรายการ
+    if filtered:
+        for c in filtered:
+            st.write(f"👤 **{c.get('name', '')}**: `{c.get('phone', '')}`")
+            if c.get('note'):
+                st.caption(f"📝 {c['note']}")
+            st.divider()
+    else:
+        st.caption("ไม่พบข้อมูลเบอร์ติดต่อ")
+        
+    # 3. ฟอร์มเพิ่มเบอร์ติดต่อใหม่
+    st.markdown("**➕ เพิ่มเบอร์ติดต่อใหม่**")
+    with st.form("add_contact_form", clear_on_submit=True):
+        new_name = st.text_input("ชื่อ / หน่วยงาน")
+        new_phone = st.text_input("เบอร์โทรศัพท์")
+        new_note = st.text_input("หมายเหตุ (ถ้ามี)")
+        submit_btn = st.form_submit_button("💾 บันทึกเบอร์ติดต่อ")
+        
+        if submit_btn:
+            if new_name.strip() and new_phone.strip():
+                contacts_list.append({
+                    "name": new_name.strip(),
+                    "phone": new_phone.strip(),
+                    "note": new_note.strip()
+                })
+                save_contacts_data(contacts_list)
+                st.success("บันทึกเบอร์ติดต่อเรียบร้อยแล้ว!")
+                st.rerun()
+            else:
+                st.warning("กรุณากรอกชื่อและเบอร์โทรศัพท์")
 with st.sidebar.expander("📍 ที่อยู่ NT", expanded=False):
     current_address_data = render_address_section("addresses.json", ADDRESS_SEED)
 

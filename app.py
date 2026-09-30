@@ -1895,9 +1895,26 @@ with col_btn:
 st.markdown("---")
 
 if dash_search:
-    st.markdown(f"### 🎯 ผลการค้นหาสำหรับ: `<mark class='highlight'>{dash_search}</mark>`", unsafe_allow_html=True)
+    st.markdown(f"### 🎯 ผลการค้นหาสำหรับ: <mark class='highlight'>{dash_search}</mark>", unsafe_allow_html=True)
     found_global = False
 
+    # --- ค้นหาในหมวด: เบอร์ติดต่อ ---
+    contacts_data = get_contacts_search_data()
+    matched_contacts = [
+        item for item in contacts_data
+        if dash_search.lower() in item.get("name", "").lower()
+        or dash_search in item.get("phone", "")
+        or dash_search.lower() in item.get("note", "").lower()
+    ]
+    if matched_contacts:
+        found_global = True
+        st.markdown("#### 📞 พบใน: เบอร์ติดต่อ")
+        for item in matched_contacts:
+            h_name = highlight_text(item.get("name", ""), dash_search)
+            h_phone = highlight_text(item.get("phone", ""), dash_search)
+            h_note = highlight_text(item.get("note", "-"), dash_search)
+            st.markdown(f"• **{h_name}** : `{h_phone}` (หมายเหตุ: {h_note})", unsafe_allow_html=True)
+        st.markdown("---")
     matched_ofc = [
         item for item in current_ofc_data
         if dash_search.lower() in item["route"].lower()

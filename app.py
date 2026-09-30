@@ -124,6 +124,19 @@ def check_password():
             st.error("😕 รหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้งครับ")
 
     return False
+# =========================================================
+# 🚫 ซ่อนตัวหนังสือคำแนะนำ (Press ⌘Enter / Press Enter) ทุกช่องทั้งหน้า
+# =========================================================
+st.markdown("""
+    <style>
+    /* ซ่อนคำแนะนำการกดปุ่มในช่องกรอกข้อมูลและฟอร์มทั้งหมด */
+    [data-testid="stInputInstructions"],
+    [data-testid="stFormInstructions"],
+    div[data-testid="stInputInstructions"] {
+        display: none !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 #if not check_password():
  #   st.stop()

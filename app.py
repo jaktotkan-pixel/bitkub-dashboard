@@ -774,85 +774,148 @@ def show_pdf_library():
                 scrolling=False
             )
 import os
-import base64
+import json
 import streamlit as st
+from PIL import Image
 
 # =========================================================
-# 1. ส่วนจัดการไฟล์ PDF (PDF Library & Viewer)
+# การตั้งค่าระบบบันทึกข้อมูลคู่มือ (JSON & File Storage)
 # =========================================================
-st.subheader("📁 คลังเอกสาร และ ไฟล์ PDF")
+MANUAL_DATA_FILE = "manuals_data.json"
+MANUAL_FILES_DIR = "manual_attachments"
 
-pdf_dir = "pdf_files"
-os.makedirs(pdf_dir, exist_ok=True)
+os.makedirs(MANUAL_FILES_DIR, exist_ok=True)
 
-# อัปโหลดไฟล์ PDF ใหม่
-uploaded_file = st.file_uploader("อัปโหลดไฟล์ PDF", type=["pdf"])
-if uploaded_file is not None:
-    file_path = os.path.join(pdf_dir, uploaded_file.name)
-    with open(file_path, "wb") as f:
-        f.write(uploaded_file.getbuffer())
-    st.success(f"อัปโหลดไฟล์ {uploaded_file.name} เรียบร้อยแล้ว")
+def load_manuals():
+    """โหลดข้อมูลคู่มือทั้งหมดจากไฟล์ JSON"""
+    if os.path.exists(MANUAL_DATA_FILE):
+        with open(MANUAL_DATA_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
 
-# ดึงรายการไฟล์ PDF
-pdf_files = [f for f in os.listdir(pdf_dir) if f.endswith(".pdf")]
+def save_manuals(data):
+    """บันทึกข้อมูลคู่มือลงไฟล์ JSON"""
+    with open(MANUAL_DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
-if pdf_files:
-    selected_pdf = st.selectbox("เลือกไฟล์ PDF ที่ต้องการเปิดอ่าน/ดาวน์โหลด", pdf_files)
-    selected_path = os.path.join(pdf_dir, selected_pdf)
+# ดึงข้อมูลคู่มือที่มีอยู่ในระบบ
+manuals_list = load_manuals()
 
-    with open(selected_path, "rb") as f:
-        pdf_bytes = f.read()
-
-    # ปุ่มดาวน์โหลดไฟล์ PDF
-    st.download_button(
-        label="📥 ดาวน์โหลดไฟล์ PDF นี้",
-        data=pdf_bytes,
-        file_name=selected_pdf,
-        mime="application/pdf"
-    )
-
-    # แสดงตัวอย่าง PDF ในหน้าเว็บ (Preview Window)
-    base64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
-    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf"></iframe>'
-    st.markdown(pdf_display, unsafe_allow_html=True)
-else:
-    st.info("ยังไม่มีไฟล์ PDF ในระบบ กรุณาอัปโหลดไฟล์")
-
-
-# =========================================================
-# 2. ฟังก์ชันคู่มือการใช้งาน (Manual Guide Section) - เพิ่มด้านล่าง PDF
-# =========================================================
 st.divider()
-st.subheader("📖 คู่มือการใช้งานระบบ (User Manual & Quick Guide)")
+st.header("📖 ระบบจัดการคู่มือการใช้งาน (Manual Management)")
 
-# รูปแบบที่ 1: คู่มือแบบพับเก็บได้ (Expander) แบ่งตามหมวดหมู่
-with st.expander("📌 1. คู่มือการใช้งานระบบคำสั่ง OLT / Network Command", expanded=False):
-    st.markdown("""
-    * **การค้นหาข้อมูล (Search):** สามารถพิมพ์คำค้นหา (เช่น IP Address, VLAN, Circuit ID) ในช่องค้นหาหลักเพื่อไฮไลต์และดึงข้อมูลมาแสดงทันที
-    * **การป้อนค่าพารามิเตอร์ (Dynamic Template):** ระบุค่า `PON Port`, `ONU ID` หรือ `VLAN` ในช่องตัวแปร โค้ดคำสั่งจะเจนให้อัตโนมัติตามรูปแบบ ZTE C300/C600
-    * **การคัดลอกคำสั่ง:** กดปุ่ม **Copy** บริเวณมุมขวาของกล่องโค้ด เพื่อนำคำสั่งไปวางใน **SecureCRT** หรือ **Terminal**
-    """)
+# สร้าง Tab สลับระหว่าง "แสดงคู่มือ" กับ "เพิ่ม/แก้ไขคู่มือ"
+tab_view, tab_manage = st.tabs(["📚 รายการคู่มือทั้งหมด", "⚙️ เพิ่ม / แก้ไขคู่มือ"])
 
-with st.expander("📁 2. คู่มือการจัดการและเปิดอ่านไฟล์ PDF", expanded=False):
-    st.markdown("""
-    * **การเพิ่มเอกสาร:** ใช้เมนู `อัปโหลดไฟล์ PDF` ด้านบน เอกสารจะถูกบันทึกเข้าสู่โฟลเดอร์ระบบทันที
-    * **การแสดงผล:** หากเบราว์เซอร์ไม่แสดงพรีวิว PDF ให้กดปุ่ม `📥 ดาวน์โหลดไฟล์ PDF นี้` เพื่อเปิดอ่านด้วยโปรแกรมในเครื่องแทน
-    """)
+# =========================================================
+# TAB 1: แสดงรายการคู่มือทั้งหมด
+# =========================================================
+with tab_view:
+    if not manuals_list:
+        st.info("ยังไม่มีคู่มือในระบบ กรุณาไปที่แท็บ 'เพิ่ม / แก้ไขคู่มือ' เพื่อสร้างคู่มือใหม่")
+    else:
+        for idx, item in enumerate(manuals_list):
+            with st.expander(f"📌 {item['title']}", expanded=False):
+                # แสดงคำอธิบาย
+                st.markdown(item["description"])
+                
+                # แสดงไฟล์แนบหรือรูปภาพ (ถ้ามี)
+                if item.get("file_path") and os.path.exists(item["file_path"]):
+                    file_path = item["file_path"]
+                    file_ext = os.path.splitext(file_path)[1].lower()
+                    
+                    st.caption("📎 ไฟล์แนบประกอบคู่มือ:")
+                    # กรณีเป็นไฟล์รูปภาพ ให้แสดงรูป
+                    if file_ext in [".png", ".jpg", ".jpeg", ".webp"]:
+                        st.image(file_path, use_container_width=True)
+                    # กรณีเป็นไฟล์อื่นๆ (เช่น PDF, Zip, Docx) ให้แสดงปุ่มดาวน์โหลด
+                    else:
+                        with open(file_path, "rb") as f:
+                            st.download_button(
+                                label=f"📥 ดาวน์โหลดไฟล์แนบ ({os.path.basename(file_path)})",
+                                data=f.read(),
+                                file_name=os.path.basename(file_path),
+                                key=f"dl_{idx}"
+                            )
 
-with st.expander("🛠️ 3. ข้อแนะนำการแก้ไขปัญหาเบื้องต้น (Troubleshooting)", expanded=False):
-    st.markdown("""
-    * **หาคำสั่งไม่พบ:** ตรวจสอบเว้นวรรคหรือตัวอักษรพิมพ์เล็ก-ใหญ่ในคำค้นหา
-    * **พรีวิว PDF ไม่ขึ้น:** ตรวจสอบว่าไฟล์ PDF ไม่อยู่ในสภาวะติดรหัสผ่าน (Password Protected)
-    """)
+# =========================================================
+# TAB 2: ฟังก์ชัน เพิ่ม / แก้ไข / ลบ คู่มือ
+# =========================================================
+with tab_manage:
+    st.subheader("จัดการข้อมูลคู่มือ")
+    
+    # ตัวเลือกโหมดการทำงาน
+    options = ["➕ เพิ่มคู่มือใหม่"] + [f"✏️ แก้ไข: {m['title']}" for m in manuals_list]
+    selected_option = st.selectbox("เลือกรายการที่ต้องการดำเนินการ", options)
+    
+    # ตัวแปรเริ่มต้นสำหรับฟอร์ม
+    edit_mode = False
+    target_index = None
+    default_title = ""
+    default_desc = ""
+    current_file_path = None
 
-# รูปแบบที่ 2 (Option): แท็บคู่มือการใช้งานอย่างเร็ว (Quick Reference Tabs)
-tab_guide1, tab_guide2 = st.tabs(["🚀 Quick Start", "💡 วิธีแก้ปัญหาที่พบบ่อย"])
+    # ตรวจสอบว่าเป็นการแก้ไขคู่มือเดิมหรือไม่
+    if selected_option != "➕ เพิ่มคู่มือใหม่":
+        edit_mode = True
+        target_index = options.index(selected_option) - 1
+        selected_item = manuals_list[target_index]
+        default_title = selected_item["title"]
+        default_desc = selected_item["description"]
+        current_file_path = selected_item.get("file_path")
 
-with tab_guide1:
-    st.info("💡 **Tip:** กด `Ctrl + F` เพื่อค้นหาคำสั่งด่วนภายในหน้านี้ได้ทันที")
+    # ฟอร์มป้อนข้อมูลคู่มือ
+    with st.form("manual_form", clear_on_submit=False):
+        title_input = st.text_input("1. หัวข้อคู่มือ (Title)", value=default_title)
+        desc_input = st.text_area("2. คำอธิบาย / รายละเอียดคู่มือ (Description)", value=default_desc, height=150)
+        
+        if edit_mode and current_file_path:
+            st.info(f"ไฟล์แนบปัจจุบัน: {os.path.basename(current_file_path)}")
+        
+        file_input = st.file_uploader("3. แนบรูปภาพหรือไฟล์ประกอบ (Optional)", type=["png", "jpg", "jpeg", "pdf", "docx", "txt", "zip"])
+        
+        submit_btn = st.form_submit_button("💾 บันทึกข้อมูลคู่มือ")
 
-with tab_guide2:
-    st.warning("⚠️ หากพบระบบไม่ตอบสนอง ให้ลองรีเฟรชหน้าเว็บหรือตรวจสอบสถานะการเชื่อมต่อ Network")
+    # การประมวลผลเมื่อกดบันทึก
+    if submit_btn:
+        if not title_input.strip():
+            st.error("กรุณาระบุหัวข้อคู่มือ")
+        else:
+            saved_file_path = current_file_path
+
+            # หากมีการอัปโหลดไฟล์ใหม่เข้ามา
+            if file_input is not None:
+                new_file_path = os.path.join(MANUAL_FILES_DIR, file_input.name)
+                with open(new_file_path, "wb") as f:
+                    f.write(file_input.getbuffer())
+                saved_file_path = new_file_path
+
+            manual_data = {
+                "title": title_input,
+                "description": desc_input,
+                "file_path": saved_file_path
+            }
+
+            if edit_mode:
+                # แก้ไขรายการเดิม
+                manuals_list[target_index] = manual_data
+                st.success("อัปเดตข้อมูลคู่มือเรียบร้อยแล้ว!")
+            else:
+                # เพิ่มรายการใหม่
+                manuals_list.append(manual_data)
+                st.success("เพิ่มคู่มือใหม่เรียบร้อยแล้ว!")
+
+            save_manuals(manuals_list)
+            st.rerun()
+
+    # ปุ่มสำหรับลบคู่มือ (แสดงเฉพาะโหมดแก้ไข)
+    if edit_mode:
+        st.divider()
+        if st.button("🗑️ ลบคู่มือรายการนี้", type="secondary"):
+            deleted_item = manuals_list.pop(target_index)
+            save_manuals(manuals_list)
+            st.warning(f"ลบคู่มือหัวข้อ '{deleted_item['title']}' เรียบร้อยแล้ว")
+            st.rerun()
 
 # =================================================================
 # ⚙️ Dictionary คลังคำสั่ง

@@ -526,7 +526,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-
 def highlight_text(text, keyword):
   if not keyword or not text:
     return text
@@ -538,6 +537,16 @@ def highlight_text(text, keyword):
       str(text),
       flags=re.IGNORECASE,
   )
+def get_contacts_search_data():
+    if os.path.exists("contacts_list.json"):
+        try:
+            with open("contacts_list.json", "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, list):
+                    return data
+        except Exception:
+            pass
+    return []
 # =================================================================
 # 🗃️ ระบบจัดการข้อมูลแบบแก้ไขได้ (เพิ่ม/ลบ + Auto GitHub Sync)
 # =================================================================

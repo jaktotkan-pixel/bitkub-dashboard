@@ -1552,6 +1552,8 @@ SECURECRT_SEED = [
     {"value": "10.224.55.129", "note": ""},
 ]
 
+CONTACTS_SEED = {}
+
 all_categories = {
     "🍏 ZTE C300 Series": c300_commands,
     "⚡ ZTE C600 Series": c600_commands,

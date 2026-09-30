@@ -1606,6 +1606,11 @@ with st.sidebar.expander("📏 ระยะสาย Optic", expanded=False):
 with st.sidebar.expander("🆔 เลขวงจรลูกค้า", expanded=False):
     current_circuit_data = render_circuit_section("circuit_list.json", CIRCUIT_SEED)
 
+with st.sidebar.expander("📞 เบอร์ติดต่อ", expanded=False):
+    current_contact_data = render_simple_value_section(
+        "contacts.json", CONTACTS_SEED, "ชื่อ / เบอร์ติดต่อ", "contacts"
+    )
+
 with st.sidebar.expander("📍 ที่อยู่ NT", expanded=False):
     current_address_data = render_address_section("addresses.json", ADDRESS_SEED)
 

@@ -46,34 +46,126 @@ div[data-testid="stColumn"] button:hover {
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 3. ปุ่มกด shortcut 5 คอลัมน์
-# =========================================================
-col1, col2, col3, col4, col5 = st.columns(5)
+# =========================================================================
+# 1. จัดเตรียมข้อมูลลิงก์ทางลัด 5 ช่อง (เก็บใน Session State)
+# =========================================================================
+if "shortcut_links" not in st.session_state:
+    st.session_state["shortcut_links"] = [
+        {"title": "// OLT Center", "sub": "ระบบ OLT หลัก", "url": "https://google.com"},
+        {"title": "// คำสั่ง / เอกสาร", "sub": "คู่มือการใช้งาน", "url": "https://google.com"},
+        {"title": "// IP OLT ในพื้นที่", "sub": "ค้นหา IP", "url": "https://google.com"},
+        {"title": "// เส้นทางสาย OFC", "sub": "แผนที่สายสัญญาณ", "url": "https://google.com"},
+        {"title": "// เลขวงจรลูกค้า", "sub": "ระบบเช็กวงจร", "url": "https://google.com"},
+    ]
 
-with col1:
-    if st.button(f"// หมวดคำสั่งทั้งหมด\n\n{cat_num} หมวด", key="btn_sc_categories", use_container_width=True):
-        st.session_state["dash_global_search"] = "คำสั่ง"
-        st.rerun()
+# =========================================================================
+# 2. ตกแต่งสไตล์ปุ่มลิงก์ให้ออกมาเป็น Terminal Dark Theme
+# =========================================================================
+st.markdown("""
+<style>
+/* แต่งปุ่ม Link ให้เป็นกล่อง Terminal */
+div[data-testid="stColumn"] a {
+    background-color: #0d1117 !important;
+    color: #58a6ff !important;
+    border: 1px solid #30363d !important;
+    border-radius: 6px !important;
+    font-family: 'Courier New', monospace !important;
+    text-align: center !important;
+    height: 75px !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    font-size: 13px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+}
+div[data-testid="stColumn"] a:hover {
+    border-color: #2ea043 !important;
+    color: #7ee787 !important;
+    box-shadow: 0 0 8px rgba(46, 160, 67, 0.4);
+}
+</style>
+""", unsafe_allow_html=True)
 
-with col2:
-    if st.button(f"// คำสั่ง / เอกสาร\n\n{cmd_num} รายการ", key="btn_sc_commands", use_container_width=True):
-        st.session_state["dash_global_search"] = "เอกสาร"
-        st.rerun()
+# =========================================================================
+# 3. แสดงผลปุ่มทางลัด 5 คอลัมน์ (คลิกแล้วเปิดลิงก์เว็บทันที)
+# =========================================================================
+cols = st.columns(5)
+shortcut_list = st.session_state["shortcut_links"]
 
-with col3:
-    if st.button(f"// IP OLT ในพื้นที่\n\n{olt_num} จุด", key="btn_sc_olt", use_container_width=True):
-        st.session_state["dash_global_search"] = "IP"
-        st.rerun()
+for idx, col in enumerate(cols):
+    with col:
+        if idx < len(shortcut_list):
+            item = shortcut_list[idx]
+            btn_label = f"{item['title']}\n{item['sub']}"
+            st.link_button(btn_label, item["url"], use_container_width=True)
+        else:
+            st.caption("📌 [ว่าง]")
 
-with col4:
-    if st.button(f"// เส้นทางสาย OFC\n\n{ofc_num} เส้นทาง", key="btn_sc_ofc", use_container_width=True):
-        st.session_state["dash_global_search"] = "OFC"
-        st.rerun()
+st.markdown("---")
 
-with col5:
-    if st.button(f"// เลขวงจรลูกค้า\n\n{cir_num} วงจร", key="btn_sc_circuits", use_container_width=True):
-        st.session_state["dash_global_search"] = "วงจร"
-        st.rerun()
+# =========================================================================
+# 4. เมนูจัดการลิงก์ทางลัด (กดเพิ่ม / แก้ไข / ลบ ได้จากตรงนี้)
+# =========================================================================
+with st.expander("⚙️ จัดการลิงก์ทางลัด 5 คอลัมน์ (เพิ่ม / แก้ไข / ลบ)"):
+    tab_edit, tab_add = st.tabs(["✏️ แก้ไข / ลบ ลิงก์เดิม", "➕ เพิ่มลิงก์ใหม่"])
+
+    # --- แท็บ: แก้ไข / ลบ ลิงก์ ---
+    with tab_edit:
+        if len(shortcut_list) > 0:
+            options = [f"คอลัมน์ที่ {i+1}: {item['title']} ({item['url']})" for i, item in enumerate(shortcut_list)]
+            selected_idx = st.selectbox("เลือกลิงก์ที่ต้องการจัดการ:", range(len(options)), format_func=lambda x: options[x])
+
+            selected_item = shortcut_list[selected_idx]
+
+            with st.form(key=f"edit_form_{selected_idx}"):
+                edit_title = st.text_input("ชื่อหัวข้อ (เช่น // OLT Center)", value=selected_item["title"])
+                edit_sub = st.text_input("รายละเอียด/คำอธิบาย (บรรทัดล่าง)", value=selected_item["sub"])
+                edit_url = st.text_input("URL / ลิงก์หน้าเว็บ", value=selected_item["url"])
+
+                col_save, col_del = st.columns(2)
+                with col_save:
+                    btn_save = st.form_submit_button("💾 บันทึกการแก้ไข", type="primary", use_container_width=True)
+                with col_del:
+                    btn_del = st.form_submit_button("🗑️ ลบรายการนี้", use_container_width=True)
+
+                if btn_save:
+                    st.session_state["shortcut_links"][selected_idx] = {
+                        "title": edit_title,
+                        "sub": edit_sub,
+                        "url": edit_url
+                    }
+                    st.success("บันทึกข้อมูลเรียบร้อย!")
+                    st.rerun()
+
+                if btn_del:
+                    st.session_state["shortcut_links"].pop(selected_idx)
+                    st.success("ลบรายการเรียบร้อย!")
+                    st.rerun()
+        else:
+            st.info("ยังไม่มีลิงก์ทางลัดในระบบ")
+
+    # --- แท็บ: เพิ่มลิงก์ใหม่ ---
+    with tab_add:
+        if len(shortcut_list) >= 5:
+            st.warning("⚠️ ทางลัดเต็ม 5 คอลัมน์แล้ว (หากต้องการเพิ่มใหม่ กรุณาไปที่แท็บ 'แก้ไข/ลบ' เพื่อลบออก 1 รายการก่อน)")
+        else:
+            with st.form(key="add_shortcut_form"):
+                add_title = st.text_input("ชื่อหัวข้อ (เช่น // ระบบเช็กสเปก)", value="// ")
+                add_sub = st.text_input("รายละเอียด (เช่น เข้าสู่ระบบ Admin)", value="")
+                add_url = st.text_input("URL / ลิงก์หน้าเว็บ", value="https://")
+
+                btn_add = st.form_submit_button("➕ เพิ่มลงในคอลัมน์ทางลัด", type="primary", use_container_width=True)
+
+                if btn_add:
+                    st.session_state["shortcut_links"].append({
+                        "title": add_title,
+                        "sub": add_sub,
+                        "url": add_url
+                    })
+                    st.success("เพิ่มลิงก์ทางลัดใหม่เรียบร้อย!")
+                    st.rerun()
 # =================================================================
 # 🐙 GITHUB AUTO-SYNC HELPER FUNCTIONS
 # =================================================================

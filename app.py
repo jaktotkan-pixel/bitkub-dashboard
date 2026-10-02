@@ -17,11 +17,11 @@ import streamlit as st
 # =========================================================
 # 1. ตรวจสอบและดึงค่าตัวแปร (ป้องกัน NameError หากยังไม่ได้ประกาศค่าไว้)
 # =========================================================
-cat_num = locals().get('total_categories', globals().get('total_categories', 0))
-cmd_num = locals().get('total_commands', globals().get('total_commands', 0))
-olt_num = locals().get('total_olt_ip', globals().get('total_olt_ip', 0))
-ofc_num = locals().get('total_ofc_routes', globals().get('total_ofc_routes', 0))
-cir_num = locals().get('total_circuits', globals().get('total_circuits', 0))
+#cat_num = locals().get('total_categories', globals().get('total_categories', 0))
+#cmd_num = locals().get('total_commands', globals().get('total_commands', 0))
+#olt_num = locals().get('total_olt_ip', globals().get('total_olt_ip', 0))
+#ofc_num = locals().get('total_ofc_routes', globals().get('total_ofc_routes', 0))
+#cir_num = locals().get('total_circuits', globals().get('total_circuits', 0))
 
 # =========================================================
 # 2. แต่งสไตล์ปุ่มกดสไตล์ Terminal (Custom CSS)

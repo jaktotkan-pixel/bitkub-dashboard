@@ -1990,38 +1990,111 @@ if 'dash_search' not in st.session_state:
     st.session_state['dash_search'] = ''
 
 # 2. ปุ่มกด 5 คอลัมน์ (คลิกแล้วจะส่งคำไปค้นหาในระบบหลักทันที)
+# =========================================================================
+# ลิงก์ทางลัดเปิดเว็บ 5 กล่อง (วางใต้บรรทัดที่ 1981)
+# =========================================================================
+
+# 1. กำหนดค่าเริ่มต้นลิงก์ทางลัด 5 กล่อง
+if "cmd_shortcuts" not in st.session_state:
+    st.session_state["cmd_shortcuts"] = [
+        {"title": "// หมวดคำสั่งทั้งหมด", "sub": "12 หมวด", "url": "https://google.com"},
+        {"title": "// คำสั่ง / เอกสาร", "sub": "113 รายการ", "url": "https://google.com"},
+        {"title": "// IP OLT ในพื้นที่", "sub": "188 จุด", "url": "https://google.com"},
+        {"title": "// เส้นทางสาย OFC", "sub": "129 เส้นทาง", "url": "https://google.com"},
+        {"title": "// เลขวงจรลูกค้า", "sub": "14 วงจร", "url": "https://google.com"},
+    ]
+
+# 2. CSS ตกแต่งปุ่มเฉพาะส่วน main (ไม่กระทบ Sidebar ฝั่งซ้าย)
+st.markdown("""
+<style>
+section.main div[data-testid="stColumn"] a {
+    background-color: #0d1117 !important;
+    color: #58a6ff !important;
+    border: 1px solid #30363d !important;
+    border-radius: 6px !important;
+    font-family: 'Courier New', monospace !important;
+    text-align: center !important;
+    height: 80px !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    font-size: 13px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+}
+section.main div[data-testid="stColumn"] a:hover {
+    border-color: #2ea043 !important;
+    color: #7ee787 !important;
+    box-shadow: 0 0 8px rgba(46, 160, 67, 0.4);
+}
+</style>
+""", unsafe_allow_html=True)
+
+# 3. แสดงผลปุ่มทางลัด 5 คอลัมน์
 col1, col2, col3, col4, col5 = st.columns(5)
+cols = [col1, col2, col3, col4, col5]
+shortcut_list = st.session_state["cmd_shortcuts"]
 
-with col1:
-    if st.button(f"// หมวดคำสั่งทั้งหมด\n\n{total_categories} หมวด", use_container_width=True):
-        st.session_state['dash_search'] = 'คำสั่ง'
-        st.rerun()
+for idx, col in enumerate(cols):
+    with col:
+        if idx < len(shortcut_list):
+            item = shortcut_list[idx]
+            btn_label = f"{item['title']}\n\n{item['sub']}"
+            st.link_button(btn_label, item["url"], use_container_width=True)
+        else:
+            st.caption("📌 [ว่าง]")
 
-with col2:
-    if st.button(f"// คำสั่ง / เอกสาร\n\n{total_commands} รายการ", use_container_width=True):
-        st.session_state['dash_search'] = 'เอกสาร'
-        st.rerun()
+st.markdown("---")
 
-with col3:
-    if st.button(f"// IP OLT ในพื้นที่\n\n{total_olt_ip} จุด", use_container_width=True):
-        st.session_state['dash_search'] = 'IP OLT'  # ส่งคำว่า IP OLT ไปยังระบบค้นหาหลัก
-        st.rerun()
+# 4. กล่องจัดการลิงก์ (กดเพิ่ม / แก้ไข / ลบ ได้โดยตรง)
+with st.expander("⚙️ จัดการลิงก์ทางลัด 5 กล่อง (เพิ่ม / แก้ไข / ลบ)"):
+    tab_edit, tab_add = st.tabs(["✏️ แก้ไข / ลบ ลิงก์เดิม", "➕ เพิ่มลิงก์ใหม่"])
 
-with col4:
-    if st.button(f"// เส้นทางสาย OFC\n\n{total_ofc_routes} เส้นทาง", use_container_width=True):
-        st.session_state['dash_search'] = 'OFC'
-        st.rerun()
+    # --- แท็บ: แก้ไข / ลบ ---
+    with tab_edit:
+        if len(shortcut_list) > 0:
+            options = [f"กล่องที่ {i+1}: {item['title']} ({item['url']})" for i, item in enumerate(shortcut_list)]
+            selected_idx = st.selectbox("เลือกลิงก์ที่ต้องการจัดการ:", range(len(options)), format_func=lambda x: options[x], key="select_sc_box")
+            selected_item = shortcut_list[selected_idx]
 
-with col5:
-    if st.button(f"// เลขวงจรลูกค้า\n\n{total_circuits} วงจร", use_container_width=True):
-        st.session_state['dash_search'] = 'วงจร'
-        st.rerun()
+            with st.form(key=f"form_edit_sc_{selected_idx}"):
+                edit_title = st.text_input("ชื่อหัวข้อ (บรรทัดบน)", value=selected_item["title"])
+                edit_sub = st.text_input("รายละเอียด/ตัวเลข (บรรทัดล่าง)", value=selected_item["sub"])
+                edit_url = st.text_input("URL / ลิงก์เว็บไซต์", value=selected_item["url"])
 
-# 3. ปุ่มสำหรับล้างคำค้นหาเพื่อกลับสู่หน้าปกติ
-if st.session_state.get('dash_search'):
-    if st.button("🔄 ล้างการค้นหา (แสดงหน้าหลักทั้งหมด)"):
-        st.session_state['dash_search'] = ''
-        st.rerun()
+                c_save, c_del = st.columns(2)
+                with c_save:
+                    if st.form_submit_button("💾 บันทึกการแก้ไข", type="primary", use_container_width=True):
+                        st.session_state["cmd_shortcuts"][selected_idx] = {
+                            "title": edit_title, "sub": edit_sub, "url": edit_url
+                        }
+                        st.success("อัปเดตลิงก์เรียบร้อย!")
+                        st.rerun()
+                with c_del:
+                    if st.form_submit_button("🗑️ ลบกล่องนี้", use_container_width=True):
+                        st.session_state["cmd_shortcuts"].pop(selected_idx)
+                        st.success("ลบรายการเรียบร้อย!")
+                        st.rerun()
+        else:
+            st.info("ยังไม่มีลิงก์ทางลัดในระบบ")
+
+    # --- แท็บ: เพิ่มลิงก์ใหม่ ---
+    with tab_add:
+        if len(shortcut_list) >= 5:
+            st.warning("⚠️ ครบ 5 กล่องแล้ว (ลบกล่องเดิมออกก่อนหากต้องการเพิ่มใหม่)")
+        else:
+            with st.form(key="form_add_new_sc"):
+                add_title = st.text_input("ชื่อหัวข้อ", value="// ")
+                add_sub = st.text_input("รายละเอียด/ตัวเลข", value="")
+                add_url = st.text_input("URL / ลิงก์เว็บไซต์", value="https://")
+
+                if st.form_submit_button("➕ เพิ่มลิงก์", type="primary", use_container_width=True):
+                    st.session_state["cmd_shortcuts"].append({
+                        "title": add_title, "sub": add_sub, "url": add_url
+                    })
+                    st.success("เพิ่มลิงก์ทางลัดสำเร็จ!")
+                    st.rerun()
 # แสดงคลังเอกสารส่วนกลางบนหน้า Dashboard
 show_pdf_library()
 

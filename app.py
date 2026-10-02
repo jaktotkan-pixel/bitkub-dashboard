@@ -793,94 +793,6 @@ def render_simple_value_section(filename, seed, value_label, form_prefix):
             )
     return data
 
-# =================================================================
-# 📚 คลังเอกสาร PDF บน Dashboard
-# =================================================================
-PDF_LIBRARY_DIR = Path("pdf_library")
-PDF_LIBRARY_DIR.mkdir(exist_ok=True)
-
-
-def get_pdf_files():
-    """คืนรายการ PDF ที่บันทึกไว้ในคลัง"""
-    return sorted(PDF_LIBRARY_DIR.glob("*.pdf"), key=lambda file: file.name.lower())
-
-
-def show_pdf_library():
-    """แสดงส่วนเพิ่มไฟล์ เปิดดู และดาวน์โหลดเอกสาร PDF"""
-    with st.expander("📚 คลังเอกสาร PDF", expanded=False):
-        st.caption("เพิ่มคู่มือหรือเอกสารที่ต้องใช้ร่วมกันบน Dashboard")
-
-        uploaded_pdf = st.file_uploader(
-            "เลือกไฟล์ PDF เพื่อเพิ่มเข้าคลัง",
-            type=["pdf"],
-            key="pdf_library_uploader"
-        )
-
-        if uploaded_pdf is not None:
-            safe_name = Path(uploaded_pdf.name).name
-            save_path = PDF_LIBRARY_DIR / safe_name
-
-            if save_path.exists():
-                st.warning(f"มีไฟล์ชื่อ {safe_name} อยู่แล้ว การบันทึกจะเขียนทับไฟล์เดิม")
-
-            if st.button("💾 บันทึกไฟล์ PDF", type="primary", key="save_pdf_library"):
-                save_path.write_bytes(uploaded_pdf.getvalue())
-                commit_to_github(save_path, f"Upload PDF document: {safe_name}")
-                st.success(f"บันทึกไฟล์ “{safe_name}” และ Sync ขึ้น GitHub เรียบร้อยแล้ว")
-                st.rerun()
-
-        pdf_files = get_pdf_files()
-        if not pdf_files:
-            st.info("ยังไม่มีเอกสาร PDF ในคลัง")
-            return
-
-        selected_pdf = st.selectbox(
-            "เลือกเอกสาร",
-            pdf_files,
-            format_func=lambda file: file.name,
-            key="pdf_library_selected"
-        )
-        pdf_data = selected_pdf.read_bytes()
-
-        st.download_button(
-            "📥 ดาวน์โหลดเอกสาร",
-            data=pdf_data,
-            file_name=selected_pdf.name,
-            mime="application/pdf",
-            use_container_width=True
-        )
-
-        confirm_delete = st.checkbox(
-            f"ยืนยันการลบไฟล์: {selected_pdf.name}",
-            key=f"confirm_delete_{selected_pdf.name}"
-        )
-        if st.button(
-            "D ลบไฟล์ PDF ที่เลือก",
-            type="secondary",
-            use_container_width=True,
-            disabled=not confirm_delete,
-            key=f"del_pdf_{selected_pdf.name}"
-        ):
-            file_to_del_name = selected_pdf.name
-            selected_pdf.unlink()
-            st.success(f"ลบไฟล์ “{file_to_del_name}” เรียบร้อยแล้ว")
-            st.rerun()
-
-        if st.checkbox("👁️ เปิดดูเอกสารใน Dashboard", key="pdf_library_preview"):
-            pdf_base64 = base64.b64encode(pdf_data).decode("utf-8")
-            components.html(
-                f'''<object data="data:application/pdf;base64,{pdf_base64}"
-                    type="application/pdf" width="100%" height="650px">
-                    ไม่สามารถแสดงตัวอย่าง PDF ได้ กรุณาใช้ปุ่มดาวน์โหลดเอกสาร
-                </object>''',
-                height=660,
-                scrolling=False
-            )
-import os
-import json
-import streamlit as st
-from PIL import Image
-
 # =========================================================
 # การตั้งค่าระบบบันทึกข้อมูลคู่มือ (JSON & File Storage)
 # =========================================================
@@ -1799,28 +1711,40 @@ with st.sidebar.expander("📞 IP Phone", expanded=False):
 with st.sidebar.expander("🔐 SecureCRT", expanded=False):
     current_securecrt_data = render_simple_value_section("securecrt.json", SECURECRT_SEED, "IP / โฮสต์", "securecrt")
 
-# โหลดคลังคำสั่ง (ตรวจสอบว่ามี COMMAND_LIBRARY_SEED ประกาศไว้ก่อนหน้าแล้ว)
+# =========================================================================
+# กำหนดค่าสำรองให้ COMMAND_LIBRARY_SEED หากยังไม่ได้ถูกประกาศด้านบน เพื่อป้องกัน NameError
+# =========================================================================
+if "COMMAND_LIBRARY_SEED" not in globals():
+    COMMAND_LIBRARY_SEED = {
+        "📍 IP OLT ในพื้นที่": {},
+        "⚙️ คำสั่งทั่วไป": {}
+    }
+
+# โหลดคลังคำสั่ง
 command_library_data = load_section_data(
     "command_library.json", COMMAND_LIBRARY_SEED
 )
 
 selected_menu = None
 with st.sidebar.expander("⚙️ Config", expanded=False):
-    selected_menu = st.radio("เลือกหมวดหมู่การใช้งาน:", list(command_library_data.keys()), label_visibility="collapsed")
+    if command_library_data:
+        selected_menu = st.radio("เลือกหมวดหมู่การใช้งาน:", list(command_library_data.keys()), label_visibility="collapsed")
+    else:
+        st.caption("ไม่มีหมวดหมู่คำสั่ง")
 
-if selected_menu is None:
+if selected_menu is None and command_library_data:
     selected_menu = list(command_library_data.keys())[0]
 
 # =========================================================================
 # 📊 คำนวณสรุปตัวเลขแบบปลอดภัย (สำหรับ Ticker และ ปุ่มทางลัด)
 # =========================================================================
-total_categories = len(command_library_data)
+total_categories = len(command_library_data) if command_library_data else 0
 total_commands = sum(
     len(items) for cat_dict in command_library_data.values() for items in cat_dict.values()
-)
+) if command_library_data else 0
 
 # คำนวณ IP OLT แบบปลอดภัยป้องกัน KeyError / NameError
-olt_cat = command_library_data.get("📍 IP OLT ในพื้นที่", {})
+olt_cat = command_library_data.get("📍 IP OLT ในพื้นที่", {}) if command_library_data else {}
 first_sub = list(olt_cat.values())[0] if olt_cat else []
 total_olt_ip = len(first_sub[0][1].strip().split("\n")) if (first_sub and len(first_sub) > 0 and len(first_sub[0]) > 1) else 0
 
@@ -1843,19 +1767,12 @@ st.markdown("""
     # คลังคำสั่งและข้อมูลหน้างานเครือข่าย ZTE / OLT / DSLAM / Switch — ค้นหาได้จากทุกหมวดในจุดเดียว
 </div>
 """, unsafe_allow_html=True)
-# แถบสรุปตัวเลขภาพรวมระบบ แบบปุ่มกดลัด (Quick Search Shortcuts)
-# =========================================================================
 
 # 1. ตรวจสอบและสร้าง Session State สำหรับช่องค้นหา
 if 'dash_search' not in st.session_state:
     st.session_state['dash_search'] = ''
 
-# 2. ปุ่มกด 5 คอลัมน์ (คลิกแล้วจะส่งคำไปค้นหาในระบบหลักทันที)
-# =========================================================================
-# ลิงก์ทางลัดเปิดเว็บ 5 กล่อง (วางใต้บรรทัดที่ 1981)
-# =========================================================================
-
-# 1. กำหนดค่าเริ่มต้นลิงก์ทางลัด 5 กล่อง
+# 2. ลิงก์ทางลัดเปิดเว็บ 5 กล่อง
 if "cmd_shortcuts" not in st.session_state:
     st.session_state["cmd_shortcuts"] = [
         {"title": "// หมวดคำสั่งทั้งหมด", "sub": "12 หมวด", "url": "https://google.com"},
@@ -1865,7 +1782,7 @@ if "cmd_shortcuts" not in st.session_state:
         {"title": "// เลขวงจรลูกค้า", "sub": "14 วงจร", "url": "https://google.com"},
     ]
 
-# 2. CSS ตกแต่งปุ่มเฉพาะส่วน main (ไม่กระทบ Sidebar ฝั่งซ้าย)
+# CSS ตกแต่งปุ่มเฉพาะส่วน main
 st.markdown("""
 <style>
 section.main div[data-testid="stColumn"] a {
@@ -1892,7 +1809,7 @@ section.main div[data-testid="stColumn"] a:hover {
 </style>
 """, unsafe_allow_html=True)
 
-# 3. แสดงผลปุ่มทางลัด 5 คอลัมน์
+# แสดงผลปุ่มทางลัด 5 คอลัมน์
 col1, col2, col3, col4, col5 = st.columns(5)
 cols = [col1, col2, col3, col4, col5]
 shortcut_list = st.session_state["cmd_shortcuts"]
@@ -1908,11 +1825,10 @@ for idx, col in enumerate(cols):
 
 st.markdown("---")
 
-# 4. กล่องจัดการลิงก์ (กดเพิ่ม / แก้ไข / ลบ ได้โดยตรง)
+# กล่องจัดการลิงก์
 with st.expander("⚙️ จัดการลิงก์ทางลัด 5 กล่อง (เพิ่ม / แก้ไข / ลบ)"):
     tab_edit, tab_add = st.tabs(["✏️ แก้ไข / ลบ ลิงก์เดิม", "➕ เพิ่มลิงก์ใหม่"])
 
-    # --- แท็บ: แก้ไข / ลบ ---
     with tab_edit:
         if len(shortcut_list) > 0:
             options = [f"กล่องที่ {i+1}: {item['title']} ({item['url']})" for i, item in enumerate(shortcut_list)]
@@ -1940,7 +1856,6 @@ with st.expander("⚙️ จัดการลิงก์ทางลัด 5 �
         else:
             st.info("ยังไม่มีลิงก์ทางลัดในระบบ")
 
-    # --- แท็บ: เพิ่มลิงก์ใหม่ ---
     with tab_add:
         if len(shortcut_list) >= 5:
             st.warning("⚠️ ครบ 5 กล่องแล้ว (ลบกล่องเดิมออกก่อนหากต้องการเพิ่มใหม่)")
@@ -1956,8 +1871,6 @@ with st.expander("⚙️ จัดการลิงก์ทางลัด 5 �
                     })
                     st.success("เพิ่มลิงก์ทางลัดสำเร็จ!")
                     st.rerun()
-# แสดงคลังเอกสารส่วนกลางบนหน้า Dashboard
-show_pdf_library()
 
 col_input, col_btn = st.columns([5, 1])
 
@@ -1974,7 +1887,7 @@ with col_btn:
 
 st.markdown("---")
 
-# ปุ่มสำหรับล้างการค้นหาเพื่อกลับหน้าปกติ (วางไว้ก่อน if dash_search:)
+# ปุ่มสำหรับล้างการค้นหาเพื่อกลับหน้าปกติ
 if st.session_state.get("dash_global_search"):
     if st.button("🔄 ล้างคำค้นหา (แสดงทั้งหมด)"):
         st.session_state["dash_global_search"] = ""
@@ -2009,7 +1922,7 @@ if dash_search:
             )
         st.markdown("---")
 
-    # --- ค้นหาในหมวด: ระยะสาย Optic (OFC) (ปรับใช้ .get ป้องกัน KeyError) ---
+    # --- ค้นหาในหมวด: ระยะสาย Optic (OFC) ---
     matched_ofc = [
         item
         for item in current_ofc_data
@@ -2084,48 +1997,49 @@ if dash_search:
         st.markdown("---")
 
     # --- ค้นหาในหมวด Config Commands ---
-    for cat_name, cat_dict in command_library_data.items():
-        cat_matches = []
-        for sub_cat, items in cat_dict.items():
-            for desc, code in items:
-                if (
-                    dash_search.lower() in desc.lower()
-                    or dash_search.lower() in code.lower()
-                ):
-                    cat_matches.append((sub_cat, desc, code))
+    if command_library_data:
+        for cat_name, cat_dict in command_library_data.items():
+            cat_matches = []
+            for sub_cat, items in cat_dict.items():
+                for desc, code in items:
+                    if (
+                        dash_search.lower() in desc.lower()
+                        or dash_search.lower() in code.lower()
+                    ):
+                        cat_matches.append((sub_cat, desc, code))
 
-        if cat_matches:
-            found_global = True
-            st.markdown(f"#### ⚙️ หมวด Config: {cat_name}")
-            for sub_cat, desc, code in cat_matches:
-                st.markdown(
-                    f"<div class='cmd-label'>🔹 {sub_cat} ➔ {highlight_text(desc, dash_search)}</div>",
-                    unsafe_allow_html=True,
-                )
-
-                if cat_name == "📍 IP OLT ในพื้นที่":
-                    lines = code.strip().split("\n")
-                    highlighted_lines = []
-                    for line in lines:
-                        if dash_search.lower() in line.lower():
-                            h_line = highlight_text(line, dash_search)
-                            highlighted_lines.append(f"• {h_line}")
-                        else:
-                            highlighted_lines.append(f"• {line}")
-                    final_html = "<br>".join(highlighted_lines)
+            if cat_matches:
+                found_global = True
+                st.markdown(f"#### ⚙️ หมวด Config: {cat_name}")
+                for sub_cat, desc, code in cat_matches:
                     st.markdown(
-                        f"<div style='background-color: #050a06; border: 1px solid #1c3320; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 14px; color: #33ff77;'>{final_html}</div>",
+                        f"<div class='cmd-label'>🔹 {sub_cat} ➔ {highlight_text(desc, dash_search)}</div>",
                         unsafe_allow_html=True,
                     )
-                else:
-                    st.code(code, language="text")
-            st.markdown("---")
+
+                    if cat_name == "📍 IP OLT ในพื้นที่":
+                        lines = code.strip().split("\n")
+                        highlighted_lines = []
+                        for line in lines:
+                            if dash_search.lower() in line.lower():
+                                h_line = highlight_text(line, dash_search)
+                                highlighted_lines.append(f"• {h_line}")
+                            else:
+                                highlighted_lines.append(f"• {line}")
+                        final_html = "<br>".join(highlighted_lines)
+                        st.markdown(
+                            f"<div style='background-color: #050a06; border: 1px solid #1c3320; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 14px; color: #33ff77;'>{final_html}</div>",
+                            unsafe_allow_html=True,
+                        )
+                    else:
+                        st.code(code, language="text")
+                st.markdown("---")
 
     if not found_global:
         st.warning("❌ ไม่พบข้อมูลที่ตรงกับคำค้นหาของคุณในระบบ")
 
-else:
-    current_dict = command_library_data[selected_menu]
+elif selected_menu and command_library_data:
+    current_dict = command_library_data.get(selected_menu, {})
     st.markdown(f"## {selected_menu}")
     st.markdown("---")
 

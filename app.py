@@ -49,14 +49,14 @@ div[data-testid="stColumn"] button:hover {
 # =========================================================================
 # 1. จัดเตรียมข้อมูลลิงก์ทางลัด 5 ช่อง (เก็บใน Session State)
 # =========================================================================
-if "shortcut_links" not in st.session_state:
-    st.session_state["shortcut_links"] = [
-        {"title": "// OLT Center", "sub": "ระบบ OLT หลัก", "url": "https://google.com"},
-        {"title": "// คำสั่ง / เอกสาร", "sub": "คู่มือการใช้งาน", "url": "https://google.com"},
-        {"title": "// IP OLT ในพื้นที่", "sub": "ค้นหา IP", "url": "https://google.com"},
-        {"title": "// เส้นทางสาย OFC", "sub": "แผนที่สายสัญญาณ", "url": "https://google.com"},
-        {"title": "// เลขวงจรลูกค้า", "sub": "ระบบเช็กวงจร", "url": "https://google.com"},
-    ]
+#if "shortcut_links" not in st.session_state:
+   # st.session_state["shortcut_links"] = [
+       # {"title": "// OLT Center", "sub": "ระบบ OLT หลัก", "url": "https://google.com"},
+       # {"title": "// คำสั่ง / เอกสาร", "sub": "คู่มือการใช้งาน", "url": "https://google.com"},
+        #{"title": "// IP OLT ในพื้นที่", "sub": "ค้นหา IP", "url": "https://google.com"},
+        #{"title": "// เส้นทางสาย OFC", "sub": "แผนที่สายสัญญาณ", "url": "https://google.com"},
+        #{"title": "// เลขวงจรลูกค้า", "sub": "ระบบเช็กวงจร", "url": "https://google.com"},
+  #  ]
 
 # =========================================================================
 # 2. ตกแต่งสไตล์ปุ่มลิงก์ให้ออกมาเป็น Terminal Dark Theme

@@ -10,6 +10,124 @@ import urllib.error
 import streamlit.components.v1 as components
 
 
+# =========================================================================
+# 🎨 MODERN DARK CYBER THEME (อ่านง่าย สีหลากหลาย สบายตา)
+# =========================================================================
+st.markdown("""
+<style>
+/* 1. นำเข้าฟอนต์จาก Google Fonts (Prompt สำหรับภาษาไทย + JetBrains Mono สำหรับโค้ด) */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Prompt:wght@300;400;500;600;700&display=swap');
+
+/* 2. ตั้งค่าฟอนต์พื้นฐาน ตัวหนังสือไม่เล็กเกินไป (15.5px) */
+html, body, [class*="css"], .stMarkdown, p, div, span, label {
+    font-family: 'Prompt', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-size: 15.5px !important;
+    line-height: 1.65 !important;
+    color: #e6edf3 !important;
+}
+
+/* 3. หัวข้อแบบเล่นระดับสีแยกหมวดหมู่ */
+h1 {
+    font-family: 'Prompt', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 28px !important;
+    color: #3fb950 !important; /* สีเขียวสดใส */
+    letter-spacing: -0.3px;
+}
+h2 {
+    font-family: 'Prompt', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 22px !important;
+    color: #58a6ff !important; /* สีฟ้า Cyber Blue */
+    border-bottom: 2px solid #21262d;
+    padding-bottom: 8px;
+    margin-top: 15px !important;
+}
+h3, h4 {
+    font-family: 'Prompt', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 18px !important;
+    color: #d2a8ff !important; /* สีม่วงพาสเทล */
+}
+
+/* 4. ปรับแต่งกล่อง Expander (เมนูย่อย / คู่มือ) ให้มีมิติ */
+.stExpander {
+    background-color: #161b22 !important;
+    border: 1px solid #30363d !important;
+    border-radius: 8px !important;
+    margin-bottom: 10px !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.stExpander summary {
+    font-weight: 500 !important;
+    color: #f0f6fc !important;
+}
+.stExpander summary:hover {
+    color: #58a6ff !important;
+}
+.stExpander [data-testid="stExpanderDetails"] {
+    background-color: #0d1117 !important;
+    border-top: 1px solid #21262d !important;
+    padding: 15px !important;
+}
+
+/* 5. ปรับแต่ง แท็บ (Tabs) รายการคู่มือ / เพิ่มแก้ไข */
+button[data-baseweb="tab"] {
+    font-family: 'Prompt', sans-serif !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    color: #8b949e !important;
+    padding: 8px 18px !important;
+}
+button[aria-selected="true"] {
+    color: #3fb950 !important;
+    border-bottom: 3px solid #3fb950 !important;
+    background-color: rgba(63, 185, 80, 0.08) !important;
+    font-weight: 600 !important;
+}
+
+/* 6. ปรับแต่งปุ่มกด (Buttons) */
+.stButton > button {
+    font-family: 'Prompt', sans-serif !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    border-radius: 6px !important;
+    border: 1px solid #30363d !important;
+    background-color: #21262d !important;
+    color: #c9d1d9 !important;
+    transition: all 0.2s ease-in-out !important;
+}
+.stButton > button:hover {
+    border-color: #58a6ff !important;
+    color: #58a6ff !important;
+    box-shadow: 0 0 10px rgba(88, 166, 255, 0.25) !important;
+}
+
+/* 7. ปรับแต่งกล่อง โค้ด / IP Address ให้เด่นคมชัด */
+code, pre, .stCodeBlock {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 14.5px !important;
+    background-color: #010409 !important;
+    color: #7ee787 !important; /* ตัวหนังสือสีเขียวเทอร์มินัล */
+    border: 1px solid #21262d !important;
+    border-radius: 6px !important;
+}
+
+/* 8. ช่องกรอกข้อมูล (Input / Textarea / Selectbox) */
+.stTextInput input, .stTextArea textarea, div[data-baseweb="select"] {
+    font-family: 'Prompt', sans-serif !important;
+    font-size: 15px !important;
+    background-color: #0d1117 !important;
+    color: #f0f6fc !important;
+    border: 1px solid #30363d !important;
+    border-radius: 6px !important;
+}
+.stTextInput input:focus, .stTextArea textarea:focus {
+    border-color: #58a6ff !important;
+    box-shadow: 0 0 6px rgba(88, 166, 255, 0.3) !important;
+}
+</style>
+""", unsafe_allow_html=True)
 # =================================================================
 # 🐙 GITHUB AUTO-SYNC HELPER FUNCTIONS
 # =================================================================

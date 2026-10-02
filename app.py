@@ -14,35 +14,20 @@ import streamlit as st
 # =========================================================
 # 🚫 ซ่อนคำแนะนำ "Press Enter / Press ⌘Enter" ทุกกรณี
 # =========================================================
-col1, col2, col3, col4, col5 = st.columns(5)
+# =========================================================
+# 1. ตรวจสอบและดึงค่าตัวแปร (ป้องกัน NameError หากยังไม่ได้ประกาศค่าไว้)
+# =========================================================
+cat_num = locals().get('total_categories', globals().get('total_categories', 0))
+cmd_num = locals().get('total_commands', globals().get('total_commands', 0))
+olt_num = locals().get('total_olt_ip', globals().get('total_olt_ip', 0))
+ofc_num = locals().get('total_ofc_routes', globals().get('total_ofc_routes', 0))
+cir_num = locals().get('total_circuits', globals().get('total_circuits', 0))
 
-with col1:
-    if st.button(f"// หมวดคำสั่งทั้งหมด\n\n{total_categories} หมวด", use_container_width=True):
-        st.session_state["dash_global_search"] = "คำสั่ง"
-        st.rerun()
-
-with col2:
-    if st.button(f"// คำสั่ง / เอกสาร\n\n{total_commands} รายการ", use_container_width=True):
-        st.session_state["dash_global_search"] = "เอกสาร"
-        st.rerun()
-
-with col3:
-    if st.button(f"// IP OLT ในพื้นที่\n\n{total_olt_ip} จุด", use_container_width=True):
-        st.session_state["dash_global_search"] = "IP"  # ส่งคำว่า IP เข้าช่องค้นหา
-        st.rerun()
-
-with col4:
-    if st.button(f"// เส้นทางสาย OFC\n\n{total_ofc_routes} เส้นทาง", use_container_width=True):
-        st.session_state["dash_global_search"] = "OFC"  # ส่งคำว่า OFC เข้าช่องค้นหา
-        st.rerun()
-
-with col5:
-    if st.button(f"// เลขวงจรลูกค้า\n\n{total_circuits} วงจร", use_container_width=True):
-        st.session_state["dash_global_search"] = "วงจร"  # ส่งคำว่า วงจร เข้าช่องค้นหา
-        st.rerun()
+# =========================================================
+# 2. แต่งสไตล์ปุ่มกดสไตล์ Terminal (Custom CSS)
+# =========================================================
 st.markdown("""
 <style>
-/* แต่งปุ่มกด Ticker ให้เป็นกล่องกรอบสไตล์ Terminal */
 div[data-testid="stColumn"] button {
     background-color: #0d1117 !important;
     color: #58a6ff !important;
@@ -59,6 +44,36 @@ div[data-testid="stColumn"] button:hover {
 }
 </style>
 """, unsafe_allow_html=True)
+
+# =========================================================
+# 3. ปุ่มกด shortcut 5 คอลัมน์
+# =========================================================
+col1, col2, col3, col4, col5 = st.columns(5)
+
+with col1:
+    if st.button(f"// หมวดคำสั่งทั้งหมด\n\n{cat_num} หมวด", key="btn_sc_categories", use_container_width=True):
+        st.session_state["dash_global_search"] = "คำสั่ง"
+        st.rerun()
+
+with col2:
+    if st.button(f"// คำสั่ง / เอกสาร\n\n{cmd_num} รายการ", key="btn_sc_commands", use_container_width=True):
+        st.session_state["dash_global_search"] = "เอกสาร"
+        st.rerun()
+
+with col3:
+    if st.button(f"// IP OLT ในพื้นที่\n\n{olt_num} จุด", key="btn_sc_olt", use_container_width=True):
+        st.session_state["dash_global_search"] = "IP"
+        st.rerun()
+
+with col4:
+    if st.button(f"// เส้นทางสาย OFC\n\n{ofc_num} เส้นทาง", key="btn_sc_ofc", use_container_width=True):
+        st.session_state["dash_global_search"] = "OFC"
+        st.rerun()
+
+with col5:
+    if st.button(f"// เลขวงจรลูกค้า\n\n{cir_num} วงจร", key="btn_sc_circuits", use_container_width=True):
+        st.session_state["dash_global_search"] = "วงจร"
+        st.rerun()
 # =================================================================
 # 🐙 GITHUB AUTO-SYNC HELPER FUNCTIONS
 # =================================================================

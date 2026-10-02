@@ -14,6 +14,32 @@ import streamlit as st
 # =========================================================
 # 🚫 ซ่อนคำแนะนำ "Press Enter / Press ⌘Enter" ทุกกรณี
 # =========================================================
+col1, col2, col3, col4, col5 = st.columns(5)
+
+with col1:
+    if st.button(f"// หมวดคำสั่งทั้งหมด\n\n{total_categories} หมวด", use_container_width=True):
+        st.session_state["dash_global_search"] = "คำสั่ง"
+        st.rerun()
+
+with col2:
+    if st.button(f"// คำสั่ง / เอกสาร\n\n{total_commands} รายการ", use_container_width=True):
+        st.session_state["dash_global_search"] = "เอกสาร"
+        st.rerun()
+
+with col3:
+    if st.button(f"// IP OLT ในพื้นที่\n\n{total_olt_ip} จุด", use_container_width=True):
+        st.session_state["dash_global_search"] = "IP"  # ส่งคำว่า IP เข้าช่องค้นหา
+        st.rerun()
+
+with col4:
+    if st.button(f"// เส้นทางสาย OFC\n\n{total_ofc_routes} เส้นทาง", use_container_width=True):
+        st.session_state["dash_global_search"] = "OFC"  # ส่งคำว่า OFC เข้าช่องค้นหา
+        st.rerun()
+
+with col5:
+    if st.button(f"// เลขวงจรลูกค้า\n\n{total_circuits} วงจร", use_container_width=True):
+        st.session_state["dash_global_search"] = "วงจร"  # ส่งคำว่า วงจร เข้าช่องค้นหา
+        st.rerun()
 st.markdown("""
 <style>
 /* แต่งปุ่มกด Ticker ให้เป็นกล่องกรอบสไตล์ Terminal */

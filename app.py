@@ -1732,7 +1732,9 @@ with st.sidebar.expander("🔐 SecureCRT", expanded=False):
     current_securecrt_data = render_simple_value_section("securecrt.json", SECURECRT_SEED, "IP / โฮสต์", "securecrt")
 
 # โหลดคลังคำสั่ง (ตรวจสอบว่ามี COMMAND_LIBRARY_SEED ประกาศไว้ก่อนหน้าแล้ว)
-command_library_data = load_section_data("command_library.json", COMMAND_LIBRARY_SEED)
+command_library_data = load_section_data(
+    "command_library.json", COMMAND_LIBRARY_SEED
+)
 
 selected_menu = None
 with st.sidebar.expander("⚙️ Config", expanded=False):

@@ -1933,6 +1933,12 @@ with col_btn:
 
 st.markdown("---")
 
+# ปุ่มสำหรับล้างการค้นหาเพื่อกลับหน้าปกติ (วางไว้ก่อน if dash_search:)
+if st.session_state.get("dash_global_search"):
+    if st.button("🔄 ล้างคำค้นหา (แสดงทั้งหมด)"):
+        st.session_state["dash_global_search"] = ""
+        st.rerun()
+
 if dash_search:
     st.markdown(f"### 🎯 ผลการค้นหาสำหรับ: <mark class='highlight'>{dash_search}</mark>", unsafe_allow_html=True)
     found_global = False

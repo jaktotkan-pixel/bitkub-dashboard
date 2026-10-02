@@ -10,7 +10,13 @@ import urllib.error
 import streamlit.components.v1 as components
 import re
 import streamlit as st
-
+import os
+import json
+import streamlit as st
+import re
+import streamlit.components.v1 as components
+import urllib.request
+import urllib.error
 
 
 # =================================================================
@@ -1967,13 +1973,17 @@ if st.session_state.get("dash_global_search"):
         st.rerun()
 
 if dash_search:
-    st.markdown(f"### 🎯 ผลการค้นหาสำหรับ: <mark class='highlight'>{dash_search}</mark>", unsafe_allow_html=True)
+    st.markdown(
+        f"### 🎯 ผลการค้นหาสำหรับ: <mark class='highlight'>{dash_search}</mark>",
+        unsafe_allow_html=True,
+    )
     found_global = False
 
     # --- ค้นหาในหมวด: เบอร์ติดต่อ ---
     contacts_data = get_contacts_search_data()
     matched_contacts = [
-        item for item in contacts_data
+        item
+        for item in contacts_data
         if dash_search.lower() in item.get("name", "").lower()
         or dash_search in item.get("phone", "")
         or dash_search.lower() in item.get("note", "").lower()
@@ -1985,77 +1995,106 @@ if dash_search:
             h_name = highlight_text(item.get("name", ""), dash_search)
             h_phone = highlight_text(item.get("phone", ""), dash_search)
             h_note = highlight_text(item.get("note", "-"), dash_search)
-            st.markdown(f"• **{h_name}** : `{h_phone}` (หมายเหตุ: {h_note})", unsafe_allow_html=True)
+            st.markdown(
+                f"• **{h_name}** : `{h_phone}` (หมายเหตุ: {h_note})",
+                unsafe_allow_html=True,
+            )
         st.markdown("---")
+
+    # --- ค้นหาในหมวด: ระยะสาย Optic (OFC) (ปรับใช้ .get ป้องกัน KeyError) ---
     matched_ofc = [
-        item for item in current_ofc_data
-        if dash_search.lower() in item["route"].lower()
-        or dash_search.lower() in item["distance"].lower()
+        item
+        for item in current_ofc_data
+        if dash_search.lower() in item.get("route", "").lower()
+        or dash_search.lower() in item.get("distance", "").lower()
         or dash_search.lower() in item.get("note", "").lower()
     ]
     if matched_ofc:
         found_global = True
         st.markdown("#### 📏 พบใน: ระยะสาย Optic (OFC)")
         for item in matched_ofc:
-            h_route = highlight_text(item["route"], dash_search)
+            h_route = highlight_text(item.get("route", ""), dash_search)
             h_note = highlight_text(item.get("note", "-"), dash_search)
-            st.markdown(f"• **{h_route}** : `{item['distance']}` (หมายเหตุ: {h_note})", unsafe_allow_html=True)
+            st.markdown(
+                f"• **{h_route}** : `{item.get('distance', '-')}` (หมายเหตุ: {h_note})",
+                unsafe_allow_html=True,
+            )
         st.markdown("---")
 
+    # --- ค้นหาในหมวด: เลขวงจรลูกค้า ---
     matched_circuits = [
-        item for item in current_circuit_data
-        if dash_search.lower() in item["code"].lower() or dash_search.lower() in item["owner"].lower()
+        item
+        for item in current_circuit_data
+        if dash_search.lower() in item.get("code", "").lower()
+        or dash_search.lower() in item.get("owner", "").lower()
     ]
     if matched_circuits:
         found_global = True
         st.markdown("#### 🆔 พบใน: เลขวงจรลูกค้า")
         for item in matched_circuits:
-            h_code = highlight_text(item["code"], dash_search)
-            h_owner = highlight_text(item["owner"], dash_search)
-            st.markdown(f"• **{h_code}** : {h_owner}", unsafe_allow_html=True)
+            h_code = highlight_text(item.get("code", ""), dash_search)
+            h_owner = highlight_text(item.get("owner", ""), dash_search)
+            st.markdown(
+                f"• **{h_code}** : {h_owner}", unsafe_allow_html=True
+            )
         st.markdown("---")
 
+    # --- ค้นหาในหมวด: ลิงก์เว็บ ---
     matched_web = [
-        item for item in current_web_data
-        if dash_search.lower() in item["name"].lower() or dash_search.lower() in item["url"].lower()
+        item
+        for item in current_web_data
+        if dash_search.lower() in item.get("name", "").lower()
+        or dash_search.lower() in item.get("url", "").lower()
     ]
     if matched_web:
         found_global = True
         st.markdown("#### 🌐 พบใน: ลิงก์เว็บ")
         for item in matched_web:
-            h_name = highlight_text(item["name"], dash_search)
-            st.markdown(f"• 🔗 [{h_name}]({item['url']})", unsafe_allow_html=True)
+            h_name = highlight_text(item.get("name", ""), dash_search)
+            st.markdown(
+                f"• 🔗 [{h_name}]({item.get('url', '#')})",
+                unsafe_allow_html=True,
+            )
         st.markdown("---")
 
+    # --- ค้นหาในหมวด: ที่อยู่ NT ---
     matched_address = [
-        item for item in current_address_data
-        if dash_search.lower() in item["title"].lower() or dash_search.lower() in item["detail"].lower()
+        item
+        for item in current_address_data
+        if dash_search.lower() in item.get("title", "").lower()
+        or dash_search.lower() in item.get("detail", "").lower()
     ]
     if matched_address:
         found_global = True
         st.markdown("#### 📍 พบใน: ที่อยู่ NT")
         for item in matched_address:
-            h_title = highlight_text(item["title"], dash_search)
-            h_detail = highlight_text(item["detail"], dash_search)
-            st.markdown(f"• **{h_title}** : {h_detail}", unsafe_allow_html=True)
+            h_title = highlight_text(item.get("title", ""), dash_search)
+            h_detail = highlight_text(item.get("detail", ""), dash_search)
+            st.markdown(
+                f"• **{h_title}** : {h_detail}", unsafe_allow_html=True
+            )
         st.markdown("---")
 
+    # --- ค้นหาในหมวด Config Commands ---
     for cat_name, cat_dict in command_library_data.items():
         cat_matches = []
         for sub_cat, items in cat_dict.items():
             for desc, code in items:
-                if dash_search.lower() in desc.lower() or dash_search.lower() in code.lower():
+                if (
+                    dash_search.lower() in desc.lower()
+                    or dash_search.lower() in code.lower()
+                ):
                     cat_matches.append((sub_cat, desc, code))
-        
+
         if cat_matches:
             found_global = True
             st.markdown(f"#### ⚙️ หมวด Config: {cat_name}")
             for sub_cat, desc, code in cat_matches:
                 st.markdown(
                     f"<div class='cmd-label'>🔹 {sub_cat} ➔ {highlight_text(desc, dash_search)}</div>",
-                    unsafe_allow_html=True
+                    unsafe_allow_html=True,
                 )
-                
+
                 if cat_name == "📍 IP OLT ในพื้นที่":
                     lines = code.strip().split("\n")
                     highlighted_lines = []
@@ -2066,7 +2105,10 @@ if dash_search:
                         else:
                             highlighted_lines.append(f"• {line}")
                     final_html = "<br>".join(highlighted_lines)
-                    st.markdown(f"<div style='background-color: #050a06; border: 1px solid #1c3320; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 14px; color: #33ff77;'>{final_html}</div>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"<div style='background-color: #050a06; border: 1px solid #1c3320; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 14px; color: #33ff77;'>{final_html}</div>",
+                        unsafe_allow_html=True,
+                    )
                 else:
                     st.code(code, language="text")
             st.markdown("---")
@@ -2084,26 +2126,42 @@ else:
         sub_choice = st.selectbox(
             "หมวดหมู่ย่อย (เลือกที่มีอยู่ หรือสร้างใหม่)",
             existing_subs + ["+ สร้างหมวดหมู่ย่อยใหม่"],
-            key=f"sub_choice_{selected_menu}"
+            key=f"sub_choice_{selected_menu}",
         )
         new_sub_name = ""
         if sub_choice == "+ สร้างหมวดหมู่ย่อยใหม่":
-            new_sub_name = st.text_input("ชื่อหมวดหมู่ย่อยใหม่", key=f"new_sub_{selected_menu}")
+            new_sub_name = st.text_input(
+                "ชื่อหมวดหมู่ย่อยใหม่", key=f"new_sub_{selected_menu}"
+            )
 
         with st.form(f"add_cmd_form_{selected_menu}", clear_on_submit=True):
-            cmd_desc = st.text_input("คำอธิบายคำสั่ง", key=f"cmd_desc_{selected_menu}")
-            cmd_code = st.text_area("คำสั่ง / โค้ด", key=f"cmd_code_{selected_menu}", height=100)
-            submitted = st.form_submit_button("➕ เพิ่มคำสั่ง", use_container_width=True)
+            cmd_desc = st.text_input(
+                "คำอธิบายคำสั่ง", key=f"cmd_desc_{selected_menu}"
+            )
+            cmd_code = st.text_area(
+                "คำสั่ง / โค้ด", key=f"cmd_code_{selected_menu}", height=100
+            )
+            submitted = st.form_submit_button(
+                "➕ เพิ่มคำสั่ง", use_container_width=True
+            )
             if submitted:
-                target_sub = new_sub_name.strip() if sub_choice == "+ สร้างหมวดหมู่ย่อยใหม่" else sub_choice
+                target_sub = (
+                    new_sub_name.strip()
+                    if sub_choice == "+ สร้างหมวดหมู่ย่อยใหม่"
+                    else sub_choice
+                )
                 if not target_sub:
                     st.warning("กรุณาระบุหมวดหมู่ย่อย")
                 elif not cmd_desc.strip() or not cmd_code.strip():
                     st.warning("กรุณากรอกคำอธิบายและคำสั่ง")
                 else:
                     add_command_to_library(
-                        "command_library.json", command_library_data,
-                        selected_menu, target_sub, cmd_desc.strip(), cmd_code
+                        "command_library.json",
+                        command_library_data,
+                        selected_menu,
+                        target_sub,
+                        cmd_desc.strip(),
+                        cmd_code,
                     )
                     st.success("เพิ่มคำสั่งเรียบร้อยแล้ว")
                     st.rerun()
@@ -2113,15 +2171,26 @@ else:
         for item_idx, (desc, code) in enumerate(items):
             col_label, col_del = st.columns([6, 1])
             with col_label:
-                st.markdown(f"<div class='cmd-label'>📌 {desc}</div>", unsafe_allow_html=True)
+                st.markdown(
+                    f"<div class='cmd-label'>📌 {desc}</div>",
+                    unsafe_allow_html=True,
+                )
             with col_del:
                 del_key = f"del_cmd_{selected_menu}_{sub_cat}_{item_idx}"
                 with st.popover("D", key=del_key, help="ลบคำสั่งนี้"):
                     st.write("⚠️ ยืนยันการลบคำสั่งนี้หรือไม่?")
-                    if st.button("✅ ยืนยันลบ", key=f"{del_key}_confirm", type="primary", use_container_width=True):
+                    if st.button(
+                        "✅ ยืนยันลบ",
+                        key=f"{del_key}_confirm",
+                        type="primary",
+                        use_container_width=True,
+                    ):
                         delete_command_from_library(
-                            "command_library.json", command_library_data,
-                            selected_menu, sub_cat, item_idx
+                            "command_library.json",
+                            command_library_data,
+                            selected_menu,
+                            sub_cat,
+                            item_idx,
                         )
                         st.rerun()
             st.code(code, language="text")

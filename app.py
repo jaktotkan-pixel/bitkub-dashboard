@@ -1848,31 +1848,69 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # แถบสรุปตัวเลขภาพรวมระบบ แบบ Stock Ticker
-st.markdown(f"""
-<div class="ticker-wrap">
-    <div class="ticker-item">
-        <div class="ticker-label">หมวดคำสั่งทั้งหมด</div>
-        <div class="ticker-value up">{total_categories}<span class="ticker-unit">หมวด</span></div>
-    </div>
-    <div class="ticker-item">
-        <div class="ticker-label">คำสั่ง / เอกสารในคลัง</div>
-        <div class="ticker-value up">{total_commands}<span class="ticker-unit">รายการ</span></div>
-    </div>
-    <div class="ticker-item">
-        <div class="ticker-label">IP OLT ในพื้นที่</div>
-        <div class="ticker-value up">{total_olt_ip}<span class="ticker-unit">จุด</span></div>
-    </div>
-    <div class="ticker-item">
-        <div class="ticker-label">เส้นทางสาย OFC</div>
-        <div class="ticker-value">{total_ofc_routes}<span class="ticker-unit">เส้นทาง</span></div>
-    </div>
-    <div class="ticker-item">
-        <div class="ticker-label">เลขวงจรลูกค้า</div>
-        <div class="ticker-value">{total_circuits}<span class="ticker-unit">วงจร</span></div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+# 1. กำหนดค่าเริ่มต้นสำหรับจำว่าเลือกหมวดไหนอยู่
+if 'view_filter' not in st.session_state:
+    st.session_state['view_filter'] = 'ALL'
 
+# 2. สร้างปุ่มกดเรียง 5 คอลัมน์
+col1, col2, col3, col4, col5 = st.columns(5)
+
+with col1:
+    if st.button(f"// หมวดคำสั่งทั้งหมด\n\n{total_categories} หมวด", use_container_width=True):
+        st.session_state['view_filter'] = 'COMMANDS'
+
+with col2:
+    if st.button(f"// คำสั่ง / เอกสาร\n\n{total_commands} รายการ", use_container_width=True):
+        st.session_state['view_filter'] = 'COMMANDS'
+
+with col3:
+    if st.button(f"// IP OLT ในพื้นที่\n\n{total_olt_ip} จุด", use_container_width=True):
+        st.session_state['view_filter'] = 'OLT_IP'
+
+with col4:
+    if st.button(f"// เส้นทางสาย OFC\n\n{total_ofc_routes} เส้นทาง", use_container_width=True):
+        st.session_state['view_filter'] = 'OFC'
+
+with col5:
+    if st.button(f"// เลขวงจรลูกค้า\n\n{total_circuits} วงจร", use_container_width=True):
+        st.session_state['view_filter'] = 'CIRCUITS'
+
+# ปุ่มสำหรับล้างการกรอง (ดูทั้งหมด)
+if st.session_state['view_filter'] != 'ALL':
+    if st.button("🔄 แสดงข้อมูลทั้งหมด"):
+        st.session_state['view_filter'] = 'ALL'
+        st.rerun()
+
+st.markdown("---")
+
+# 3. ควบคุมการแสดงผลเนื้อหาด้านล่างตามหมวดที่กดเลือก
+filter_mode = st.session_state['view_filter']
+
+# --- แสดงหมวดคำสั่ง (12 หมวด) ---
+if filter_mode in ['ALL', 'COMMANDS']:
+    st.markdown("### 📑 คลังคำสั่งทั้งหมด (12 หมวดหมู่)")
+    for cat_name, cat_dict in command_library_data.items():
+        with st.expander(f"📁 หมวด: {cat_name}", expanded=(filter_mode == 'COMMANDS')):
+            for sub_cat, items in cat_dict.items():
+                st.markdown(f"**{sub_cat}**")
+                for desc, code in items:
+                    st.text(f"• {desc}")
+                    st.code(code, language="text")
+
+# --- แสดง IP OLT ---
+if filter_mode in ['ALL', 'OLT_IP']:
+    st.markdown("### 📍 รายชื่อ IP OLT ในพื้นที่")
+    # ใส่โค้ดแสดงรายการ IP OLT ของคุณตรงนี้...
+
+# --- แสดง เส้นทางสาย OFC ---
+if filter_mode in ['ALL', 'OFC']:
+    st.markdown("### 🛣️ เส้นทางสาย Optic (OFC)")
+    # ใส่โค้ดแสดงรายการ OFC ของคุณตรงนี้...
+
+# --- แสดง เลขวงจรลูกค้า ---
+if filter_mode in ['ALL', 'CIRCUITS']:
+    st.markdown("### 🆔 เลขวงจรลูกค้า")
+    # ใส่โค้ดแสดงรายการวงจรของคุณตรงนี้...
 # แสดงคลังเอกสารส่วนกลางบนหน้า Dashboard
 show_pdf_library()
 

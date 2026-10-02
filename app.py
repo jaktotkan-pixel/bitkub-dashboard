@@ -12,67 +12,7 @@ import re
 import streamlit as st
 
 
-# =========================================================================
-# 4. เมนูจัดการลิงก์ทางลัด (กดเพิ่ม / แก้ไข / ลบ ได้จากตรงนี้)
-# =========================================================================
-with st.expander("⚙️ จัดการลิงก์ทางลัด 5 คอลัมน์ (เพิ่ม / แก้ไข / ลบ)"):
-    tab_edit, tab_add = st.tabs(["✏️ แก้ไข / ลบ ลิงก์เดิม", "➕ เพิ่มลิงก์ใหม่"])
 
-    # --- แท็บ: แก้ไข / ลบ ลิงก์ ---
-    with tab_edit:
-        if len(shortcut_list) > 0:
-            options = [f"คอลัมน์ที่ {i+1}: {item['title']} ({item['url']})" for i, item in enumerate(shortcut_list)]
-            selected_idx = st.selectbox("เลือกลิงก์ที่ต้องการจัดการ:", range(len(options)), format_func=lambda x: options[x])
-
-            selected_item = shortcut_list[selected_idx]
-
-            with st.form(key=f"edit_form_{selected_idx}"):
-                edit_title = st.text_input("ชื่อหัวข้อ (เช่น // OLT Center)", value=selected_item["title"])
-                edit_sub = st.text_input("รายละเอียด/คำอธิบาย (บรรทัดล่าง)", value=selected_item["sub"])
-                edit_url = st.text_input("URL / ลิงก์หน้าเว็บ", value=selected_item["url"])
-
-                col_save, col_del = st.columns(2)
-                with col_save:
-                    btn_save = st.form_submit_button("💾 บันทึกการแก้ไข", type="primary", use_container_width=True)
-                with col_del:
-                    btn_del = st.form_submit_button("🗑️ ลบรายการนี้", use_container_width=True)
-
-                if btn_save:
-                    st.session_state["shortcut_links"][selected_idx] = {
-                        "title": edit_title,
-                        "sub": edit_sub,
-                        "url": edit_url
-                    }
-                    st.success("บันทึกข้อมูลเรียบร้อย!")
-                    st.rerun()
-
-                if btn_del:
-                    st.session_state["shortcut_links"].pop(selected_idx)
-                    st.success("ลบรายการเรียบร้อย!")
-                    st.rerun()
-        else:
-            st.info("ยังไม่มีลิงก์ทางลัดในระบบ")
-
-    # --- แท็บ: เพิ่มลิงก์ใหม่ ---
-    with tab_add:
-        if len(shortcut_list) >= 5:
-            st.warning("⚠️ ทางลัดเต็ม 5 คอลัมน์แล้ว (หากต้องการเพิ่มใหม่ กรุณาไปที่แท็บ 'แก้ไข/ลบ' เพื่อลบออก 1 รายการก่อน)")
-        else:
-            with st.form(key="add_shortcut_form"):
-                add_title = st.text_input("ชื่อหัวข้อ (เช่น // ระบบเช็กสเปก)", value="// ")
-                add_sub = st.text_input("รายละเอียด (เช่น เข้าสู่ระบบ Admin)", value="")
-                add_url = st.text_input("URL / ลิงก์หน้าเว็บ", value="https://")
-
-                btn_add = st.form_submit_button("➕ เพิ่มลงในคอลัมน์ทางลัด", type="primary", use_container_width=True)
-
-                if btn_add:
-                    st.session_state["shortcut_links"].append({
-                        "title": add_title,
-                        "sub": add_sub,
-                        "url": add_url
-                    })
-                    st.success("เพิ่มลิงก์ทางลัดใหม่เรียบร้อย!")
-                    st.rerun()
 # =================================================================
 # 🐙 GITHUB AUTO-SYNC HELPER FUNCTIONS
 # =================================================================

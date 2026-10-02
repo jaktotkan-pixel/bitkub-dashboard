@@ -10,32 +10,55 @@ import urllib.error
 import streamlit.components.v1 as components
 
 
-
 # =========================================================================
-# 🎨 MODERN DARK CYBER THEME (แก้ไขปัญหา Icon ซ้อนทับเรียบร้อย)
+# 🎨 MODERN DARK CYBER THEME (แก้ไขปัญหาไอคอนและตัวอักษรซ้อนทับ 100%)
 # =========================================================================
 st.markdown("""
 <style>
 /* 1. นำเข้าฟอนต์ Prompt และ JetBrains Mono */
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Prompt:wght@300;400;500;600;700&display=swap');
 
-/* 2. ตั้งค่าฟอนต์หลักเฉพาะข้อความทั่วไป (ไม่กระทบ Icon) */
-html, body, .stApp, p, label, .stMarkdown p {
+/* 2. กำหนดฟอนต์เฉพาะส่วนข้อความ (หลีกเลี่ยงการครอบ span/div รวมทั้งหมดเพื่อไม่ให้ทับไอคอน) */
+html, body, .stApp {
     font-family: 'Prompt', sans-serif !important;
-    font-size: 15.5px !important;
-    line-height: 1.65 !important;
-    color: #e6edf3 !important;
+    font-size: 15.5px;
+    color: #e6edf3;
 }
 
-/* 3. ป้องกัน CSS ไปทับ Icon Font ของ Streamlit */
-[data-testid="stIcon"], 
-[class*="material-symbols"], 
-[class*="Material"],
-.stExpander summary span:first-child {
+p, label, input, textarea, button, select,
+.stMarkdown, .stMarkdown p, .stText,
+[data-testid="stMarkdownContainer"] > p {
+    font-family: 'Prompt', sans-serif !important;
+}
+
+/* 3. คืนค่าฟอนต์ไอคอนลูกศรและสัญลักษณ์ทั้งหมดของ Streamlit (แก้ตัวหนังสือ _arro / expand_more ซ้อนทับ) */
+[data-testid="stIcon"],
+[data-testid="stExpanderToggleIcon"],
+[data-testid="stPopoverToggleIcon"],
+[aria-hidden="true"],
+.material-symbols-outlined,
+.material-icons {
     font-family: 'Material Symbols Outlined', 'Material Icons' !important;
+    font-weight: normal !important;
+    font-style: normal !important;
 }
 
-/* 4. หัวข้อหลักแบบแยกโทนสี */
+/* 4. จัดระยะห่างหัวข้อ Expander ไม่ให้ไอคอนชนกับข้อความ */
+[data-testid="stExpander"] summary {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    color: #f0f6fc !important;
+}
+
+.stExpander {
+    background-color: #161b22 !important;
+    border: 1px solid #30363d !important;
+    border-radius: 8px !important;
+    margin-bottom: 10px !important;
+}
+
+/* 5. หัวข้อหลักเล่นระดับโทนสี */
 h1 {
     font-family: 'Prompt', sans-serif !important;
     font-weight: 700 !important;
@@ -58,21 +81,7 @@ h3, h4 {
     color: #d2a8ff !important;
 }
 
-/* 5. ปรับแต่ง Expander */
-.stExpander {
-    background-color: #161b22 !important;
-    border: 1px solid #30363d !important;
-    border-radius: 8px !important;
-    margin-bottom: 10px !important;
-}
-.stExpander summary {
-    color: #f0f6fc !important;
-}
-.stExpander summary:hover {
-    color: #58a6ff !important;
-}
-
-/* 6. ปรับแต่ง Tabs */
+/* 6. แถบ Tabs */
 button[data-baseweb="tab"] {
     font-family: 'Prompt', sans-serif !important;
     font-size: 15.5px !important;
@@ -84,7 +93,7 @@ button[aria-selected="true"] {
     background-color: rgba(63, 185, 80, 0.08) !important;
 }
 
-/* 7. ปรับแต่งปุ่มกด */
+/* 7. ปุ่มกด */
 .stButton > button {
     font-family: 'Prompt', sans-serif !important;
     font-size: 15px !important;

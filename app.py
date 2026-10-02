@@ -1849,98 +1849,46 @@ st.markdown("""
 
 # แถบสรุปตัวเลขภาพรวมระบบ แบบ Stock Ticker
 # =========================================================================
-# แถบสรุปตัวเลขภาพรวมระบบ แบบปุ่มกด + ระบบกรองแสดงผล (แทนที่บรรทัด 1851 เป็นต้นไป)
+# แถบสรุปตัวเลขภาพรวมระบบ แบบปุ่มกดลัด (Quick Search Shortcuts)
 # =========================================================================
 
-# 1. กำหนด Session State สำหรับจำการเลือกหมวดหมู่
-if 'view_filter' not in st.session_state:
-    st.session_state['view_filter'] = 'ALL'
+# 1. ตรวจสอบและสร้าง Session State สำหรับช่องค้นหา
+if 'dash_search' not in st.session_state:
+    st.session_state['dash_search'] = ''
 
-# 2. สร้างแถบปุ่มกด 5 คอลัมน์
+# 2. ปุ่มกด 5 คอลัมน์ (คลิกแล้วจะส่งคำไปค้นหาในระบบหลักทันที)
 col1, col2, col3, col4, col5 = st.columns(5)
 
 with col1:
     if st.button(f"// หมวดคำสั่งทั้งหมด\n\n{total_categories} หมวด", use_container_width=True):
-        st.session_state['view_filter'] = 'COMMANDS'
+        st.session_state['dash_search'] = 'คำสั่ง'
+        st.rerun()
 
 with col2:
     if st.button(f"// คำสั่ง / เอกสาร\n\n{total_commands} รายการ", use_container_width=True):
-        st.session_state['view_filter'] = 'COMMANDS'
+        st.session_state['dash_search'] = 'เอกสาร'
+        st.rerun()
 
 with col3:
     if st.button(f"// IP OLT ในพื้นที่\n\n{total_olt_ip} จุด", use_container_width=True):
-        st.session_state['view_filter'] = 'OLT_IP'
+        st.session_state['dash_search'] = 'IP OLT'  # ส่งคำว่า IP OLT ไปยังระบบค้นหาหลัก
+        st.rerun()
 
 with col4:
     if st.button(f"// เส้นทางสาย OFC\n\n{total_ofc_routes} เส้นทาง", use_container_width=True):
-        st.session_state['view_filter'] = 'OFC'
+        st.session_state['dash_search'] = 'OFC'
+        st.rerun()
 
 with col5:
     if st.button(f"// เลขวงจรลูกค้า\n\n{total_circuits} วงจร", use_container_width=True):
-        st.session_state['view_filter'] = 'CIRCUITS'
-
-# 3. ตัวตรวจจับหมวดที่คลิกเลือก
-filter_mode = st.session_state['view_filter']
-
-# แสดงปุ่มรีเซ็ตเมื่อมีการกดเลือกหมวดใดหมวดหนึ่ง
-if filter_mode != 'ALL':
-    if st.button("🔄 แสดงข้อมูลทั้งหมด (Reset Filter)"):
-        st.session_state['view_filter'] = 'ALL'
+        st.session_state['dash_search'] = 'วงจร'
         st.rerun()
 
-st.markdown("---")
-
-# -------------------------------------------------------------------------
-# 4. แสดงผลเนื้อหาตามหมวดที่เลือกคลิก
-# -------------------------------------------------------------------------
-
-# 🟢 1 & 2. คลังคำสั่งและเอกสารทั้งหมด (COMMANDS)
-if filter_mode in ['ALL', 'COMMANDS']:
-    st.markdown("### 📑 คลังคำสั่งและเอกสารทั้งหมด")
-    if 'command_library_data' in locals() or 'command_library_data' in globals():
-        for cat_name, cat_dict in command_library_data.items():
-            with st.expander(f"📁 หมวด: {cat_name}", expanded=(filter_mode == 'COMMANDS')):
-                for sub_cat, items in cat_dict.items():
-                    st.markdown(f"**{sub_cat}**")
-                    for desc, code in items:
-                        st.text(f"• {desc}")
-                        st.code(code, language="text")
-
-# 🔵 3. IP OLT ในพื้นที่ (OLT_IP)
-if filter_mode in ['ALL', 'OLT_IP']:
-    st.markdown("### 📍 รายชื่อ IP OLT ในพื้นที่")
-    olt_list = globals().get('olt_ip_data') or locals().get('olt_ip_data') or globals().get('current_olt_data') or []
-    if olt_list:
-        for item in olt_list:
-            name = item.get('name', item.get('site', '-'))
-            ip = item.get('ip', '-')
-            st.markdown(f"• **{name}** : `{ip}`")
-    else:
-        st.info("ไม่พบรายการ IP OLT")
-
-# 🟡 4. เส้นทางสาย OFC (OFC)
-if filter_mode in ['ALL', 'OFC']:
-    st.markdown("### 🛣️ เส้นทางสาย Optic (OFC)")
-    ofc_list = globals().get('current_ofc_data') or locals().get('current_ofc_data') or []
-    if ofc_list:
-        for item in ofc_list:
-            route_name = item.get('route_name', item.get('name', 'เส้นทาง'))
-            dist = item.get('distance', '-')
-            st.markdown(f"• **{route_name}** — ระยะทาง: `{dist}` กม.")
-    else:
-        st.info("ไม่พบรายการเส้นทางสาย OFC")
-
-# 🔴 5. เลขวงจรลูกค้า (CIRCUITS)
-if filter_mode in ['ALL', 'CIRCUITS']:
-    st.markdown("### 🆔 รายชื่อเลขวงจรลูกค้า")
-    circuit_list = globals().get('circuit_data') or locals().get('circuit_data') or globals().get('current_circuit_data') or []
-    if circuit_list:
-        for item in circuit_list:
-            cid = item.get('circuit_id', item.get('id', '-'))
-            cname = item.get('customer_name', item.get('name', '-'))
-            st.markdown(f"• วงจร: `{cid}` — ลูกค้า: **{cname}**")
-    else:
-        st.info("ไม่พบรายการเลขวงจรลูกค้า")
+# 3. ปุ่มสำหรับล้างคำค้นหาเพื่อกลับสู่หน้าปกติ
+if st.session_state.get('dash_search'):
+    if st.button("🔄 ล้างการค้นหา (แสดงหน้าหลักทั้งหมด)"):
+        st.session_state['dash_search'] = ''
+        st.rerun()
 # แสดงคลังเอกสารส่วนกลางบนหน้า Dashboard
 show_pdf_library()
 

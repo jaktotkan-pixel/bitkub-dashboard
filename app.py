@@ -1646,7 +1646,7 @@ with st.sidebar.expander("📞 เบอร์ติดต่อ", expanded=Fals
     st.markdown("### 📞 ระบบจัดการเบอร์ติดต่อ")
     contacts_list = load_contacts_data()
 
-    tab_view, tab_add, tab_manage = st.tabs(["🔍 ค้นหา", "➕ เพิ่ม", "⚙️️ แก้ไข/ลบ"])
+    tab_view, tab_add, tab_manage = st.tabs(["🔍 ค้นหา", "➕ เพิ่ม", "⚙ แก้ไข/ลบ"])
 
     with tab_view:
         search_kw = st.text_input("🔍 พิมพ์คำค้นหา", key="search_contact_kw")
@@ -1731,6 +1731,7 @@ with st.sidebar.expander("📞 IP Phone", expanded=False):
 with st.sidebar.expander("🔐 SecureCRT", expanded=False):
     current_securecrt_data = render_simple_value_section("securecrt.json", SECURECRT_SEED, "IP / โฮสต์", "securecrt")
 
+# โหลดคลังคำสั่ง (ตรวจสอบว่ามี COMMAND_LIBRARY_SEED ประกาศไว้ก่อนหน้าแล้ว)
 command_library_data = load_section_data("command_library.json", COMMAND_LIBRARY_SEED)
 
 selected_menu = None
@@ -1741,33 +1742,23 @@ if selected_menu is None:
     selected_menu = list(command_library_data.keys())[0]
 
 # =========================================================================
-# 📊 คำนวณสรุปตัวเลขแบบปลอดภัย (วางไว้ก่อนส่วนสร้างปุ่ม 5 กล่อง)
+# 📊 คำนวณสรุปตัวเลขแบบปลอดภัย (สำหรับ Ticker และ ปุ่มทางลัด)
 # =========================================================================
 total_categories = len(command_library_data)
 total_commands = sum(
     len(items) for cat_dict in command_library_data.values() for items in cat_dict.values()
 )
 
-# คำนวณ IP OLT แบบปลอดภัยป้องกัน KeyError
+# คำนวณ IP OLT แบบปลอดภัยป้องกัน KeyError / NameError
 olt_cat = command_library_data.get("📍 IP OLT ในพื้นที่", {})
 first_sub = list(olt_cat.values())[0] if olt_cat else []
-total_olt_ip = len(first_sub[0][1].strip().split("\n")) if first_sub else 0
+total_olt_ip = len(first_sub[0][1].strip().split("\n")) if (first_sub and len(first_sub) > 0 and len(first_sub[0]) > 1) else 0
 
-total_circuits = len(current_circuit_data)
-total_ofc_routes = len(current_ofc_data)
-# =================================================================
-# 📊 คำนวณสรุปตัวเลขสำหรับแถบ Ticker บนหน้า Dashboard
-# =================================================================
-total_categories = len(command_library_data)
-total_commands = sum(
-    len(items) for cat_dict in command_library_data.values() for items in cat_dict.values()
-)
-total_olt_ip = len(olt_ip_commands["📍 รายชื่อ IP OLT ในพื้นที่ & โครงข่าย"][0][1].strip().split("\n"))
-total_circuits = len(current_circuit_data)
-total_ofc_routes = len(current_ofc_data)
+total_circuits = len(current_circuit_data) if current_circuit_data else 0
+total_ofc_routes = len(current_ofc_data) if current_ofc_data else 0
 
 
-# --- 3. MAIN CONTENT DISPLAY & DASHBOARD SEARCH ---
+# --- MAIN CONTENT DISPLAY & DASHBOARD SEARCH ---
 
 st.markdown("""
 <div style="display:flex; align-items:baseline; justify-content:space-between; margin-top:-10px; flex-wrap:wrap; gap:8px;">
@@ -1782,9 +1773,6 @@ st.markdown("""
     # คลังคำสั่งและข้อมูลหน้างานเครือข่าย ZTE / OLT / DSLAM / Switch — ค้นหาได้จากทุกหมวดในจุดเดียว
 </div>
 """, unsafe_allow_html=True)
-
-# แถบสรุปตัวเลขภาพรวมระบบ แบบ Stock Ticker
-# =========================================================================
 # แถบสรุปตัวเลขภาพรวมระบบ แบบปุ่มกดลัด (Quick Search Shortcuts)
 # =========================================================================
 

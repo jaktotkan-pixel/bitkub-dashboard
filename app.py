@@ -10,13 +10,6 @@ import urllib.error
 import streamlit.components.v1 as components
 
 
-# 1. ประกาศตัวแปร COMMAND_LIBRARY_SEED ไว้ก่อนหน้า
-COMMAND_LIBRARY_SEED = copy.deepcopy(all_categories)
-
-# 2. เรียกใช้งานฟังก์ชัน
-command_library_data = load_section_data(
-    "command_library.json", COMMAND_LIBRARY_SEED
-)
 # =================================================================
 # 🐙 GITHUB AUTO-SYNC HELPER FUNCTIONS
 # =================================================================

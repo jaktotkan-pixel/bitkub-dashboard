@@ -910,30 +910,37 @@ def render_simple_value_section(filename, seed, value_label, form_prefix):
     return data
 
 # =========================================================
-# การตั้งค่าระบบบันทึกข้อมูลคู่มือ (JSON & File Storage)
+import base64
+
 # =========================================================
-MANUAL_DATA_FILE = "manuals_data.json"
-MANUAL_FILES_DIR = "manual_attachments"
+# 📖 ระบบจัดการคู่มือการใช้งาน (Manual Management) - Sync GitHub ถาวร
+# =========================================================
 
-os.makedirs(MANUAL_FILES_DIR, exist_ok=True)
+# ฟังก์ชันแปลงไฟล์อัปโหลดเป็น Base64
+def file_to_base64(uploaded_file):
+    if uploaded_file is not None:
+        bytes_data = uploaded_file.getvalue()
+        base64_str = base64.b64encode(bytes_data).decode("utf-8")
+        file_type = uploaded_file.type
+        return {
+            "name": uploaded_file.name,
+            "type": file_type,
+            "data": f"data:{file_type};base64,{base64_str}"
+        }
+    return None
 
-def load_manuals():
-    """โหลดข้อมูลคู่มือทั้งหมดจากไฟล์ JSON"""
-    if os.path.exists(MANUAL_DATA_FILE):
-        with open(MANUAL_DATA_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return []
+MANUALS_SEED = [
+    {
+        "title": "คู่มือตัวอย่าง 1",
+        "description": "รายละเอียดคู่มือการใช้งานระบบ...",
+        "file_attachment": None
+    }
+]
 
-def save_manuals(data):
-    """บันทึกข้อมูลคู่มือลงไฟล์ JSON"""
-    with open(MANUAL_DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+# โหลดข้อมูลผ่านฟังก์ชันหลักของระบบ (Sync กับ GitHub)
+manuals_list = load_section_data("manuals.json", MANUALS_SEED)
 
-# ดึงข้อมูลคู่มือที่มีอยู่ในระบบ
-manuals_list = load_manuals()
-
-st.divider()
-st.header("📖 ระบบจัดการคู่มือการใช้งาน (Manual Management)")
+st.markdown("## 📖 ระบบจัดการคู่มือการใช้งาน (Manual Management)")
 
 # สร้าง Tab สลับระหว่าง "แสดงคู่มือ" กับ "เพิ่ม/แก้ไขคู่มือ"
 tab_view, tab_manage = st.tabs(["📚 รายการคู่มือทั้งหมด", "⚙️ เพิ่ม / แก้ไขคู่มือ"])
@@ -946,28 +953,33 @@ with tab_view:
         st.info("ยังไม่มีคู่มือในระบบ กรุณาไปที่แท็บ 'เพิ่ม / แก้ไขคู่มือ' เพื่อสร้างคู่มือใหม่")
     else:
         for idx, item in enumerate(manuals_list):
-            with st.expander(f"📌 {item['title']}", expanded=False):
+            with st.expander(f"📌 {item.get('title', 'ไม่มีหัวข้อ')}", expanded=False):
                 # แสดงคำอธิบาย
-                st.markdown(item["description"])
+                st.markdown(item.get("description", ""))
                 
                 # แสดงไฟล์แนบหรือรูปภาพ (ถ้ามี)
-                if item.get("file_path") and os.path.exists(item["file_path"]):
-                    file_path = item["file_path"]
-                    file_ext = os.path.splitext(file_path)[1].lower()
+                file_info = item.get("file_attachment")
+                if file_info and isinstance(file_info, dict):
+                    st.caption(f"📎 ไฟล์แนบประกอบคู่มือ: {file_info.get('name')}")
+                    file_type = file_info.get("type", "")
+                    file_data_uri = file_info.get("data", "")
                     
-                    st.caption("📎 ไฟล์แนบประกอบคู่มือ:")
                     # กรณีเป็นไฟล์รูปภาพ ให้แสดงรูป
-                    if file_ext in [".png", ".jpg", ".jpeg", ".webp"]:
-                        st.image(file_path, use_container_width=True)
-                    # กรณีเป็นไฟล์อื่นๆ (เช่น PDF, Zip, Docx) ให้แสดงปุ่มดาวน์โหลด
+                    if "image" in file_type:
+                        st.image(file_data_uri, use_container_width=True)
+                    # กรณีเป็นไฟล์อื่นๆ ให้แสดงปุ่มดาวน์โหลด
                     else:
-                        with open(file_path, "rb") as f:
+                        try:
+                            base64_clean = file_data_uri.split(",")[1]
+                            file_bytes = base64.b64decode(base64_clean)
                             st.download_button(
-                                label=f"📥 ดาวน์โหลดไฟล์แนบ ({os.path.basename(file_path)})",
-                                data=f.read(),
-                                file_name=os.path.basename(file_path),
-                                key=f"dl_{idx}"
+                                label=f"📥 ดาวน์โหลดไฟล์แนบ ({file_info.get('name')})",
+                                data=file_bytes,
+                                file_name=file_info.get('name'),
+                                key=f"dl_manual_{idx}"
                             )
+                        except Exception:
+                            st.caption("⚠️ ไม่สามารถโหลดไฟล์แนบนี้ได้")
 
 # =========================================================
 # TAB 2: ฟังก์ชัน เพิ่ม / แก้ไข / ลบ คู่มือ
@@ -976,77 +988,84 @@ with tab_manage:
     st.subheader("จัดการข้อมูลคู่มือ")
     
     # ตัวเลือกโหมดการทำงาน
-    options = ["➕ เพิ่มคู่มือใหม่"] + [f"✏️ แก้ไข: {m['title']}" for m in manuals_list]
-    selected_option = st.selectbox("เลือกรายการที่ต้องการดำเนินการ", options)
+    options = ["➕ เพิ่มคู่มือใหม่"] + [f"✏️ แก้ไข: {m.get('title')}" for m in manuals_list]
+    selected_option = st.selectbox("เลือกรายการที่ต้องการดำเนินการ", options, key="select_manual_action")
     
     # ตัวแปรเริ่มต้นสำหรับฟอร์ม
     edit_mode = False
     target_index = None
     default_title = ""
     default_desc = ""
-    current_file_path = None
+    current_file_info = None
 
     # ตรวจสอบว่าเป็นการแก้ไขคู่มือเดิมหรือไม่
     if selected_option != "➕ เพิ่มคู่มือใหม่":
         edit_mode = True
         target_index = options.index(selected_option) - 1
         selected_item = manuals_list[target_index]
-        default_title = selected_item["title"]
-        default_desc = selected_item["description"]
-        current_file_path = selected_item.get("file_path")
+        default_title = selected_item.get("title", "")
+        default_desc = selected_item.get("description", "")
+        current_file_info = selected_item.get("file_attachment")
 
     # ฟอร์มป้อนข้อมูลคู่มือ
     with st.form("manual_form", clear_on_submit=False):
         title_input = st.text_input("1. หัวข้อคู่มือ (Title)", value=default_title)
         desc_input = st.text_area("2. คำอธิบาย / รายละเอียดคู่มือ (Description)", value=default_desc, height=150)
         
-        if edit_mode and current_file_path:
-            st.info(f"ไฟล์แนบปัจจุบัน: {os.path.basename(current_file_path)}")
+        remove_file = False
+        if edit_mode and current_file_info:
+            st.info(f"📁 ไฟล์แนบปัจจุบัน: {current_file_info.get('name')}")
+            remove_file = st.checkbox("🗑️ ลบไฟล์แนบเดิมออก", key="chk_rm_file")
         
-        file_input = st.file_uploader("3. แนบรูปภาพหรือไฟล์ประกอบ (Optional)", type=["png", "jpg", "jpeg", "pdf", "docx", "txt", "zip"])
+        file_input = st.file_uploader(
+            "3. แนบรูปภาพหรือไฟล์ประกอบ (Optional)", 
+            type=["png", "jpg", "jpeg", "pdf", "docx", "txt", "zip"],
+            key="upload_manual_file"
+        )
         
-        submit_btn = st.form_submit_button("💾 บันทึกข้อมูลคู่มือ")
+        submit_btn = st.form_submit_button("💾 บันทึกข้อมูลคู่มือ", type="primary")
 
     # การประมวลผลเมื่อกดบันทึก
     if submit_btn:
         if not title_input.strip():
             st.error("กรุณาระบุหัวข้อคู่มือ")
         else:
-            saved_file_path = current_file_path
-
+            final_file_info = current_file_info
+            
+            if remove_file:
+                final_file_info = None
+                
             # หากมีการอัปโหลดไฟล์ใหม่เข้ามา
             if file_input is not None:
-                new_file_path = os.path.join(MANUAL_FILES_DIR, file_input.name)
-                with open(new_file_path, "wb") as f:
-                    f.write(file_input.getbuffer())
-                saved_file_path = new_file_path
+                final_file_info = file_to_base64(file_input)
 
             manual_data = {
-                "title": title_input,
-                "description": desc_input,
-                "file_path": saved_file_path
+                "title": title_input.strip(),
+                "description": desc_input.strip(),
+                "file_attachment": final_file_info
             }
 
             if edit_mode:
-                # แก้ไขรายการเดิม
                 manuals_list[target_index] = manual_data
+                save_section_data("manuals.json", manuals_list, commit_msg=f"Update manual: {title_input.strip()}")
                 st.success("อัปเดตข้อมูลคู่มือเรียบร้อยแล้ว!")
             else:
-                # เพิ่มรายการใหม่
                 manuals_list.append(manual_data)
+                save_section_data("manuals.json", manuals_list, commit_msg=f"Add manual: {title_input.strip()}")
                 st.success("เพิ่มคู่มือใหม่เรียบร้อยแล้ว!")
 
-            save_manuals(manuals_list)
             st.rerun()
 
     # ปุ่มสำหรับลบคู่มือ (แสดงเฉพาะโหมดแก้ไข)
     if edit_mode:
         st.divider()
-        if st.button("🗑️ ลบคู่มือรายการนี้", type="secondary"):
+        if st.button("🗑️ ลบคู่มือรายการนี้", type="secondary", key="btn_del_manual"):
             deleted_item = manuals_list.pop(target_index)
-            save_manuals(manuals_list)
-            st.warning(f"ลบคู่มือหัวข้อ '{deleted_item['title']}' เรียบร้อยแล้ว")
+            save_section_data("manuals.json", manuals_list, commit_msg=f"Delete manual: {deleted_item.get('title')}")
+            st.warning(f"ลบคู่มือหัวข้อ '{deleted_item.get('title')}' เรียบร้อยแล้ว")
             st.rerun()
+
+st.markdown("---")
 
 # =================================================================
 # ⚙️ Dictionary คลังคำสั่ง

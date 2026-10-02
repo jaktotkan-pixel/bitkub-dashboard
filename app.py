@@ -15,26 +15,23 @@ import streamlit as st
 # 🚫 ซ่อนคำแนะนำ "Press Enter / Press ⌘Enter" ทุกกรณี
 # =========================================================
 st.markdown("""
-    <style>
-    /* ซ่อน Container คำแนะนำทั้งหมด */
-    [data-testid="stInputInstructions"],
-    [data-testid="stFormInstructions"],
-    [data-testid="stWidgetInstructions"],
-    div[data-baseweb="typo-caption"],
-    .stTextInput small,
-    .stTextArea small,
-    div[class*="InputInstructions"],
-    div[class*="FormInstructions"],
-    form small,
-    form [data-testid="stMarkdownContainer"] p small {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        height: 0px !important;
-        margin: 0px !important;
-        padding: 0px !important;
-    }
-    </style>
+<style>
+/* แต่งปุ่มกด Ticker ให้เป็นกล่องกรอบสไตล์ Terminal */
+div[data-testid="stColumn"] button {
+    background-color: #0d1117 !important;
+    color: #58a6ff !important;
+    border: 1px solid #30363d !important;
+    border-radius: 6px !important;
+    font-family: 'Courier New', monospace !important;
+    text-align: left !important;
+    height: 80px !important;
+}
+div[data-testid="stColumn"] button:hover {
+    border-color: #2ea043 !important;
+    color: #7ee787 !important;
+    box-shadow: 0 0 8px rgba(46, 160, 67, 0.4);
+}
+</style>
 """, unsafe_allow_html=True)
 # =================================================================
 # 🐙 GITHUB AUTO-SYNC HELPER FUNCTIONS

@@ -1772,15 +1772,17 @@ st.markdown("""
 if 'dash_search' not in st.session_state:
     st.session_state['dash_search'] = ''
 
-# 2. ลิงก์ทางลัดเปิดเว็บ 5 กล่อง
-if "cmd_shortcuts" not in st.session_state:
-    st.session_state["cmd_shortcuts"] = [
-        {"title": "// หมวดคำสั่งทั้งหมด", "sub": "12 หมวด", "url": "https://google.com"},
-        {"title": "// คำสั่ง / เอกสาร", "sub": "113 รายการ", "url": "https://google.com"},
-        {"title": "// IP OLT ในพื้นที่", "sub": "188 จุด", "url": "https://google.com"},
-        {"title": "// เส้นทางสาย OFC", "sub": "129 เส้นทาง", "url": "https://google.com"},
-        {"title": "// เลขวงจรลูกค้า", "sub": "14 วงจร", "url": "https://google.com"},
-    ]
+# 2. ลิงก์ทางลัดเปิดเว็บ 5 กล่อง (บันทึกลงไฟล์ JSON ถาวร - Reboot ข้อมูลไม่หาย)
+SHORTCUTS_SEED = [
+    {"title": "// หมวดคำสั่งทั้งหมด", "sub": "12 หมวด", "url": "https://google.com"},
+    {"title": "// คำสั่ง / เอกสาร", "sub": "113 รายการ", "url": "https://google.com"},
+    {"title": "// IP OLT ในพื้นที่", "sub": "188 จุด", "url": "https://google.com"},
+    {"title": "// เส้นทางสาย OFC", "sub": "129 เส้นทาง", "url": "https://google.com"},
+    {"title": "// เลขวงจรลูกค้า", "sub": "14 วงจร", "url": "https://google.com"},
+]
+
+# โหลดข้อมูลทางลัดผ่านไฟล์ JSON
+shortcut_list = load_section_data("cmd_shortcuts.json", SHORTCUTS_SEED)
 
 # CSS ตกแต่งปุ่มเฉพาะส่วน main
 st.markdown("""
@@ -1812,7 +1814,6 @@ section.main div[data-testid="stColumn"] a:hover {
 # แสดงผลปุ่มทางลัด 5 คอลัมน์
 col1, col2, col3, col4, col5 = st.columns(5)
 cols = [col1, col2, col3, col4, col5]
-shortcut_list = st.session_state["cmd_shortcuts"]
 
 for idx, col in enumerate(cols):
     with col:
@@ -1825,8 +1826,8 @@ for idx, col in enumerate(cols):
 
 st.markdown("---")
 
-# กล่องจัดการลิงก์
-with st.expander("⚙️ จัดการลิงก์ทางลัด 5 กล่อง (เพิ่ม / แก้ไข / ลบ)"):
+# กล่องจัดการลิงก์ทางลัด 5 กล่อง (บันทึกลงไฟล์ JSON ถาวร)
+with st.expander("⚙️️ จัดการลิงก์ทางลัด 5 กล่อง (เพิ่ม / แก้ไข / ลบ)"):
     tab_edit, tab_add = st.tabs(["✏️ แก้ไข / ลบ ลิงก์เดิม", "➕ เพิ่มลิงก์ใหม่"])
 
     with tab_edit:
@@ -1843,15 +1844,17 @@ with st.expander("⚙️ จัดการลิงก์ทางลัด 5 �
                 c_save, c_del = st.columns(2)
                 with c_save:
                     if st.form_submit_button("💾 บันทึกการแก้ไข", type="primary", use_container_width=True):
-                        st.session_state["cmd_shortcuts"][selected_idx] = {
+                        shortcut_list[selected_idx] = {
                             "title": edit_title, "sub": edit_sub, "url": edit_url
                         }
-                        st.success("อัปเดตลิงก์เรียบร้อย!")
+                        save_section_data("cmd_shortcuts.json", shortcut_list, commit_msg=f"Update shortcut box {selected_idx+1}")
+                        st.success("อัปเดตลิงก์และบันทึกไฟล์เรียบร้อย!")
                         st.rerun()
                 with c_del:
                     if st.form_submit_button("🗑️ ลบกล่องนี้", use_container_width=True):
-                        st.session_state["cmd_shortcuts"].pop(selected_idx)
-                        st.success("ลบรายการเรียบร้อย!")
+                        shortcut_list.pop(selected_idx)
+                        save_section_data("cmd_shortcuts.json", shortcut_list, commit_msg=f"Delete shortcut box {selected_idx+1}")
+                        st.success("ลบรายการและบันทึกไฟล์เรียบร้อย!")
                         st.rerun()
         else:
             st.info("ยังไม่มีลิงก์ทางลัดในระบบ")
@@ -1866,10 +1869,11 @@ with st.expander("⚙️ จัดการลิงก์ทางลัด 5 �
                 add_url = st.text_input("URL / ลิงก์เว็บไซต์", value="https://")
 
                 if st.form_submit_button("➕ เพิ่มลิงก์", type="primary", use_container_width=True):
-                    st.session_state["cmd_shortcuts"].append({
+                    shortcut_list.append({
                         "title": add_title, "sub": add_sub, "url": add_url
                     })
-                    st.success("เพิ่มลิงก์ทางลัดสำเร็จ!")
+                    save_section_data("cmd_shortcuts.json", shortcut_list, commit_msg="Add new shortcut box")
+                    st.success("เพิ่มลิงก์ทางลัดและบันทึกสำเร็จ!")
                     st.rerun()
 
 col_input, col_btn = st.columns([5, 1])

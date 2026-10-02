@@ -537,7 +537,11 @@ def load_section_data(filename, seed):
         except Exception:
             pass
     seed_copy = copy.deepcopy(seed)
-    save_section_data(filename, seed_copy, commit_msg=f"Initialize default seed data for {filename}")
+    save_section_data(
+        filename,
+        seed_copy,
+        commit_msg=f"Initialize default seed data for {filename}",
+    )
     return seed_copy
 
 
@@ -549,16 +553,30 @@ def save_section_data(filename, data, commit_msg=None):
     )
     if commit_msg is None:
         commit_msg = f"Update data: {filename}"
-    commit_to_github(file_path, commit_msg)
+
+    try:
+        if "commit_to_github" in globals():
+            commit_to_github(file_path, commit_msg)
+    except Exception as e:
+        st.warning(f"⚠️ ไม่สามารถ Auto Sync ไปยัง GitHub ได้: {e}")
 
 
 def render_delete_button(filename, data, idx, key):
     """ปุ่มลบ (ตัว D สีแดง) รายการที่ idx — พร้อมส่ง Auto Sync เข้า GitHub"""
     with st.popover("D", key=key, help="ลบรายการนี้"):
-        st.write("⚠️ ยืนยันการลบรายการนี้หรือไม่?")
-        if st.button("✅ ยืนยันลบ", key=f"{key}_confirm", type="primary", use_container_width=True):
+        st.write("⚠️️ ยืนยันการลบรายการนี้หรือไม่?")
+        if st.button(
+            "✅ ยืนยันลบ",
+            key=f"{key}_confirm",
+            type="primary",
+            use_container_width=True,
+        ):
             removed_item = data.pop(idx)
-            save_section_data(filename, data, commit_msg=f"Delete item from {filename}: {removed_item}")
+            save_section_data(
+                filename,
+                data,
+                commit_msg=f"Delete item from {filename}: {removed_item}",
+            )
             st.rerun()
 
 
@@ -568,8 +586,12 @@ def render_web_section(filename, seed):
 
     with st.form("add_web_form", clear_on_submit=True):
         name = st.text_input("ชื่อเว็บ", key="web_name_input")
-        url = st.text_input("URL", key="web_url_input", placeholder="https://...")
-        submitted = st.form_submit_button("➕ เพิ่มลิงก์", use_container_width=True)
+        url = st.text_input(
+            "URL", key="web_url_input", placeholder="https://..."
+        )
+        submitted = st.form_submit_button(
+            "➕ เพิ่มลิงก์", use_container_width=True
+        )
         if submitted:
             if not name.strip() or not url.strip():
                 st.warning("กรุณากรอกทั้งชื่อเว็บและ URL")
@@ -578,7 +600,11 @@ def render_web_section(filename, seed):
                 if not clean_url.startswith(("http://", "https://")):
                     clean_url = "https://" + clean_url
                 data.append({"name": name.strip(), "url": clean_url})
-                save_section_data(filename, data, commit_msg=f"Add web link: {name.strip()}")
+                save_section_data(
+                    filename,
+                    data,
+                    commit_msg=f"Add web link: {name.strip()}",
+                )
                 st.rerun()
 
     st.markdown("---")
@@ -598,10 +624,16 @@ def render_ofc_section(filename, seed):
     data = load_section_data(filename, seed)
 
     with st.form("add_ofc_form", clear_on_submit=True):
-        route = st.text_input("เส้นทาง (เช่น จุด A - จุด B)", key="ofc_route_input")
-        distance = st.text_input("ระยะทาง (เช่น 12.3 km)", key="ofc_distance_input")
+        route = st.text_input(
+            "เส้นทาง (เช่น จุด A - จุด B)", key="ofc_route_input"
+        )
+        distance = st.text_input(
+            "ระยะทาง (เช่น 12.3 km)", key="ofc_distance_input"
+        )
         note = st.text_input("หมายเหตุ (ถ้ามี)", key="ofc_note_input")
-        submitted = st.form_submit_button("➕ เพิ่มเส้นทาง", use_container_width=True)
+        submitted = st.form_submit_button(
+            "➕ เพิ่มเส้นทาง", use_container_width=True
+        )
         if submitted:
             if not route.strip() or not distance.strip():
                 st.warning("กรุณากรอกเส้นทางและระยะทาง")
@@ -611,15 +643,26 @@ def render_ofc_section(filename, seed):
                     "distance": distance.strip(),
                     "note": note.strip() or "-",
                 })
-                save_section_data(filename, data, commit_msg=f"Add OFC route: {route.strip()}")
+                save_section_data(
+                    filename,
+                    data,
+                    commit_msg=f"Add OFC route: {route.strip()}",
+                )
                 st.rerun()
 
     st.markdown("---")
     st.markdown("#### 🛠️ ข้อมูลระยะสาย OFC หน้างาน")
-    search_ofc = st.text_input("🔍 ค้นหาเส้นทางสาย OFC:", "", key="search_ofc_sidebar").strip().lower()
+    search_ofc = (
+        st.text_input(
+            "🔍 ค้นหาเส้นทางสาย OFC:", "", key="search_ofc_sidebar"
+        )
+        .strip()
+        .lower()
+    )
 
     filtered = [
-        (idx, item) for idx, item in enumerate(data)
+        (idx, item)
+        for idx, item in enumerate(data)
         if search_ofc in item["route"].lower()
         or search_ofc in item["distance"].lower()
         or search_ofc in item.get("note", "").lower()
@@ -632,7 +675,10 @@ def render_ofc_section(filename, seed):
         col_a, col_b = st.columns([5, 1])
         with col_a:
             if item.get("note", "-") != "-":
-                st.markdown(f"• **{item['route']}** : `{item['distance']}`\n  *(หมายเหตุ: {item['note']})*")
+                st.markdown(
+                    f"• **{item['route']}** : `{item['distance']}`\n  *(หมายเหตุ:"
+                    f" {item['note']})*"
+                )
             else:
                 st.markdown(f"• **{item['route']}** : `{item['distance']}`")
         with col_b:
@@ -646,14 +692,22 @@ def render_circuit_section(filename, seed):
 
     with st.form("add_circuit_form", clear_on_submit=True):
         code = st.text_input("เลขวงจร", key="circuit_code_input")
-        owner = st.text_input("ชื่อเจ้าของ/หมายเหตุ", key="circuit_owner_input")
-        submitted = st.form_submit_button("➕ เพิ่มวงจร", use_container_width=True)
+        owner = st.text_input(
+            "ชื่อเจ้าของ/หมายเหตุ", key="circuit_owner_input"
+        )
+        submitted = st.form_submit_button(
+            "➕ เพิ่มวงจร", use_container_width=True
+        )
         if submitted:
             if not code.strip():
                 st.warning("กรุณากรอกเลขวงจร")
             else:
                 data.append({"code": code.strip(), "owner": owner.strip()})
-                save_section_data(filename, data, commit_msg=f"Add Circuit: {code.strip()}")
+                save_section_data(
+                    filename,
+                    data,
+                    commit_msg=f"Add Circuit: {code.strip()}",
+                )
                 st.rerun()
 
     st.markdown("---")
@@ -674,14 +728,22 @@ def render_address_section(filename, seed):
 
     with st.form("add_address_form", clear_on_submit=True):
         title = st.text_input("ชื่อสถานที่", key="addr_title_input")
-        detail = st.text_area("รายละเอียดที่อยู่", key="addr_detail_input", height=80)
-        submitted = st.form_submit_button("➕ เพิ่มที่อยู่", use_container_width=True)
+        detail = st.text_area(
+            "รายละเอียดที่อยู่", key="addr_detail_input", height=80
+        )
+        submitted = st.form_submit_button(
+            "➕ เพิ่มที่อยู่", use_container_width=True
+        )
         if submitted:
             if not title.strip() or not detail.strip():
                 st.warning("กรุณากรอกชื่อสถานที่และรายละเอียด")
             else:
                 data.append({"title": title.strip(), "detail": detail.strip()})
-                save_section_data(filename, data, commit_msg=f"Add Address: {title.strip()}")
+                save_section_data(
+                    filename,
+                    data,
+                    commit_msg=f"Add Address: {title.strip()}",
+                )
                 st.rerun()
 
     st.markdown("---")
@@ -710,7 +772,11 @@ def render_simple_value_section(filename, seed, value_label, form_prefix):
                 st.warning("กรุณากรอกข้อมูล")
             else:
                 data.append({"value": value.strip(), "note": note.strip()})
-                save_section_data(filename, data, commit_msg=f"Add {form_prefix}: {value.strip()}")
+                save_section_data(
+                    filename,
+                    data,
+                    commit_msg=f"Add {form_prefix}: {value.strip()}",
+                )
                 st.rerun()
 
     st.markdown("---")
@@ -722,9 +788,10 @@ def render_simple_value_section(filename, seed, value_label, form_prefix):
             note_txt = f" ({item['note']})" if item.get("note") else ""
             st.markdown(f"• `{item['value']}`{note_txt}")
         with col_b:
-            render_delete_button(filename, data, idx, key=f"del_{form_prefix}_{idx}")
+            render_delete_button(
+                filename, data, idx, key=f"del_{form_prefix}_{idx}"
+            )
     return data
-
 
 # =================================================================
 # 📚 คลังเอกสาร PDF บน Dashboard
